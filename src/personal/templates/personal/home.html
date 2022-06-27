@@ -48,9 +48,8 @@
 			<!-- Top 'create post' bar -->
 			<div class="d-lg-none mb-3">
 				<div class="card m-auto d-flex flex-column p-3">
-					<img class="img-fluid d-block m-auto pb-2" src="{% static 'IMG_6332cl.jpg' %}" width="72" height="72">
-					<p class="lead">In this course you'll learn how to build a simple blog with user registration and blog CRUD functionality. Django is a powerful 
-	  					framework and you'll see why in this courses.</p>
+					<img class="img-fluid d-block m-auto pb-2"  src="{% static 'nyasa.png' %}" width="72" height="72">
+					<p class="lead">Creat a blog post by uploading an image, giving it a title and adding a description to your new post.</p>
 					<p class="m-auto"><a class="btn btn-primary" href="{% url 'blog:create' %}">Create post</a></p>
 				</div>
 			</div>
@@ -81,16 +80,24 @@
 		<div class="right-column col-lg-3 d-lg-flex d-none flex-column">
 
 			<div class="card create-post-bar d-flex flex-column p-3">
-				<img class="img-fluid d-block m-auto pb-2" src="{% static 'IMG_6332cl.jpg' %}" width="72" height="72">
-				<p class="lead">Creat a blog post by uploading an image, giving it a tittle
-				and adding a description to your post.</p>
+				<div class="d-flex flex-column pb-3">
+					<a href="{% url 'home' %}">
+					 <img class="img-fluid mx-auto d-block"   src="{%static 'nyasa.png' %}" alt="WepApp Logo image here" width="70" height="70">
+				   </a>
+				   </div>
+				<p class="lead">Creat a blog post by uploading an image, giving it a title
+				and adding a description to your new post.</p>
 				<p class="m-auto"><a class="btn btn-primary" href="{% url 'blog:create' %}">Create post</a></p>
 			</div>
-		
+			
+	
 		</div>
+
+		
 		<!-- end Right 'create post' column  -->
 
-
+			
+		
 
 	</div>
 </div>

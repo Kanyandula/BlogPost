@@ -4,6 +4,7 @@ from django.utils.text import slugify
 from django.conf import settings
 from django.db.models.signals import post_delete
 from django.dispatch import receiver
+from django.contrib.auth.models import User
 
 def upload_location(instance, filename):
 	file_path = 'blog/{author_id}/{title}-{filename}'.format(

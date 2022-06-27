@@ -1,9 +1,11 @@
+from ast import Delete
+from multiprocessing import context
 from django.shortcuts import render, redirect, get_object_or_404
 from django.db.models import Q
 from django.http import HttpResponse
 
 from blog.models import BlogPost
-from blog.forms import CreateBlogPostForm, UpdateBlogPostForm
+from blog.forms import CreateBlogPostForm, UpdateBlogPostForm, DeleteBlogPost
 from account.models import Account
 
 
@@ -31,12 +33,14 @@ def create_blog_view(request):
 def detail_blog_view(request, slug):
 
 	context = {}
-
+	if request.method == 'POST':
+		return redirect('detail', slug =blog_post.id)
+             
 	blog_post = get_object_or_404(BlogPost, slug=slug)
+	
 	context['blog_post'] = blog_post
-
+	
 	return render(request, 'blog/detail_blog.html', context)
-
 
 
 def edit_blog_view(request, slug):
@@ -85,3 +89,18 @@ def get_blog_queryset(query=None):
 			queryset.append(post)
 
 	return list(set(queryset))	
+
+
+
+
+
+def delete_blog_post(request, pk):
+    post = BlogPost.objects.get(id=pk)
+    if request.method == 'POST':
+        post.delete()
+        return redirect('home' )
+    context = {
+        'post': post,
+		
+    }
+    return render(request, 'blog/post_delete.html', context)

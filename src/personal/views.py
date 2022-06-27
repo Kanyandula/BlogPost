@@ -7,6 +7,8 @@ from blog.models import BlogPost
 
 BLOG_POSTS_PER_PAGE = 10
 
+
+
 def home_screen_view(request, *args, **kwargs):
 	
 	context = {}
@@ -35,5 +37,7 @@ def home_screen_view(request, *args, **kwargs):
 
 	return render(request, "personal/home.html", context)
 
+def about_screen_view(request):
+	return render(request, 'personal/about.html')
 
 

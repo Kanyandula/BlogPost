@@ -28,3 +28,11 @@ class UpdateBlogPostForm(forms.ModelForm):
 			blog_post.save()
 		return blog_post
 
+class DeleteBlogPost(forms.ModelForm):
+	class Meta:
+		model = BlogPost
+		fields = ['title', 'body', 'image']
+	
+
+	
+
