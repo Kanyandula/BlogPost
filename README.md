@@ -16,5 +16,4 @@ Python, Javascript, Html, CSS and PHP
 =======
 ## Design pattern
 
-MVVM achitecture
->>>>>>> 0804abbb1fa56c4f39bbb5769b4bff1a1598b24b
+
