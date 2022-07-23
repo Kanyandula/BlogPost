@@ -2,5 +2,7 @@
 db.sqlite3
 venv/
 
+.ini
+
 .idea/
 uploaded_media/

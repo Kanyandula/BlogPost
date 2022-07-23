@@ -11,7 +11,7 @@
                     </div>
                     <form method="POST">
                         {% csrf_token %}
-                        <a class="btn btn-secondary btn-sm" href="{% url 'home'  %}">Cancel</a>
+                        <a class="btn btn-secondary btn-sm" href="{% url 'blog:detail' post.slug %}">Cancel</a>
                         <input class="btn btn-primary btn-sm" type="submit" value="Confirm">
                     </form>
                 </div>
