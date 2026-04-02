@@ -203,32 +203,21 @@
 </div>
 
 <script>
-function toggleLike(slug) {
-  fetch('/blog/' + slug + '/like/', {
+function toggleAction(slug, action, iconId, countId) {
+  fetch('/blog/' + slug + '/' + action + '/', {
     method: 'POST',
     headers: {'X-CSRFToken': '{{ csrf_token }}'},
     credentials: 'same-origin'
   })
-  .then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
-  .then(data => {
-    document.getElementById('like-count').textContent = data.count;
-    var icon = document.getElementById('like-icon');
-    icon.style.fontVariationSettings = data.liked ? "'FILL' 1" : "'FILL' 0";
+  .then(function(r) { if (r.status === 401) { window.location.href = '{% url "login" %}'; throw 'redirect'; } if (!r.ok) throw new Error(r.status); return r.json(); })
+  .then(function(data) {
+    var active = data.liked !== undefined ? data.liked : data.bookmarked;
+    document.getElementById(iconId).style.fontVariationSettings = active ? "'FILL' 1" : "'FILL' 0";
+    if (countId && data.count !== undefined) document.getElementById(countId).textContent = data.count;
   })
-  .catch(e => { if (e.message === '401') window.location.href = '{% url "login" %}'; });
+  .catch(function(e) { if (e !== 'redirect') console.error(e); });
 }
-function toggleBookmark(slug) {
-  fetch('/blog/' + slug + '/bookmark/', {
-    method: 'POST',
-    headers: {'X-CSRFToken': '{{ csrf_token }}'},
-    credentials: 'same-origin'
-  })
-  .then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
-  .then(data => {
-    var icon = document.getElementById('bookmark-icon');
-    icon.style.fontVariationSettings = data.bookmarked ? "'FILL' 1" : "'FILL' 0";
-  })
-  .catch(e => { if (e.message === '401') window.location.href = '{% url "login" %}'; });
-}
+function toggleLike(slug) { toggleAction(slug, 'like', 'like-icon', 'like-count'); }
+function toggleBookmark(slug) { toggleAction(slug, 'bookmark', 'bookmark-icon', null); }
 </script>
 {% endblock content %}

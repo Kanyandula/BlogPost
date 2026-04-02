@@ -7,6 +7,7 @@ from django.conf import settings
 from django.db.models.signals import post_delete
 from django.dispatch import receiver
 from django_ckeditor_5.fields import CKEditor5Field
+import uuid
 
 
 def upload_location(instance, filename):
@@ -130,6 +131,9 @@ def pre_save_blog_post_receiver(sender, instance, *args, **kwargs):
 		slug = base_slug
 		counter = 1
 		while BlogPost.objects.filter(slug=slug).exclude(pk=instance.pk).exists():
+			if counter >= 100:
+				slug = f"{base_slug}-{uuid.uuid4().hex[:8]}"
+				break
 			slug = f"{base_slug}-{counter}"
 			counter += 1
 		instance.slug = slug

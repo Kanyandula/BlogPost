@@ -46,10 +46,8 @@ def detail_blog_view(request, slug):
 			parent_id = request.POST.get('parent_id')
 			if parent_id:
 				parent = get_object_or_404(Comment, pk=parent_id)
-				if parent.parent is not None:
-					comment.parent = parent.parent
-				else:
-					comment.parent = parent
+				# Flatten to max 1 level: replies to replies become siblings
+				comment.parent = parent.parent or parent
 			comment.save()
 			return redirect('blog:detail', slug=slug)
 	else:
@@ -97,14 +95,14 @@ def edit_blog_view(request, slug):
 			form.save_m2m()
 			context['success_message'] = "Updated"
 			blog_post = obj
-
-	form = UpdateBlogPostForm(
-		initial={
-			"title": blog_post.title,
-			"body": blog_post.body,
-			"image": blog_post.image,
-		}
-	)
+	else:
+		form = UpdateBlogPostForm(
+			initial={
+				"title": blog_post.title,
+				"body": blog_post.body,
+				"image": blog_post.image,
+			}
+		)
 
 	context['form'] = form
 	context['blog_post'] = blog_post
