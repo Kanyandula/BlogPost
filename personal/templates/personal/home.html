@@ -2,106 +2,205 @@
 {% load static %}
 
 {% block content %}
-<style type="text/css">
+<div class="max-w-[1440px] mx-auto px-6 md:px-12">
 
-	@media (max-width: 768px) { 
-		.right-column{
-			margin-left: 0px;
-		}
-	}
+<!-- Hero: Featured Post -->
+{% if featured_posts %}
+{% with post=featured_posts.0 %}
+<section class="relative mb-12 group cursor-pointer overflow-hidden rounded-xl">
+  <a href="{% url 'blog:detail' post.slug %}">
+    <div class="aspect-[21/9] w-full relative">
+      {% if post.image %}
+      <img alt="{{ post.title }}" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" src="{{ post.image.url }}"/>
+      {% else %}
+      <div class="w-full h-full bg-primary-container"></div>
+      {% endif %}
+      <div class="absolute inset-0 bg-gradient-to-t from-primary/90 via-primary/20 to-transparent"></div>
+    </div>
+    <div class="absolute bottom-0 left-0 p-6 md:p-12 w-full lg:w-2/3">
+      <span class="bg-tertiary-fixed-dim text-on-tertiary-fixed px-3 py-1 rounded text-xs font-bold tracking-widest uppercase mb-4 inline-block">Featured Story</span>
+      <h1 class="text-white text-2xl md:text-4xl lg:text-5xl font-black mb-4 leading-tight">{{ post.title }}</h1>
+      <div class="flex items-center gap-3 text-white/90 text-sm">
+        <span class="material-symbols-outlined text-base">person</span>
+        <span>{{ post.author.username }}</span>
+        <span class="opacity-50">·</span>
+        <span>{{ post.reading_time }} min read</span>
+      </div>
+    </div>
+  </a>
+</section>
+{% endwith %}
+{% endif %}
 
-	@media (min-width: 768px) { 
-		.right-column{
-			margin-left: 20px;
-		}
-	}
-
-	.blog-post-container{
-		margin-bottom: 20px;
-		width: 100%;
-	}
-	.create-post-bar{
-		background-color: #fff;
-		margin-bottom:20px;
-	}
-
-	.left-column{
-		padding:0px;
-	}
-
-	.right-column{
-		padding:0px;
-	}
-	.lead{
-		font-size: 17px;
-	}
-</style>
-
-
-<!-- main content -->
-<div class="container">
-	<div class="row">
-
-		<!-- blog feed -->
-		<div class="left-column col-lg-7 offset-lg-1">
-
-			<!-- Top 'create post' bar -->
-			<div class="d-lg-none mb-3">
-				<div class="card m-auto d-flex flex-column p-3">
-					<img class="img-fluid d-block m-auto pb-2" src="{% static 'nyasa.png' %}" width="72" height="72">
-					<p class="lead">Click the button to create a new post.</p>
-					<p class="m-auto"><a class="btn btn-primary" href="{% url 'blog:create' %}">Create post</a></p>
-				</div>
-			</div>
-			<!-- end Top 'create post' bar -->
-
-			<!-- Blog posts-->
-			{% if blog_posts %}
-				{% for post in blog_posts %}
-					<div class="blog-post-container">
-						{% include 'blog/snippets/blog_post_snippet.html' with blog_post=post %}
-					</div>
-				{% endfor %}
-			{% else %}
-				<div class="blog-post-container">
-					{% include 'blog/snippets/blog_post_snippet.html' with query=query %}
-				</div>
-			{% endif %}
-			<!-- End Blog posts-->
-
-		<!-- Pagination -->
-		{% include 'blog/snippets/blog_post_pagination.html' with blog_posts=blog_posts %}
-
-		</div>
-		<!-- end blog feed -->
-
-
-		<!-- Right 'create post' column  -->
-		<div class="right-column col-lg-3 d-lg-flex d-none flex-column">
-
-			<div class="card create-post-bar d-flex flex-column p-3">
-				<div class="d-flex flex-column pb-3">
-					<a href="{% url 'home' %}">
-					 <img class="img-fluid mx-auto d-block"   src="{%static 'nyasa.png' %}" alt="WepApp Logo image here" width="70" height="70">
-				   </a>
-				   </div>
-				<p class="lead">Creat a blog post by uploading an image, giving it a title
-				and adding a description to your new post.</p>
-				<p class="m-auto"><a class="btn btn-primary" href="{% url 'blog:create' %}">Create post</a></p>
-			</div>
-			
-	
-		</div>
-
-		
-		<!-- end Right 'create post' column  -->
-
-
-
-	</div>
+<!-- Category Filter Pills -->
+<div class="flex gap-3 overflow-x-auto hide-scrollbar pb-4 mb-8">
+  <a href="{% url 'home' %}" class="px-5 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors {% if not active_category %}bg-primary text-on-primary{% else %}bg-surface-container-high text-on-surface-variant hover:bg-surface-container-highest{% endif %}">
+    All
+  </a>
+  {% for cat in categories %}
+  <a href="{% url 'home' %}?category={{ cat.slug }}" class="px-5 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors {% if active_category == cat.slug %}bg-primary text-on-primary{% else %}bg-surface-container-high text-on-surface-variant hover:bg-surface-container-highest{% endif %}">
+    {{ cat.name }}
+  </a>
+  {% endfor %}
 </div>
 
+<!-- Main Grid -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-12">
+
+  <!-- Blog Feed -->
+  <div class="lg:col-span-8">
+    <h2 class="text-2xl font-black text-primary mb-8">Latest Stories</h2>
+
+    {% if blog_posts %}
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+      {% for post in blog_posts %}
+      <article class="group bg-surface-container-lowest rounded-xl overflow-hidden">
+        <a href="{% url 'blog:detail' post.slug %}">
+          <div class="aspect-video overflow-hidden">
+            {% if post.image %}
+            <img alt="{{ post.title }}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" src="{{ post.image.url }}"/>
+            {% else %}
+            <div class="w-full h-full bg-surface-container-high flex items-center justify-center">
+              <span class="material-symbols-outlined text-4xl text-outline-variant">article</span>
+            </div>
+            {% endif %}
+          </div>
+        </a>
+        <div class="p-5">
+          {% if post.category %}
+          <span class="text-xs font-semibold uppercase tracking-widest text-secondary">{{ post.category.name }}</span>
+          {% endif %}
+          <a href="{% url 'blog:detail' post.slug %}">
+            <h3 class="text-lg font-bold text-primary mt-1 mb-2 line-clamp-2 group-hover:text-primary-container transition-colors">{{ post.title }}</h3>
+          </a>
+          <p class="text-sm text-on-surface-variant line-clamp-2 mb-4">{{ post.body|striptags|truncatechars:120 }}</p>
+          <div class="flex items-center justify-between text-xs text-on-surface-variant">
+            <div class="flex items-center gap-2">
+              <span class="material-symbols-outlined text-sm">person</span>
+              <a href="{% url 'author_profile' post.author.username %}" class="font-medium hover:text-primary">{{ post.author.username }}</a>
+              <span class="opacity-50">·</span>
+              <span>{{ post.reading_time }} min</span>
+            </div>
+            <div class="flex items-center gap-3">
+              <span class="flex items-center gap-1"><span class="material-symbols-outlined text-sm">favorite</span>{{ post.likes.count }}</span>
+              <span class="flex items-center gap-1"><span class="material-symbols-outlined text-sm">chat</span>{{ post.comments.count }}</span>
+            </div>
+          </div>
+        </div>
+      </article>
+      {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if blog_posts.has_other_pages %}
+    <div class="flex justify-center gap-2 mt-12">
+      {% if blog_posts.has_previous %}
+      <a href="?page={{ blog_posts.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if active_category %}&category={{ active_category }}{% endif %}"
+         class="px-4 py-2 rounded-lg bg-surface-container-high text-on-surface text-sm hover:bg-surface-container-highest transition-colors">
+        <span class="material-symbols-outlined text-sm align-middle">chevron_left</span> Previous
+      </a>
+      {% endif %}
+      <span class="px-4 py-2 text-sm text-on-surface-variant">Page {{ blog_posts.number }} of {{ blog_posts.paginator.num_pages }}</span>
+      {% if blog_posts.has_next %}
+      <a href="?page={{ blog_posts.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if active_category %}&category={{ active_category }}{% endif %}"
+         class="px-4 py-2 rounded-lg bg-surface-container-high text-on-surface text-sm hover:bg-surface-container-highest transition-colors">
+        Next <span class="material-symbols-outlined text-sm align-middle">chevron_right</span>
+      </a>
+      {% endif %}
+    </div>
+    {% endif %}
+
+    {% else %}
+    <!-- Empty state -->
+    <div class="text-center py-20">
+      <span class="material-symbols-outlined text-6xl text-outline-variant mb-4">search_off</span>
+      <h3 class="text-xl font-bold text-primary mb-2">No stories found</h3>
+      <p class="text-on-surface-variant mb-6">Try different keywords or browse categories</p>
+      <a href="{% url 'home' %}" class="bg-primary-container text-on-primary px-6 py-2.5 rounded-lg font-semibold hover:opacity-90 transition-opacity">Browse All</a>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Sidebar -->
+  <aside class="lg:col-span-4">
+    <div class="sticky top-28 space-y-8">
+
+      <!-- Create Post CTA -->
+      {% if request.user.is_authenticated %}
+      <a href="{% url 'blog:create' %}" class="block bg-primary-container text-on-primary p-6 rounded-2xl hover:opacity-90 transition-opacity">
+        <div class="flex items-center gap-3 mb-3">
+          <span class="material-symbols-outlined">edit</span>
+          <span class="font-bold text-lg">Write a Story</span>
+        </div>
+        <p class="text-sm text-on-primary/70">Share your perspective with the NyasaBlog community</p>
+      </a>
+      {% endif %}
+
+      <!-- Trending -->
+      {% if trending_posts %}
+      <div class="bg-surface-container-high/40 p-6 rounded-2xl">
+        <h3 class="text-lg font-black text-primary mb-6 flex items-center gap-2">
+          <span class="material-symbols-outlined">trending_up</span> Trending Now
+        </h3>
+        {% for post in trending_posts %}
+        <a href="{% url 'blog:detail' post.slug %}" class="flex gap-4 mb-5 group">
+          <span class="text-3xl font-black text-surface-container-highest">{{ forloop.counter|stringformat:"02d" }}</span>
+          <div>
+            <h4 class="text-sm font-bold text-on-surface group-hover:text-tertiary-fixed-dim transition-colors line-clamp-2">{{ post.title }}</h4>
+            <span class="text-xs text-on-surface-variant">{{ post.reading_time }} min read</span>
+          </div>
+        </a>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      <!-- Newsletter -->
+      <div class="bg-primary p-6 rounded-2xl text-on-primary">
+        <h3 class="text-lg font-black mb-2">The Weekly Savanna</h3>
+        <p class="text-sm text-on-primary/70 mb-4">The best of Malawian stories, every Monday morning.</p>
+        <input class="w-full bg-on-primary/10 border-none rounded-lg py-2.5 px-4 text-sm text-on-primary placeholder:text-on-primary/50 mb-3" placeholder="Your email address" type="email"/>
+        <button class="w-full bg-tertiary-fixed-dim text-on-tertiary-fixed py-2.5 rounded-lg text-sm font-bold hover:opacity-90 transition-opacity">Subscribe</button>
+      </div>
+
+    </div>
+  </aside>
+
+</div>
+</div>
+
+<!-- Mobile FAB -->
+{% if request.user.is_authenticated %}
+<a href="{% url 'blog:create' %}" class="fixed bottom-24 right-6 md:hidden w-14 h-14 rounded-full bg-primary text-on-primary flex items-center justify-center shadow-lg hover:opacity-90 transition-opacity z-40">
+  <span class="material-symbols-outlined text-2xl">edit</span>
+</a>
+{% endif %}
+
+<!-- Mobile Bottom Nav -->
+<nav class="fixed bottom-0 left-0 w-full md:hidden bg-surface-container-lowest/90 backdrop-blur-md rounded-t-[10px] z-50">
+  <div class="flex justify-around py-3">
+    <a href="{% url 'home' %}" class="flex flex-col items-center text-primary">
+      <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1">home</span>
+      <span class="text-[10px] mt-0.5">Home</span>
+    </a>
+    <a href="{% url 'home' %}" class="flex flex-col items-center text-on-surface-variant">
+      <span class="material-symbols-outlined">search</span>
+      <span class="text-[10px] mt-0.5">Search</span>
+    </a>
+    {% if request.user.is_authenticated %}
+    <a href="{% url 'blog:bookmarks' %}" class="flex flex-col items-center text-on-surface-variant">
+      <span class="material-symbols-outlined">bookmark</span>
+      <span class="text-[10px] mt-0.5">Bookmarks</span>
+    </a>
+    <a href="{% url 'account' %}" class="flex flex-col items-center text-on-surface-variant">
+      <span class="material-symbols-outlined">person</span>
+      <span class="text-[10px] mt-0.5">Profile</span>
+    </a>
+    {% else %}
+    <a href="{% url 'login' %}" class="flex flex-col items-center text-on-surface-variant">
+      <span class="material-symbols-outlined">login</span>
+      <span class="text-[10px] mt-0.5">Sign in</span>
+    </a>
+    {% endif %}
+  </div>
+</nav>
 {% endblock content %}
-
-
-

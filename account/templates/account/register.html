@@ -1,86 +1,47 @@
 {% extends 'base.html' %}
-{% load static %}
+
+{% block title %}Join NyasaBlog{% endblock %}
 
 {% block content %}
-
-
-<style type="text/css">
-  .form-signin {
-  width: 100%;
-  max-width: 330px;
-  padding: 15px;
-  margin: auto;
-  }
-
-  .form-signin .form-control {
-    position: relative;
-    box-sizing: border-box;
-    height: auto;
-    padding: 10px;
-    font-size: 16px;
-  }
-  .form-signin .form-control:focus {
-    z-index: 2;
-  }
-  .form-signin input[type="email"] {
-    margin-bottom: 10px;
-    border-bottom-right-radius: 0;
-    border-bottom-left-radius: 0;
-  }
-  .form-signin input[type="text"] {
-    margin-bottom: 10px;
-    border-bottom-right-radius: 0;
-    border-bottom-left-radius: 0;
-  }
-  .form-signin input[type="password"] {
-    margin-bottom: -1px;
-    border-top-left-radius: 0;
-    border-top-right-radius: 0;
-  }
-
-  .h3{
-    text-align: center;
-  }
-
-</style>
-
-
-<form class="form-signin" method="post">{% csrf_token %}
-  <div class="d-flex flex-column pb-3">
-    <a href="{% url 'home' %}">
-     <img class="img-fluid mx-auto d-block"   src="{%static 'nyasa.png' %}" alt="WepApp Logo image here" width="70" height="70">
-   </a>
-   </div>
-  <h1 class="h3 mb-3 font-weight-normal">Register an account</h1>
-
-  <input type="email" name="email" id="inputEmail" class="form-control" placeholder="Email address" required autofocus>
-
-  <input type="text" name="username" id="inputUsername" class="form-control" placeholder="Username" required>
-  
-  <input type="password" name="password1" id="inputPassword1" class="form-control" placeholder="Password" required>
-
-  <input type="password" name="password2" id="inputPassword2" class="form-control" placeholder="Confirm password" required>
-
-  {% for field in registration_form %}
-      <p>
-        {% for error in field.errors %}
-          <p style="color: red">{{ error }}</p>
-        {% endfor %}
-      </p>
-  {% endfor %}
-  {% if registration_form.non_field_errors %}
-    <div style="color: red">
-      <p>{{registration_form.non_field_errors}}</p>
+<div class="min-h-[70vh] flex items-center justify-center px-6">
+  <div class="w-full max-w-md bg-surface-container-lowest rounded-xl p-8 md:p-10">
+    <div class="text-center mb-8">
+      <a href="{% url 'home' %}" class="text-3xl font-black tracking-tighter text-primary">NyasaBlog</a>
+      <h1 class="text-2xl font-bold text-primary mt-4">Join NyasaBlog</h1>
+      <p class="text-sm text-on-surface-variant mt-1">Start sharing your stories with Malawi</p>
     </div>
-      
-  {% endif %}
 
-  <button class="btn btn-lg btn-primary btn-block" type="submit">Register</button>
+    <form method="POST" class="space-y-4">
+      {% csrf_token %}
 
-</form>
+      {% for field in registration_form %}
+      <div>
+        <label class="block text-sm font-medium text-on-surface mb-1">{{ field.label }}</label>
+        <input type="{{ field.field.widget.input_type|default:'text' }}"
+               name="{{ field.name }}"
+               value="{{ field.value|default:'' }}"
+               placeholder="{{ field.label }}"
+               class="w-full bg-surface-container-lowest border border-outline-variant/20 rounded-lg py-3 px-4 text-sm focus:ring-2 focus:ring-secondary/20 focus:border-secondary"/>
+        {% for error in field.errors %}
+        <p class="text-xs text-error mt-1">{{ error }}</p>
+        {% endfor %}
+      </div>
+      {% endfor %}
 
+      <button type="submit" class="w-full bg-primary-container text-on-primary py-3 rounded-lg font-semibold hover:opacity-90 transition-opacity">Create Account</button>
 
+      <p class="text-xs text-on-surface-variant text-center">By creating an account, you agree to our Terms and Privacy Policy</p>
+    </form>
+
+    <div class="flex items-center gap-4 my-6">
+      <div class="flex-1 h-px bg-outline-variant/20"></div>
+      <span class="text-xs text-on-surface-variant">or</span>
+      <div class="flex-1 h-px bg-outline-variant/20"></div>
+    </div>
+
+    <p class="text-center text-sm text-on-surface-variant">
+      Already have an account? <a href="{% url 'login' %}" class="text-secondary font-semibold hover:underline">Sign in</a>
+    </p>
+  </div>
+</div>
 {% endblock content %}
-
-
-

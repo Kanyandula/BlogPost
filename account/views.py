@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, authenticate, logout
 
 from account.forms import RegistrationForm, AccountAuthenticationForm, AccountUpdateForm
@@ -95,3 +95,14 @@ def must_authenticate_view(request):
 	return render(request, 'account/must_authenticate.html', {})
 
 
+def author_profile_view(request, username):
+	from account.models import Account
+	author = get_object_or_404(Account, username=username)
+	posts = BlogPost.objects.filter(author=author, status='published').order_by('-date_published')
+	context = {
+		'author': author,
+		'posts': posts,
+		'post_count': posts.count(),
+		'total_views': sum(p.view_count for p in posts),
+	}
+	return render(request, 'account/author_profile.html', context)

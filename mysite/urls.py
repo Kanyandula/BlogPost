@@ -32,6 +32,7 @@ from account.views import (
     login_view,
     account_view,
 	must_authenticate_view,
+	author_profile_view,
 )
 
 urlpatterns = [
@@ -43,6 +44,7 @@ urlpatterns = [
     path('logout/', logout_view, name="logout"),
   	path('must_authenticate/', must_authenticate_view, name="must_authenticate"),
     path('register/', registration_view, name="register"),
+    path('author/<str:username>/', author_profile_view, name="author_profile"),
     path('about', about_screen_view, name= "about"),
     path('contact/', contact_screen_view, name= "contact"),
     path('api/', api_screen_view, name= "api"),
