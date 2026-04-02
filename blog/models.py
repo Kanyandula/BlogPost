@@ -4,7 +4,6 @@ from django.utils.text import slugify
 from django.conf import settings
 from django.db.models.signals import post_delete
 from django.dispatch import receiver
-from django.contrib.auth.models import User
 from ckeditor.fields import RichTextField
 
 def upload_location(instance, filename):

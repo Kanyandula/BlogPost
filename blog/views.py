@@ -1,5 +1,3 @@
-from ast import Delete
-from multiprocessing import context
 from django.shortcuts import render, redirect, get_object_or_404
 from django.db.models import Q
 from django.http import HttpResponse
@@ -33,10 +31,10 @@ def create_blog_view(request):
 def detail_blog_view(request, slug):
 
 	context = {}
-	if request.method == 'POST':
-		return redirect('detail', slug =blog_post.id)
-             
 	blog_post = get_object_or_404(BlogPost, slug=slug)
+
+	if request.method == 'POST':
+		return redirect('detail', slug=blog_post.slug)
 	
 	context['blog_post'] = blog_post
 	
@@ -95,10 +93,14 @@ def get_blog_queryset(query=None):
 
 
 def delete_blog_post(request, pk):
-    post = BlogPost.objects.get(id=pk)
+    if not request.user.is_authenticated:
+        return redirect('must_authenticate')
+    post = get_object_or_404(BlogPost, id=pk)
+    if post.author != request.user:
+        return HttpResponse('You are not the author of that post.')
     if request.method == 'POST':
         post.delete()
-        return redirect('home' )
+        return redirect('home')
     context = {
         'post': post,
 		

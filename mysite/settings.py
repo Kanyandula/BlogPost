@@ -143,8 +143,6 @@ TIME_ZONE = 'UTC'
 
 USE_I18N = True
 
-USE_L10N = True
-
 USE_TZ = True
 
 
@@ -174,8 +172,10 @@ else:
     AWS_LOCATION = config('AWS_LOCATION')
     AWS_DEFAULT_ACL = 'public-read'
     STATIC_URL = 'https://%s/%s/' % (AWS_S3_ENDPOINT_URL, AWS_LOCATION)
-    STATICFILES_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
-    DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+    STORAGES = {
+        "default": {"BACKEND": "storages.backends.s3boto3.S3Boto3Storage"},
+        "staticfiles": {"BACKEND": "storages.backends.s3boto3.S3Boto3Storage"},
+    }
     EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
     EMAIL_HOST = config('EMAIL_HOST')
     EMAIL_HOST_USER = config('EMAIL_HOST_USER')
