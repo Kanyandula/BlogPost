@@ -1,18 +1,29 @@
-<style type="text/css">
-	.footer{
-		min-height: 100px;
-	}
-</style>
-
 <!-- Footer -->
-<br>
-<div class="d-flex flex-row align-items-center footer  bg-white border-top shadow-lg">
-<p class="m-auto">Nyasa Blog  | 2022. All rights reserved</p>
+<footer class="bg-surface-container-high dark:bg-slate-900">
+<div class="max-w-[1440px] mx-auto px-6 md:px-12 py-12">
+  <div class="flex flex-col md:flex-row justify-between items-center gap-8">
+    <!-- Logo & copyright -->
+    <div class="text-center md:text-left">
+      <a href="{% url 'home' %}" class="text-2xl font-black tracking-tighter text-primary">NyasaBlog</a>
+      <p class="text-sm text-on-surface-variant mt-2">Editorial Excellence from the Warm Heart of Africa</p>
+    </div>
+
+    <!-- Links -->
+    <div class="flex flex-wrap justify-center gap-6 text-sm text-on-surface-variant">
+      <a href="{% url 'about' %}" class="hover:text-primary transition-colors">About Us</a>
+      <a href="{% url 'contact' %}" class="hover:text-primary transition-colors">Contact</a>
+      <a href="{% url 'api' %}" class="hover:text-primary transition-colors">API</a>
+    </div>
+
+    <!-- Social -->
+    <div class="flex gap-4">
+      <span class="material-symbols-outlined text-on-surface-variant hover:text-primary cursor-pointer transition-colors">language</span>
+      <span class="material-symbols-outlined text-on-surface-variant hover:text-primary cursor-pointer transition-colors">mail</span>
+    </div>
+  </div>
+
+  <div class="border-t border-outline-variant/20 mt-8 pt-6 text-center">
+    <p class="text-xs text-on-surface-variant">&copy; {% now "Y" %} NyasaBlog. Created by Ephraim Kanyandula. All rights reserved.</p>
+  </div>
 </div>
-<!-- End Footer -->
-
-
-<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
-
+</footer>

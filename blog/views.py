@@ -3,7 +3,7 @@ from django.db.models import Q
 from django.http import HttpResponse
 
 from blog.models import BlogPost
-from blog.forms import CreateBlogPostForm, UpdateBlogPostForm, DeleteBlogPost
+from blog.forms import CreateBlogPostForm, UpdateBlogPostForm
 from account.models import Account
 
 
