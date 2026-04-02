@@ -2,6 +2,10 @@
 
 {% block title %}Edit Post | NyasaBlog{% endblock %}
 
+{% block extra_head %}
+{{ form.media }}
+{% endblock %}
+
 {% block content %}
 <div class="max-w-4xl mx-auto px-6 md:px-12">
   <h1 class="text-3xl md:text-4xl font-black text-primary mb-2">Edit Story</h1>
@@ -12,27 +16,53 @@
   <form method="POST" enctype="multipart/form-data" class="space-y-6">
     {% csrf_token %}
 
+    <!-- Title -->
     <div>
       <input type="text" name="title" placeholder="Post title..."
              value="{{ form.title.value|default:'' }}"
              class="w-full bg-transparent text-3xl md:text-4xl font-bold text-primary placeholder:text-outline-variant border-none focus:ring-0 px-0"/>
     </div>
 
-    <div>
-      <label class="block text-sm font-medium text-on-surface mb-2">Featured Image</label>
-      {% if blog_post.image %}
-      <div class="mb-3 rounded-xl overflow-hidden max-h-64">
-        <img src="{{ blog_post.image.url }}" alt="Current image" class="w-full h-full object-cover"/>
+    <!-- Category, Status & Image -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div>
+        <label class="block text-sm font-medium text-on-surface mb-2">Category</label>
+        {{ form.category }}
       </div>
-      {% endif %}
-      <input type="file" name="image" accept="image/*" class="text-sm text-on-surface-variant"/>
+      <div>
+        <label class="block text-sm font-medium text-on-surface mb-2">Status</label>
+        {{ form.status }}
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-on-surface mb-2">Featured Image</label>
+        {% if blog_post.image %}
+        <div class="mb-3 rounded-xl overflow-hidden max-h-48">
+          <img src="{{ blog_post.image.url }}" alt="Current image" class="w-full h-full object-cover"/>
+        </div>
+        {% endif %}
+        <input type="file" name="image" accept="image/*" class="text-sm text-on-surface-variant"/>
+      </div>
     </div>
 
+    <!-- Tags -->
+    <div>
+      <label class="block text-sm font-medium text-on-surface mb-2">Tags</label>
+      <div class="flex flex-wrap gap-3">
+        {% for checkbox in form.tags %}
+        <label class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-surface-container-low text-sm text-on-surface-variant hover:bg-secondary-container/30 cursor-pointer transition-colors">
+          {{ checkbox.tag }} {{ checkbox.choice_label }}
+        </label>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Body -->
     <div>
       <label class="block text-sm font-medium text-on-surface mb-2">Content</label>
       {{ form.body }}
     </div>
 
+    <!-- Actions -->
     <div class="flex gap-3 pt-4">
       <button type="submit" class="bg-primary-container text-on-primary px-8 py-3 rounded-lg font-semibold hover:opacity-90 transition-opacity">Save Changes</button>
       <a href="{% url 'blog:detail' blog_post.slug %}" class="bg-surface-container-high text-on-surface px-8 py-3 rounded-lg font-medium hover:bg-surface-container-highest transition-colors">Cancel</a>
@@ -40,7 +70,3 @@
   </form>
 </div>
 {% endblock content %}
-
-{% block extra_head %}
-{{ form.media }}
-{% endblock %}

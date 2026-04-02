@@ -10,19 +10,53 @@ IMAGE_SIZE_MAX_BYTES = 1024 * 1024 * 2 # 2MB
 MIN_TITLE_LENGTH = 5
 MIN_BODY_LENGTH = 50
 
-from blog.models import BlogPost
+from blog.models import BlogPost, Category, Tag, Comment
 
 from blog.utils import is_image_aspect_ratio_valid, is_image_size_valid
+
+
+class CategorySerializer(serializers.ModelSerializer):
+	class Meta:
+		model = Category
+		fields = ['pk', 'name', 'slug', 'description']
+
+
+class TagSerializer(serializers.ModelSerializer):
+	class Meta:
+		model = Tag
+		fields = ['pk', 'name', 'slug']
+
+
+class CommentSerializer(serializers.ModelSerializer):
+	username = serializers.CharField(source='author.username', read_only=True)
+	replies = serializers.SerializerMethodField()
+
+	class Meta:
+		model = Comment
+		fields = ['pk', 'post', 'username', 'parent', 'body', 'created_at', 'replies']
+		read_only_fields = ['post', 'username', 'created_at']
+
+	def get_replies(self, obj):
+		if obj.replies.exists():
+			return CommentSerializer(obj.replies.filter(is_active=True), many=True).data
+		return []
 
 
 class BlogPostSerializer(serializers.ModelSerializer):
 
 	username = serializers.SerializerMethodField('get_username_from_author')
 	image 	 = serializers.SerializerMethodField('validate_image_url')
+	category = CategorySerializer(read_only=True)
+	tags = TagSerializer(many=True, read_only=True)
+	like_count = serializers.IntegerField(source='likes.count', read_only=True)
+	comment_count = serializers.IntegerField(source='comments.count', read_only=True)
+	reading_time = serializers.IntegerField(read_only=True)
 
 	class Meta:
 		model = BlogPost
-		fields = ['pk', 'title', 'slug', 'body', 'image', 'date_updated', 'username']
+		fields = ['pk', 'title', 'slug', 'body', 'image', 'date_updated', 'username',
+				  'category', 'tags', 'status', 'is_featured', 'view_count',
+				  'like_count', 'comment_count', 'reading_time']
 
 
 	def get_username_from_author(self, blog_post):

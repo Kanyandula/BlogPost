@@ -2,6 +2,10 @@
 
 {% block title %}Create Post | NyasaBlog{% endblock %}
 
+{% block extra_head %}
+{{ form.media }}
+{% endblock %}
+
 {% block content %}
 <div class="max-w-4xl mx-auto px-6 md:px-12">
   <h1 class="text-3xl md:text-4xl font-black text-primary mb-8">Write a Story</h1>
@@ -19,16 +23,15 @@
       {% endfor %}
     </div>
 
-    <!-- Category & Image -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <!-- Category, Status & Image -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
       <div>
         <label class="block text-sm font-medium text-on-surface mb-2">Category</label>
-        <select name="category" class="w-full bg-surface-container-lowest border border-outline-variant/20 rounded-lg py-3 px-4 text-sm focus:ring-2 focus:ring-secondary/20">
-          <option value="">Select a category</option>
-          {% for cat in categories %}
-          <option value="{{ cat.id }}">{{ cat.name }}</option>
-          {% endfor %}
-        </select>
+        {{ form.category }}
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-on-surface mb-2">Status</label>
+        {{ form.status }}
       </div>
       <div>
         <label class="block text-sm font-medium text-on-surface mb-2">Featured Image</label>
@@ -37,6 +40,18 @@
           <p class="text-sm text-on-surface-variant mt-2">Click to upload</p>
           <input type="file" name="image" id="id_image" class="hidden" accept="image/*"/>
         </div>
+      </div>
+    </div>
+
+    <!-- Tags -->
+    <div>
+      <label class="block text-sm font-medium text-on-surface mb-2">Tags</label>
+      <div class="flex flex-wrap gap-3">
+        {% for checkbox in form.tags %}
+        <label class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-surface-container-low text-sm text-on-surface-variant hover:bg-secondary-container/30 cursor-pointer transition-colors">
+          {{ checkbox.tag }} {{ checkbox.choice_label }}
+        </label>
+        {% endfor %}
       </div>
     </div>
 
@@ -51,13 +66,10 @@
 
     <!-- Actions -->
     <div class="flex gap-3 pt-4">
-      <button type="submit" class="bg-primary-container text-on-primary px-8 py-3 rounded-lg font-semibold hover:opacity-90 transition-opacity">Publish</button>
-      <a href="{% url 'home' %}" class="bg-surface-container-high text-on-surface px-8 py-3 rounded-lg font-medium hover:bg-surface-container-highest transition-colors">Cancel</a>
+      <button type="submit" name="status" value="published" class="bg-primary-container text-on-primary px-8 py-3 rounded-lg font-semibold hover:opacity-90 transition-opacity">Publish</button>
+      <button type="submit" name="status" value="draft" class="bg-surface-container-high text-on-surface px-8 py-3 rounded-lg font-medium hover:bg-surface-container-highest transition-colors">Save Draft</button>
+      <a href="{% url 'home' %}" class="bg-surface-container text-on-surface-variant px-8 py-3 rounded-lg font-medium hover:bg-surface-container-high transition-colors">Cancel</a>
     </div>
   </form>
 </div>
 {% endblock content %}
-
-{% block extra_head %}
-{{ form.media }}
-{% endblock %}
