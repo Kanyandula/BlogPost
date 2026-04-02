@@ -33,16 +33,7 @@ class UpdateBlogPostForm(forms.ModelForm):
 		}
 
 	def save(self, commit=True):
-		blog_post = self.instance
-		blog_post.title = self.cleaned_data['title']
-		blog_post.body = self.cleaned_data['body']
-		blog_post.category = self.cleaned_data['category']
-		blog_post.status = self.cleaned_data['status']
-
-		if self.cleaned_data['image']:
-			blog_post.image = self.cleaned_data['image']
-
-		if commit:
-			blog_post.save()
-			self.save_m2m()
-		return blog_post
+		# Keep existing image if no new one uploaded
+		if not self.cleaned_data.get('image'):
+			self.cleaned_data['image'] = self.instance.image
+		return super().save(commit=commit)

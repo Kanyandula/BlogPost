@@ -33,6 +33,11 @@
       <span class="material-symbols-outlined text-on-surface">search</span>
     </a>
 
+    <!-- Dark mode toggle -->
+    <button onclick="toggleTheme()" class="p-2 text-on-surface-variant hover:text-primary transition-colors" title="Toggle dark mode">
+      <span class="material-symbols-outlined" id="theme-icon">dark_mode</span>
+    </button>
+
     {% if request.user.is_authenticated %}
       <!-- Bookmarks -->
       <a href="{% url 'blog:bookmarks' %}" class="hidden md:block p-2" title="Bookmarks">

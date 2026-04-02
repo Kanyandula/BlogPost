@@ -249,3 +249,135 @@ class AuthorProfileTests(ModelTestMixin, TestCase):
 	def test_author_profile_404_for_nonexistent(self):
 		response = self.client.get(reverse('author_profile', args=['nobody']))
 		self.assertEqual(response.status_code, 404)
+
+
+class CreatePostViewTests(ModelTestMixin, TestCase):
+
+	def test_create_requires_auth(self):
+		response = self.client.get(reverse('blog:create'))
+		self.assertEqual(response.status_code, 302)
+
+	def test_create_page_loads_for_authenticated(self):
+		self.client.login(email='test@nyasablog.com', password='testpass123')
+		response = self.client.get(reverse('blog:create'))
+		self.assertEqual(response.status_code, 200)
+
+	def test_create_post_submission(self):
+		self.client.login(email='test@nyasablog.com', password='testpass123')
+		response = self.client.post(reverse('blog:create'), {
+			'title': 'New Blog Post',
+			'body': 'This is the body of a new blog post with enough content.',
+			'status': 'published',
+			'category': self.category.pk,
+		})
+		self.assertEqual(response.status_code, 302)
+		self.assertTrue(BlogPost.objects.filter(title='New Blog Post').exists())
+
+
+class EditPostViewTests(ModelTestMixin, TestCase):
+
+	def test_edit_requires_auth(self):
+		response = self.client.get(reverse('blog:edit', args=[self.post.slug]))
+		self.assertEqual(response.status_code, 302)
+
+	def test_edit_denied_for_non_author(self):
+		self.client.login(email='other@nyasablog.com', password='testpass123')
+		response = self.client.get(reverse('blog:edit', args=[self.post.slug]))
+		self.assertEqual(response.status_code, 200)
+		self.assertContains(response, 'You are not the author')
+
+	def test_edit_page_loads_for_author(self):
+		self.client.login(email='test@nyasablog.com', password='testpass123')
+		response = self.client.get(reverse('blog:edit', args=[self.post.slug]))
+		self.assertEqual(response.status_code, 200)
+		self.assertContains(response, 'Edit Story')
+
+	def test_edit_post_submission(self):
+		self.client.login(email='test@nyasablog.com', password='testpass123')
+		response = self.client.post(reverse('blog:edit', args=[self.post.slug]), {
+			'title': 'Updated Title',
+			'body': 'Updated body content here.',
+			'status': 'published',
+		})
+		self.assertEqual(response.status_code, 200)
+		self.post.refresh_from_db()
+		self.assertEqual(self.post.title, 'Updated Title')
+
+
+class DeletePostViewTests(ModelTestMixin, TestCase):
+
+	def test_delete_requires_auth(self):
+		response = self.client.get(reverse('blog:delete', args=[self.post.pk]))
+		self.assertEqual(response.status_code, 302)
+
+	def test_delete_denied_for_non_author(self):
+		self.client.login(email='other@nyasablog.com', password='testpass123')
+		response = self.client.get(reverse('blog:delete', args=[self.post.pk]))
+		self.assertContains(response, 'You are not the author')
+
+	def test_delete_confirmation_page_loads(self):
+		self.client.login(email='test@nyasablog.com', password='testpass123')
+		response = self.client.get(reverse('blog:delete', args=[self.post.pk]))
+		self.assertEqual(response.status_code, 200)
+		self.assertContains(response, 'delete')
+
+	def test_delete_post_submission(self):
+		self.client.login(email='test@nyasablog.com', password='testpass123')
+		post_pk = self.post.pk
+		response = self.client.post(reverse('blog:delete', args=[post_pk]))
+		self.assertEqual(response.status_code, 302)
+		self.assertFalse(BlogPost.objects.filter(pk=post_pk).exists())
+
+
+class CommentSubmissionTests(ModelTestMixin, TestCase):
+
+	def test_comment_requires_auth(self):
+		response = self.client.post(
+			reverse('blog:detail', args=[self.post.slug]),
+			{'body': 'Anonymous comment'}
+		)
+		# Unauthenticated POST redirects or ignores comment
+		self.assertEqual(Comment.objects.count(), 0)
+
+	def test_comment_submission(self):
+		self.client.login(email='test@nyasablog.com', password='testpass123')
+		response = self.client.post(
+			reverse('blog:detail', args=[self.post.slug]),
+			{'body': 'Great article!'}
+		)
+		self.assertEqual(response.status_code, 302)
+		self.assertEqual(Comment.objects.count(), 1)
+		self.assertEqual(Comment.objects.first().body, 'Great article!')
+
+	def test_reply_submission(self):
+		self.client.login(email='test@nyasablog.com', password='testpass123')
+		parent = Comment.objects.create(post=self.post, author=self.user, body='Parent comment')
+		response = self.client.post(
+			reverse('blog:detail', args=[self.post.slug]),
+			{'body': 'Reply to parent', 'parent_id': parent.pk}
+		)
+		self.assertEqual(response.status_code, 302)
+		reply = Comment.objects.filter(parent=parent).first()
+		self.assertIsNotNone(reply)
+		self.assertEqual(reply.body, 'Reply to parent')
+
+	def test_delete_comment_by_author(self):
+		self.client.login(email='test@nyasablog.com', password='testpass123')
+		comment = Comment.objects.create(post=self.post, author=self.user, body='To delete')
+		response = self.client.post(reverse('blog:delete_comment', args=[comment.pk]))
+		self.assertEqual(response.status_code, 302)
+		self.assertFalse(Comment.objects.filter(pk=comment.pk).exists())
+
+	def test_delete_comment_denied_for_non_author(self):
+		self.client.login(email='other@nyasablog.com', password='testpass123')
+		comment = Comment.objects.create(post=self.post, author=self.user, body='Not yours')
+		response = self.client.get(reverse('blog:delete_comment', args=[comment.pk]))
+		self.assertContains(response, 'You are not the author')
+
+
+class BookmarkTogglePostMethodTests(ModelTestMixin, TestCase):
+
+	def test_bookmark_requires_post_method(self):
+		self.client.login(email='test@nyasablog.com', password='testpass123')
+		response = self.client.get(reverse('blog:bookmark', args=[self.post.slug]))
+		self.assertEqual(response.status_code, 405)
