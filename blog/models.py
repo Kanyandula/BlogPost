@@ -6,6 +6,7 @@ from django.utils.html import strip_tags
 from django.conf import settings
 from django.db.models.signals import post_delete
 from django.dispatch import receiver
+from django_ckeditor_5.fields import CKEditor5Field
 
 
 def upload_location(instance, filename):
@@ -47,7 +48,7 @@ class BlogPost(models.Model):
 	]
 
 	title = models.CharField(max_length=50, null=False, blank=True)
-	body = models.TextField(max_length=7000, null=False, blank=True)
+	body = CKEditor5Field(max_length=20000, blank=True, config_name='default')
 	image = models.ImageField(upload_to=upload_location, null=True, blank=True)
 	date_published = models.DateTimeField(auto_now_add=True, verbose_name="date published")
 	date_updated = models.DateTimeField(auto_now=True, verbose_name="date updated")
@@ -76,6 +77,46 @@ class BlogPost(models.Model):
 			Q(category=self.category) | Q(tags__in=self.tags.all()),
 			status='published'
 		).exclude(pk=self.pk).distinct().order_by('-date_published')[:limit]
+
+
+class Comment(models.Model):
+	post = models.ForeignKey(BlogPost, on_delete=models.CASCADE, related_name='comments')
+	author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='comments')
+	parent = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name='replies')
+	body = models.TextField(max_length=1000)
+	created_at = models.DateTimeField(auto_now_add=True)
+	updated_at = models.DateTimeField(auto_now=True)
+	is_active = models.BooleanField(default=True)
+
+	class Meta:
+		ordering = ['-created_at']
+
+	def __str__(self):
+		return f"Comment by {self.author.username} on {self.post.title}"
+
+
+class Like(models.Model):
+	post = models.ForeignKey(BlogPost, on_delete=models.CASCADE, related_name='likes')
+	user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='likes')
+	created_at = models.DateTimeField(auto_now_add=True)
+
+	class Meta:
+		unique_together = ('post', 'user')
+
+	def __str__(self):
+		return f"{self.user.username} likes {self.post.title}"
+
+
+class Bookmark(models.Model):
+	post = models.ForeignKey(BlogPost, on_delete=models.CASCADE, related_name='bookmarks')
+	user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='bookmarks')
+	created_at = models.DateTimeField(auto_now_add=True)
+
+	class Meta:
+		unique_together = ('post', 'user')
+
+	def __str__(self):
+		return f"{self.user.username} bookmarked {self.post.title}"
 
 
 @receiver(post_delete, sender=BlogPost)

@@ -1,6 +1,16 @@
 from django import forms
 
-from blog.models import BlogPost
+from blog.models import BlogPost, Comment
+
+
+class CommentForm(forms.ModelForm):
+
+	class Meta:
+		model = Comment
+		fields = ['body']
+		widgets = {
+			'body': forms.Textarea(attrs={'rows': 3, 'placeholder': 'Write a comment...'}),
+		}
 
 
 class CreateBlogPostForm(forms.ModelForm):

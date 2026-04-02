@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from blog.models import BlogPost, Category, Tag
+from blog.models import BlogPost, Category, Tag, Comment, Like, Bookmark
 
 
 @admin.register(Category)
@@ -30,3 +30,20 @@ class BlogPostAdmin(admin.ModelAdmin):
 	@admin.action(description="Feature selected posts")
 	def feature_posts(self, request, queryset):
 		queryset.update(is_featured=True)
+
+
+@admin.register(Comment)
+class CommentAdmin(admin.ModelAdmin):
+	list_display = ('author', 'post', 'is_active', 'created_at')
+	list_filter = ('is_active', 'created_at')
+	search_fields = ('body', 'author__username')
+
+
+@admin.register(Like)
+class LikeAdmin(admin.ModelAdmin):
+	list_display = ('user', 'post', 'created_at')
+
+
+@admin.register(Bookmark)
+class BookmarkAdmin(admin.ModelAdmin):
+	list_display = ('user', 'post', 'created_at')
