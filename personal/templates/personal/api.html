@@ -7,107 +7,230 @@
 <div class="grid grid-cols-1 lg:grid-cols-12 gap-12">
 
   <!-- Main Content -->
-  <div class="lg:col-span-9">
-    <div class="bg-surface-container-lowest rounded-xl p-6 md:p-10">
+  <div class="lg:col-span-9 bg-surface-container-lowest rounded-xl p-6 md:p-10">
 
-      <h1 class="text-3xl font-black text-primary mb-2">API Documentation</h1>
-      <p class="text-on-surface-variant mb-8">REST API for NyasaBlog — Token-based authentication required.</p>
+    <header class="mb-12">
+      <h1 class="text-4xl md:text-5xl font-black text-primary tracking-tight mb-4">API Documentation</h1>
+      <p class="text-lg text-on-surface-variant max-w-[65ch] leading-relaxed">
+        The NyasaBlog REST API provides programmatic access to your editorial content.
+        All requests require <span class="font-bold text-secondary">Token-based authentication</span>.
+      </p>
+    </header>
 
-      <!-- Obtaining a Token -->
-      <section id="obtaining-an-authentication-token" class="mb-10">
-        <h2 class="text-xl font-bold text-primary mb-4">Obtaining an Authentication Token</h2>
-        <div class="space-y-3">
-          <p class="text-sm"><span class="bg-tertiary-fixed-dim text-on-tertiary-fixed px-2 py-0.5 rounded text-xs font-bold">POST</span></p>
-          <div class="bg-surface-container-low rounded-lg px-4 py-3"><code class="text-sm">/api/account/login</code></div>
-          <p class="text-sm font-medium text-on-surface">Params:</p>
-          <div class="bg-surface-container-low rounded-lg px-4 py-3 text-sm space-y-1">
-            <p><strong>username</strong> — Enter your login email</p>
-            <p><strong>password</strong> — Your password</p>
-          </div>
-          <p class="text-sm font-medium text-on-surface">Response:</p>
-          <div class="bg-surface-container-low rounded-lg px-4 py-3"><code class="text-sm text-on-surface-variant whitespace-pre">{
+    <!-- Geometric Divider -->
+    <div class="w-full h-px bg-tertiary-fixed-dim/20 mb-12"></div>
+
+    <!-- Section 1: Auth Token -->
+    <section id="auth" class="mb-16 scroll-mt-28">
+      <div class="flex items-center gap-3 mb-6">
+        <span class="px-3 py-1 text-xs font-bold rounded-lg bg-tertiary-fixed-dim text-on-tertiary-fixed uppercase tracking-wider">POST</span>
+        <h2 class="text-2xl font-bold text-primary">Obtaining an Authentication Token</h2>
+      </div>
+      <div class="bg-surface-container-low rounded-lg p-4 mb-6 font-mono text-sm text-primary overflow-x-auto">
+        POST /api/account/login
+      </div>
+      <p class="mb-6 text-on-surface-variant">Exchange your credentials for a session token. Use this token in the header of all protected requests.</p>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+        <div>
+          <h4 class="text-xs font-bold uppercase tracking-widest text-secondary mb-4">Parameters</h4>
+          <ul class="space-y-3 text-sm">
+            <li class="flex justify-between border-b border-outline-variant/20 pb-2"><span class="font-mono font-semibold">username</span> <span class="text-on-surface-variant italic">String (your email)</span></li>
+            <li class="flex justify-between border-b border-outline-variant/20 pb-2"><span class="font-mono font-semibold">password</span> <span class="text-on-surface-variant italic">String</span></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="text-xs font-bold uppercase tracking-widest text-secondary mb-4">Response</h4>
+          <pre class="bg-primary text-[#a3cfcf] p-4 rounded-lg text-xs leading-relaxed overflow-x-auto">{
   "response": "Successfully authenticated.",
   "pk": 1,
   "email": "user@nyasablog.com",
-  "token": "27a46967801960..."
-}</code></div>
+  "token": "27a46967801960de8734..."
+}</pre>
         </div>
-      </section>
+      </div>
+    </section>
 
-      <!-- Create Post -->
-      <section id="creating-a-blog-post" class="mb-10">
-        <h2 class="text-xl font-bold text-primary mb-4">Creating a Blog Post</h2>
-        <div class="space-y-3">
-          <p class="text-sm"><span class="bg-tertiary-fixed-dim text-on-tertiary-fixed px-2 py-0.5 rounded text-xs font-bold">POST</span> <span class="text-xs text-on-surface-variant ml-2">Auth required</span></p>
-          <div class="bg-surface-container-low rounded-lg px-4 py-3"><code class="text-sm">/api/blog/create</code></div>
-          <p class="text-sm font-medium text-on-surface">Headers:</p>
-          <div class="bg-surface-container-low rounded-lg px-4 py-3"><code class="text-sm">Authorization: Token &lt;token&gt;</code></div>
-          <p class="text-sm font-medium text-on-surface">Params:</p>
-          <div class="bg-surface-container-low rounded-lg px-4 py-3 text-sm space-y-1">
-            <p><strong>title</strong> (text)</p>
-            <p><strong>body</strong> (text)</p>
-            <p><strong>image</strong> (file)</p>
-          </div>
+    <!-- Section 2: Create Post -->
+    <section id="create" class="mb-16 scroll-mt-28 border-t border-outline-variant/10 pt-12">
+      <div class="flex items-center gap-3 mb-6">
+        <span class="px-3 py-1 text-xs font-bold rounded-lg bg-tertiary-fixed-dim text-on-tertiary-fixed uppercase tracking-wider">POST</span>
+        <h2 class="text-2xl font-bold text-primary">Creating a Blog Post</h2>
+      </div>
+      <div class="flex items-center gap-2 mb-4">
+        <span class="material-symbols-outlined text-sm text-secondary">lock</span>
+        <span class="text-xs font-medium text-secondary">Authentication Required</span>
+      </div>
+      <div class="bg-surface-container-low rounded-lg p-4 mb-6 font-mono text-sm text-primary overflow-x-auto">
+        POST /api/blog/create
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div>
+          <h4 class="text-xs font-bold uppercase tracking-widest text-secondary mb-4">Body Parameters</h4>
+          <ul class="space-y-3 text-sm">
+            <li class="flex justify-between border-b border-outline-variant/20 pb-2"><span class="font-mono font-semibold">title</span> <span class="text-on-surface-variant italic">String</span></li>
+            <li class="flex justify-between border-b border-outline-variant/20 pb-2"><span class="font-mono font-semibold">body</span> <span class="text-on-surface-variant italic">Text/HTML</span></li>
+            <li class="flex justify-between border-b border-outline-variant/20 pb-2"><span class="font-mono font-semibold">image</span> <span class="text-on-surface-variant italic">File</span></li>
+          </ul>
         </div>
-      </section>
-
-      <!-- View Post -->
-      <section id="viewing-a-specific-blog-post" class="mb-10">
-        <h2 class="text-xl font-bold text-primary mb-4">Viewing a Specific Blog Post</h2>
-        <div class="space-y-3">
-          <p class="text-sm"><span class="bg-secondary text-on-secondary px-2 py-0.5 rounded text-xs font-bold">GET</span> <span class="text-xs text-on-surface-variant ml-2">Auth required</span></p>
-          <div class="bg-surface-container-low rounded-lg px-4 py-3"><code class="text-sm">/api/blog/&lt;slug&gt;/</code></div>
+        <div>
+          <h4 class="text-xs font-bold uppercase tracking-widest text-secondary mb-4">Response (201)</h4>
+          <pre class="bg-primary text-[#a3cfcf] p-4 rounded-lg text-xs leading-relaxed overflow-x-auto">{
+  "title": "New Post Title",
+  "slug": "author-new-post-title",
+  "date_updated": "2026-04-02T15:19:33Z",
+  "username": "ephraim"
+}</pre>
         </div>
-      </section>
+      </div>
+    </section>
 
-      <!-- Update Post -->
-      <section id="updating-a-specific-blog-post" class="mb-10">
-        <h2 class="text-xl font-bold text-primary mb-4">Updating a Specific Blog Post</h2>
-        <div class="space-y-3">
-          <p class="text-sm"><span class="bg-primary-container text-on-primary px-2 py-0.5 rounded text-xs font-bold">PUT</span> <span class="text-xs text-on-surface-variant ml-2">Auth required, author only</span></p>
-          <div class="bg-surface-container-low rounded-lg px-4 py-3"><code class="text-sm">/api/blog/&lt;slug&gt;/update</code></div>
+    <!-- Section 3: View Post -->
+    <section id="view" class="mb-16 scroll-mt-28 border-t border-outline-variant/10 pt-12">
+      <div class="flex items-center gap-3 mb-6">
+        <span class="px-3 py-1 text-xs font-bold rounded-lg bg-secondary text-on-secondary uppercase tracking-wider">GET</span>
+        <h2 class="text-2xl font-bold text-primary">Viewing a Specific Blog Post</h2>
+      </div>
+      <div class="flex items-center gap-2 mb-4">
+        <span class="material-symbols-outlined text-sm text-secondary">lock</span>
+        <span class="text-xs font-medium text-secondary">Authentication Required</span>
+      </div>
+      <div class="bg-surface-container-low rounded-lg p-4 mb-6 font-mono text-sm text-primary overflow-x-auto">
+        GET /api/blog/&lt;slug&gt;/
+      </div>
+      <div>
+        <h4 class="text-xs font-bold uppercase tracking-widest text-secondary mb-4">Response (200)</h4>
+        <pre class="bg-primary text-[#a3cfcf] p-6 rounded-lg text-xs leading-relaxed overflow-x-auto">{
+  "title": "Malawian Culture Today",
+  "body": "Exploring the rich traditions...",
+  "image": "/media/blog/1/image.jpg",
+  "date_updated": "2026-04-02T16:02:19Z",
+  "username": "ephraim",
+  "category": {"name": "Culture", "slug": "culture"},
+  "tags": [{"name": "Malawi"}],
+  "status": "published",
+  "view_count": 142,
+  "like_count": 24,
+  "comment_count": 8,
+  "reading_time": 5
+}</pre>
+      </div>
+    </section>
+
+    <!-- Section 4: Update Post -->
+    <section id="update" class="mb-16 scroll-mt-28 border-t border-outline-variant/10 pt-12">
+      <div class="flex items-center gap-3 mb-6">
+        <span class="px-3 py-1 text-xs font-bold rounded-lg bg-primary-container text-on-primary uppercase tracking-wider">PUT</span>
+        <h2 class="text-2xl font-bold text-primary">Updating a Specific Blog Post</h2>
+      </div>
+      <div class="flex items-center gap-2 mb-4">
+        <span class="material-symbols-outlined text-sm text-error">verified_user</span>
+        <span class="text-xs font-medium text-error">Author Permission Only</span>
+      </div>
+      <div class="bg-surface-container-low rounded-lg p-4 mb-6 font-mono text-sm text-primary overflow-x-auto">
+        PUT /api/blog/&lt;slug&gt;/update
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div>
+          <p class="text-sm text-on-surface-variant">Send title, body, and image fields. Only the post author can update.</p>
         </div>
-      </section>
-
-      <!-- Delete Post -->
-      <section id="deleting-a-specific-blog-post" class="mb-10">
-        <h2 class="text-xl font-bold text-primary mb-4">Deleting a Specific Blog Post</h2>
-        <div class="space-y-3">
-          <p class="text-sm"><span class="bg-error text-on-error px-2 py-0.5 rounded text-xs font-bold">DELETE</span> <span class="text-xs text-on-surface-variant ml-2">Auth required, author only</span></p>
-          <div class="bg-surface-container-low rounded-lg px-4 py-3"><code class="text-sm">/api/blog/&lt;slug&gt;/delete</code></div>
+        <div>
+          <h4 class="text-xs font-bold uppercase tracking-widest text-secondary mb-4">Response</h4>
+          <pre class="bg-primary text-[#a3cfcf] p-4 rounded-lg text-xs leading-relaxed overflow-x-auto">{
+  "response": "updated"
+}</pre>
         </div>
-      </section>
+      </div>
+    </section>
 
-      <!-- List Posts -->
-      <section id="list-blog-posts" class="mb-10">
-        <h2 class="text-xl font-bold text-primary mb-4">List Blog Posts</h2>
-        <div class="space-y-3">
-          <p class="text-sm"><span class="bg-secondary text-on-secondary px-2 py-0.5 rounded text-xs font-bold">GET</span> <span class="text-xs text-on-surface-variant ml-2">Auth required, paginated</span></p>
-          <div class="bg-surface-container-low rounded-lg px-4 py-3"><code class="text-sm">/api/blog/list/?search=&lt;query&gt;&amp;ordering=-date_updated&amp;page=1</code></div>
-          <p class="text-sm font-medium text-on-surface">Query Params:</p>
-          <div class="bg-surface-container-low rounded-lg px-4 py-3 text-sm space-y-1">
-            <p><strong>search</strong> — Search title and body</p>
-            <p><strong>ordering</strong> — title, body, username, date_updated</p>
-            <p><strong>page</strong> — 10 results per page</p>
-          </div>
+    <!-- Section 5: Delete Post -->
+    <section id="delete" class="mb-16 scroll-mt-28 border-t border-outline-variant/10 pt-12">
+      <div class="flex items-center gap-3 mb-6">
+        <span class="px-3 py-1 text-xs font-bold rounded-lg bg-error text-on-error uppercase tracking-wider">DELETE</span>
+        <h2 class="text-2xl font-bold text-primary">Deleting a Specific Blog Post</h2>
+      </div>
+      <div class="flex items-center gap-2 mb-4">
+        <span class="material-symbols-outlined text-sm text-error">verified_user</span>
+        <span class="text-xs font-medium text-error">Author Permission Only</span>
+      </div>
+      <div class="bg-surface-container-low rounded-lg p-4 mb-6 font-mono text-sm text-primary overflow-x-auto">
+        DELETE /api/blog/&lt;slug&gt;/delete
+      </div>
+      <div class="p-4 bg-error-container/30 border-l-4 border-error rounded text-sm text-on-error-container">
+        <strong>Warning:</strong> This action is irreversible. Ensure the client verifies intent before execution.
+      </div>
+    </section>
+
+    <!-- Section 6: List Posts -->
+    <section id="list" class="scroll-mt-28 border-t border-outline-variant/10 pt-12">
+      <div class="flex items-center gap-3 mb-6">
+        <span class="px-3 py-1 text-xs font-bold rounded-lg bg-secondary text-on-secondary uppercase tracking-wider">GET</span>
+        <h2 class="text-2xl font-bold text-primary">List Blog Posts</h2>
+      </div>
+      <div class="flex items-center gap-2 mb-4">
+        <span class="material-symbols-outlined text-sm text-secondary">lock</span>
+        <span class="text-xs font-medium text-secondary">Authentication Required &middot; Paginated</span>
+      </div>
+      <div class="bg-surface-container-low rounded-lg p-4 mb-6 font-mono text-sm text-primary overflow-x-auto">
+        GET /api/blog/list/?search=&lt;query&gt;&amp;ordering=-date_updated&amp;page=1
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div>
+          <h4 class="text-xs font-bold uppercase tracking-widest text-secondary mb-4">Query Parameters</h4>
+          <ul class="space-y-3 text-sm">
+            <li class="flex justify-between border-b border-outline-variant/20 pb-2"><span class="font-mono font-semibold">search</span> <span class="text-on-surface-variant italic">String</span></li>
+            <li class="flex justify-between border-b border-outline-variant/20 pb-2"><span class="font-mono font-semibold">ordering</span> <span class="text-on-surface-variant italic">title, body, date_updated</span></li>
+            <li class="flex justify-between border-b border-outline-variant/20 pb-2"><span class="font-mono font-semibold">page</span> <span class="text-on-surface-variant italic">Int (10 per page)</span></li>
+          </ul>
         </div>
-      </section>
+        <div>
+          <h4 class="text-xs font-bold uppercase tracking-widest text-secondary mb-4">Response</h4>
+          <pre class="bg-primary text-[#a3cfcf] p-4 rounded-lg text-xs leading-relaxed overflow-x-auto">{
+  "count": 24,
+  "next": "/api/blog/list/?page=2",
+  "previous": null,
+  "results": [
+    {"title": "...", "slug": "...", ...}
+  ]
+}</pre>
+        </div>
+      </div>
+    </section>
 
-    </div>
   </div>
 
   <!-- Sidebar Navigation -->
   <aside class="lg:col-span-3">
     <div class="sticky top-28 bg-surface-container-low rounded-xl p-6">
-      <h3 class="text-sm font-bold text-primary uppercase tracking-widest mb-4">Navigation</h3>
-      <nav class="space-y-2">
-        <a href="#obtaining-an-authentication-token" class="block text-sm text-on-surface-variant hover:text-primary transition-colors">Auth Token</a>
-        <a href="#creating-a-blog-post" class="block text-sm text-on-surface-variant hover:text-primary transition-colors">Create Post</a>
-        <a href="#viewing-a-specific-blog-post" class="block text-sm text-on-surface-variant hover:text-primary transition-colors">View Post</a>
-        <a href="#updating-a-specific-blog-post" class="block text-sm text-on-surface-variant hover:text-primary transition-colors">Update Post</a>
-        <a href="#deleting-a-specific-blog-post" class="block text-sm text-on-surface-variant hover:text-primary transition-colors">Delete Post</a>
-        <a href="#list-blog-posts" class="block text-sm text-on-surface-variant hover:text-primary transition-colors">List Posts</a>
+      <div class="flex items-center gap-2 mb-6">
+        <span class="material-symbols-outlined text-primary">navigation</span>
+        <h3 class="text-sm font-black uppercase tracking-widest text-primary">Navigation</h3>
+      </div>
+      <nav class="space-y-1">
+        <a href="#auth" class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-on-surface-variant hover:bg-surface-container hover:text-primary transition-colors">
+          <span class="px-1.5 py-0.5 text-[10px] font-bold rounded bg-tertiary-fixed-dim/20 text-tertiary">POST</span> Auth Token
+        </a>
+        <a href="#create" class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-on-surface-variant hover:bg-surface-container hover:text-primary transition-colors">
+          <span class="px-1.5 py-0.5 text-[10px] font-bold rounded bg-tertiary-fixed-dim/20 text-tertiary">POST</span> Create Post
+        </a>
+        <a href="#view" class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-on-surface-variant hover:bg-surface-container hover:text-primary transition-colors">
+          <span class="px-1.5 py-0.5 text-[10px] font-bold rounded bg-secondary/20 text-secondary">GET</span> View Post
+        </a>
+        <a href="#update" class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-on-surface-variant hover:bg-surface-container hover:text-primary transition-colors">
+          <span class="px-1.5 py-0.5 text-[10px] font-bold rounded bg-primary-container/20 text-primary">PUT</span> Update Post
+        </a>
+        <a href="#delete" class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-on-surface-variant hover:bg-surface-container hover:text-primary transition-colors">
+          <span class="px-1.5 py-0.5 text-[10px] font-bold rounded bg-error/20 text-error">DEL</span> Delete Post
+        </a>
+        <a href="#list" class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-on-surface-variant hover:bg-surface-container hover:text-primary transition-colors">
+          <span class="px-1.5 py-0.5 text-[10px] font-bold rounded bg-secondary/20 text-secondary">GET</span> List Posts
+        </a>
       </nav>
+
+      <!-- Auth Header Info -->
+      <div class="mt-8 p-4 bg-surface-container rounded-lg">
+        <h4 class="text-xs font-bold uppercase tracking-widest text-primary mb-2">Authorization Header</h4>
+        <code class="text-xs text-on-surface-variant">Authorization: Token &lt;token&gt;</code>
+      </div>
     </div>
   </aside>
 
