@@ -1,6 +1,6 @@
 {% load static %}
 <!DOCTYPE html>
-<html class="light" lang="en">
+<html lang="en">
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
@@ -81,9 +81,18 @@ tailwind.config = {
 }
 </script>
 {% include 'snippets/base_css.html' %}
+<script>
+// Apply theme before render to prevent flash
+(function() {
+  var theme = localStorage.getItem('theme');
+  if (theme === 'dark' || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+    document.documentElement.classList.add('dark');
+  }
+})();
+</script>
 {% block extra_head %}{% endblock %}
 </head>
-<body class="bg-background text-on-surface font-body selection:bg-secondary-container selection:text-on-secondary-container">
+<body class="bg-background dark:bg-slate-950 text-on-surface dark:text-slate-200 font-body selection:bg-secondary-container selection:text-on-secondary-container transition-colors duration-300">
 
 {% include 'snippets/header.html' %}
 
@@ -95,5 +104,25 @@ tailwind.config = {
 {% include 'snippets/footer.html' %}
 
 {% block extra_js %}{% endblock %}
+<script>
+function toggleTheme() {
+  var html = document.documentElement;
+  var icon = document.getElementById('theme-icon');
+  if (html.classList.contains('dark')) {
+    html.classList.remove('dark');
+    localStorage.setItem('theme', 'light');
+    if (icon) icon.textContent = 'dark_mode';
+  } else {
+    html.classList.add('dark');
+    localStorage.setItem('theme', 'dark');
+    if (icon) icon.textContent = 'light_mode';
+  }
+}
+// Set correct icon on load
+document.addEventListener('DOMContentLoaded', function() {
+  var icon = document.getElementById('theme-icon');
+  if (icon) icon.textContent = document.documentElement.classList.contains('dark') ? 'light_mode' : 'dark_mode';
+});
+</script>
 </body>
 </html>
