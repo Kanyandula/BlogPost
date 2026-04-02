@@ -1,0 +1,302 @@
+{% extends 'base.html' %}
+
+
+{% block content %}
+
+
+<style type="text/css">
+	
+	.card{
+		background-color: #fff;
+		padding:20px;
+	}
+	.rounded {
+	  border-radius: 50px;
+	  background: #fff;
+	  padding:20px;
+	  border: 1px solid #BEBEBE;
+	}
+
+
+
+    .code-card {
+    padding-left: 10px;
+    padding-right: 10px;
+    padding-top: 5px;
+    padding-bottom: 5px;
+    border-radius: 10px;
+    background-color: #f2f2f2;
+    border: 1px solid #BEBEBE;
+}
+</style>
+
+<div class="container">
+	<div class="row">
+        <div class="col-lg-9 offset-lg-1">
+            <div class="card">
+    
+               
+    
+                <!-- Documentation -->
+                <h3>Documentation</h3>
+                <hr>
+                <br>
+    
+                <!-- Obtaining an Authentication token -->
+                <h6 id="obtaining-an-authentication-token">Obtaining an Authentication Token</h6>
+                <div class="p-4">
+    
+                    <p>Request: POST</p>
+                    
+                    <p>Url:</p>
+                    <div class="code-card">
+                        <code>
+                            https://nyasablog.com/api/account/login
+                        </code>
+                    </div>
+                    <br>
+                    <p>Params:</p>
+                    <div class="code-card">
+                        <p>username (Enter your login <strong>email</strong>)</p>
+                        <p>password (Your password)</p>
+                    </div>
+                    <p><small>No that's not a typo above. The param is <strong>username</strong> but you use your <strong>email.</strong></small></p>
+                    <br>
+                    <p>Success Response:</p>
+                    <div class="code-card">
+                        <code>
+                            {<br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;"response": "Successfully authenticated.",<br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;"pk": 1,<br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;"email": "mike@nyasablog.com",<br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;"token": "27a46967801960de8734f65ba13b124aaea96ad9"<br>
+                            }<br>
+                        </code>
+                    </div>
+                </div>
+                <br>
+                <!-- End Obtaining an Authentication token  -->	
+    
+                <!-- Creating a blog post -->
+                <h6 id="creating-a-blog-post">Creating a Blog Post</h6>
+                <div class="p-4">
+                    <p>Request: POST</p>
+                    <p>Headers:</p>
+                    <div class="code-card">
+                        <code>
+                            Authorization: Token &lt;token&gt;
+                        </code>	
+                    </div>
+                    <br>
+                    <p>Url:</p>
+                    <div class="code-card">
+                        <code>
+                            https://nyasablog.com/api/blog/create
+                        </code>
+                    </div>
+                    <br>
+                    <p>Params:</p>
+                    <div class="code-card">
+                        <p>title (text)</p>
+                        <p>body (text)</p>
+                        <p>image (file)</p>
+                    </div>
+                    <br>
+                    <p>Success Response:</p>
+                    <div class="code-card">
+                        <code>
+                            {<br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;"title": "New Title!",<br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;"body": "this is  new body \ncool.\nstuff.",<br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;"image":     "image": "image": "https://nyc3.digitaloceanspaces.com/nyasa-blog-spaces/nyasa-blog-static/blog/9/Blantyre-blantyre.jpg",
+                            <br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;"date_updated": "2019-07-09T15:19:33.095626Z",<br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;"username": "mike"<br>
+                            }
+                        </code>
+                    </div>
+                    
+                        
+                </div>
+                <br>
+                <!-- End Creating a blog post -->
+                
+    
+                <!-- Viewing a specific blog post -->
+                <h6 id="viewing-a-specific-blog-post">Viewing a Specific Blog Post</h6>
+                <div class="p-4">
+                    <p>Request: GET</p>
+                    <p>Headers:</p>
+                    <div class="code-card">
+                        <code>
+                            Authorization: Token &lt;token&gt;
+                        </code>	
+                    </div>
+                    <br>
+                    <p>Url:</p>
+                    <div class="code-card">
+                        <code>
+                            https://nyasablog.com/api/blog/&lt;slug&gt;/
+                        </code>
+                    </div>
+                    <br>
+                    <p>Success Response:</p>
+                    <div class="code-card">
+                        <code>
+                            {<br>
+                            &nbsp;&nbsp;&nbsp;&nbsp; "title": "Blantyre",<br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;"Blantyre is a city in the Shire Highlands, in southern Malawi. It adjoins the town of Limbe and is known for its British colonial architecture and nearby parks and reserves. On Chichiri Hill, the Museum of Malawi (Chichiri Museum) has exhibits on natural history and ethnography, and also hosts traditional dances.
+                             Colonial Mandala House, built in 1882, houses the Society of Malawi Library and Archive.",<br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;"image":  "image": "https://nyc3.digitaloceanspaces.com/nyasa-blog-spaces/nyasa-blog-static/blog/6/Blantyre-kwathu.jfif",
+                            <br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;"date_updated": "2019-07-09T16:02:19.170321Z",<br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;"username": "mike"<br>
+                            }
+                        </code>
+                    </div>
+                </div>
+                <br>
+                <!-- End Viewing a specific blog post  -->		
+    
+    
+    
+                <!-- Updating a specific blog post -->
+                <h6 id="updating-a-specific-blog-post">Updating a Specific Blog Post</h6>
+                <div class="p-4">
+                    <p>Request: PUT</p>
+                    <p>Headers:</p>
+                    <div class="code-card">
+                        <code>
+                            Authorization: Token &lt;token&gt;
+                        </code>	
+                    </div>
+                    <br>
+                    <p>Url:</p>
+                    <div class="code-card">
+                        <code>
+                            https://nyasablog.com/api/blog/&lt;slug&gt;/update
+                        </code>
+                    </div>
+                    <br>
+                    <p>Success Response:</p>
+                    <div class="code-card">
+                        <code>
+                            {<br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;"response": "updated"<br>
+                            }<br>
+                        </code>
+                    </div>
+                </div>
+                <br>
+                <!-- End Updating a specific blog post  -->	
+    
+    
+                <!-- Deleting a specific blog post -->
+                <h6 id="deleting-a-specific-blog-post">Deleting a Specific Blog Post</h6>
+                <div class="p-4">
+                    <p>Request: DELETE</p>
+                    <p>Headers:</p>
+                    <div class="code-card">
+                        <code>
+                            Authorization: Token &lt;token&gt;
+                        </code>	
+                    </div>
+                    <br>
+                    <p>Url:</p>
+                    <div class="code-card">
+                        <code>
+                            https://nyasablog.com/api/blog/&lt;slug&gt;/delete
+                        </code>
+                    </div>
+                    <br>
+                    <p>Success Response:</p>
+                    <div class="code-card">
+                        <code>
+                            {<br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;"response": "deleted"<br>
+                            }<br>
+                        </code>
+                    </div>
+                </div>
+                <br>
+                <!-- End Deleting a specific blog post  -->	
+    
+                <!-- List Blog Posts (Pagination, Search and Ordering) -->
+                <h6 id="list-blog-posts">List Blog Posts (Pagination, Search and Ordering)</h6>
+                <div class="p-4">
+                    <p>Request: GET</p>
+                    <p>Headers:</p>
+                    <div class="code-card">
+                        <code>
+                            Authorization: Token &lt;token&gt;
+                        </code>	
+                    </div>
+                    <br>
+                    <p>Url:</p>
+                    <div class="code-card">
+                        <code>
+                            https://nyasablog.com/api/blog/list/?search=&lt;<strong>query</strong>&gt;&amp;ordering=-date_updated&amp;page=1
+                        </code>
+                    </div>
+                    <br>
+                    <p>Params:</p>
+                    <div class="code-card">
+                        <p>query (this will search the title and body of blog posts for a match)</p>
+                        <p>ordering (Can use: title, body, username or date_updated)</p>
+                        <p>page (10 results will be shown per page.)</p>
+                    </div>
+                    <br>
+                    <p>Success Response:</p>
+                    <div class="code-card">
+                        <code>
+                            {<br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;"count": &lt;num_results&gt;,<br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;"next": null,<br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;"previous": null,<br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;"results": [<br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"title": "gfhhfghfgh",<br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"body": "fghgfhfghf",<br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"image": "http://nyasablog.com/media/blog/1/gfhhfghfgh-1.png",<br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"date_updated": "2019-07-05T21:43:56.452234Z",<br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"username": "mike"<br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;},<br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;...<br>
+                            }
+                        </code>
+                    </div>
+                </div>
+                <!-- End List Blog Posts (Pagination, Search and Ordering) -->		
+    
+                <br><br>
+                <!-- end Documentation -->
+    
+            </div>
+        </div>
+    
+        <div class="col-lg-2">
+            <div class="card">
+                <h5>Navigation:</h5>
+                <br>
+                <ul class="list-group">
+                    <a href="#obtaining-an-authentication-token"><li class="list-group-item p-1"><small>Obtaining an Authentication Token</small></li></a>
+                    <a href="#creating-a-blog-post"><li class="list-group-item p-1"><small>Creating a Blog Post</small></li></a>
+                    <a href="#viewing-a-specific-blog-post"><li class="list-group-item p-1"><small>Viewing a Specific Blog Post</small></li></a>
+                    <a href="#updating-a-specific-blog-post"><li class="list-group-item p-1"><small>Updating a Specific Blog Post</small></li></a>
+                    <a href="#deleting-a-specific-blog-post"><li class="list-group-item p-1"><small>Deleting a Specific Blog Post</small></li></a>
+                    <a href="#list-blog-posts"><li class="list-group-item p-1"><small>List Blog Posts</small></li></a>
+                    
+                </ul>
+            </div>
+        </div>
+    
+    </div>
+	</div>
+</div>
+
+	
+
+{% endblock content %}
+
+
+

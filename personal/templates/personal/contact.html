@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+
+{% load static %}
+{% block content %}
+
+
+<style type="text/css">
+	.card{
+		max-width: 700px;
+	}
+	.card-body{
+		padding: 20px;
+	}
+
+  .container{
+             padding-top: 15px;
+        }
+
+    #id_name{
+        width:100%
+        }
+
+    #id_message{
+        width:100%
+        }
+
+    #id_email{
+        width:100%
+        }
+
+
+</style>
+
+<div class="container">
+	<div class="row">
+    
+
+    <div class="left-column col-lg-7 offset-lg-1">
+
+
+	<!-- Contact -->
+  <div class="card m-auto">
+    <div class="card-body mt-2 mb-2">
+      <h2>Send Me a Message</h2>
+          <!-- Form -->
+          <form action="" method="POST">
+        {% csrf_token %}
+
+        {% for hidden in form.hidden_fields %}
+        {{ hidden }}
+        {% endfor %}
+
+        {% for field in form.visible_fields %}
+        <div class="form-group">
+            {{ field.errors }}
+            <label>{{ field.label_tag }}</label>
+            <p>{{ field }}</p>
+        </div>
+        {% endfor %}
+        <button type="reset" class="btn btn-secondary">Reset</button>
+         <button type="submit" class="btn btn-primary">Submit</button>
+    </form>
+    </div>
+  </div>
+
+
+  </div>
+
+
+  </div>
+	</div>
+</div>
+
+	
+
+{% endblock content %}
+
+
+

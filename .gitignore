@@ -1,0 +1,12 @@
+*.pyc
+__pycache__/
+db.sqlite3
+settings.ini
+.env
+*.env
+media/
+temp/
+.venv/
+venv/
+*.egg-info/
+.DS_Store
