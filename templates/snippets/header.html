@@ -1,66 +1,95 @@
 {% load static %}
+<!-- TopNavBar -->
+<header class="fixed top-0 w-full z-50 bg-[#f8f9fa]/85 dark:bg-slate-950/85 backdrop-blur-xl">
+<nav class="flex justify-between items-center px-6 md:px-12 h-16 md:h-20 max-w-[1440px] mx-auto">
+  <!-- Mobile menu button -->
+  <button class="md:hidden p-2 text-on-surface" id="mobile-menu-btn">
+    <span class="material-symbols-outlined text-2xl">menu</span>
+  </button>
 
-<style type="text/css">
-	@media (min-width: 768px) {
-	  html {
-	    font-size: 16px;
-	  }
-	}
+  <!-- Logo -->
+  <a href="{% url 'home' %}" class="text-2xl md:text-3xl font-black tracking-tighter text-primary dark:text-emerald-50">
+    NyasaBlog
+  </a>
 
-	.search-bar{
-		max-width: 500px;
-		width: 100%;
-	}
-	form{
-		width: 100%;
-	}
-</style>
-
-<!-- Header -->
-<div class="d-flex flex-column flex-md-row align-items-center p-3 px-md-4 mb-3 bg-white border-bottom shadow-sm">
-
-  <h5 class="my-0 mr-md-auto font-weight-normal">
-  	{% if request.user.is_authenticated %}
-  		<p class="m-auto">Hello, {{request.user.username}}</p>
-  	{% endif %}
-  </h5>
-  
-  <div class="search-bar mt-sm-2 mr-2">
-  		<form onsubmit="return executeQuery();">
-  		<input class="form-control"  type="text" name="q" id="id_q" placeholder="Search...">
-  	</form>
+  <!-- Desktop nav links -->
+  <div class="hidden md:flex items-center gap-8 text-base font-medium">
+    <a class="text-on-surface/70 hover:text-primary-container transition-colors duration-300" href="{% url 'home' %}">Home</a>
+    <a class="text-on-surface/70 hover:text-primary-container transition-colors duration-300" href="{% url 'about' %}">About</a>
+    <a class="text-on-surface/70 hover:text-primary-container transition-colors duration-300" href="{% url 'contact' %}">Contact</a>
   </div>
-  <nav class="my-2 my-md-0 mr-md-3">
-  	{% if request.user.is_authenticated %}
-	  	<a class="p-2 text-dark" href="{% url 'home' %}">Home</a>
-	    <a class="p-2 text-dark" href="{% url 'account' %}">Account</a>
-	    <a class="p-2 text-dark" href="{% url 'logout' %}">Logout</a>
-      <a class="p-2 text-dark" href="{% url 'about' %}">About</a>
-      <a class="p-2 text-dark" href="{% url 'contact' %}">Contact</a>
-      <a class="p-2 text-dark" href="{% url 'api' %}">API</a>
-	{% else %}
-		<a class="p-2 text-dark" href="{% url 'home' %}">Home</a>
-	    <a class="p-2 text-dark" href="{% url 'login' %}">Login</a>
-      <a class="p-2 text-dark" href="{% url 'about' %}">About</a> 
-      <a class="p-2 text-dark" href="{% url 'contact' %}">Contact</a> 
-      <a class="p-2 text-dark" href="{% url 'api' %}">API</a>
-	    <a class="btn btn-outline-primary" href="{% url 'register' %}">Register</a>
-	{% endif %}	
-    
-  </nav>
+
+  <!-- Right side: search + auth -->
+  <div class="flex items-center gap-4 md:gap-6">
+    <!-- Desktop search -->
+    <form class="relative hidden lg:block" action="{% url 'home' %}" method="GET">
+      <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline-variant">search</span>
+      <input class="bg-surface-container-low border-none rounded-full py-2 pl-10 pr-4 text-sm focus:ring-2 focus:ring-secondary/20 w-64"
+             placeholder="Search stories..." type="text" name="q" value="{{ query|default:'' }}"/>
+    </form>
+
+    <!-- Mobile search button -->
+    <a href="{% url 'home' %}" class="lg:hidden p-2">
+      <span class="material-symbols-outlined text-on-surface">search</span>
+    </a>
+
+    {% if request.user.is_authenticated %}
+      <!-- Bookmarks -->
+      <a href="{% url 'home' %}" class="hidden md:block p-2" title="Bookmarks">
+        <span class="material-symbols-outlined text-on-surface">bookmark</span>
+      </a>
+      <!-- Account dropdown -->
+      <div class="relative group">
+        <button class="flex items-center gap-2 cursor-pointer active:scale-95 transition-transform">
+          <span class="material-symbols-outlined text-3xl text-primary">account_circle</span>
+          <span class="hidden md:inline text-sm font-medium text-on-surface">{{ request.user.username }}</span>
+        </button>
+        <div class="absolute right-0 top-full mt-2 w-48 bg-surface-container-lowest rounded-xl shadow-lg py-2 hidden group-hover:block z-50">
+          <a href="{% url 'account' %}" class="block px-4 py-2 text-sm text-on-surface hover:bg-surface-container-low">
+            <span class="material-symbols-outlined text-base align-middle mr-2">person</span>Account
+          </a>
+          <a href="{% url 'logout' %}" class="block px-4 py-2 text-sm text-on-surface hover:bg-surface-container-low">
+            <span class="material-symbols-outlined text-base align-middle mr-2">logout</span>Logout
+          </a>
+        </div>
+      </div>
+    {% else %}
+      <a href="{% url 'login' %}" class="hidden md:inline text-sm font-medium text-on-surface hover:text-primary-container transition-colors">Sign in</a>
+      <a href="{% url 'register' %}" class="bg-primary-container text-on-primary px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 transition-opacity">
+        Register
+      </a>
+    {% endif %}
+  </div>
+</nav>
+
+<!-- Mobile menu overlay -->
+<div class="hidden md:hidden bg-surface-container-lowest border-t border-outline-variant/10 px-6 py-4" id="mobile-menu">
+  <div class="flex flex-col gap-3">
+    <a href="{% url 'home' %}" class="text-on-surface font-medium py-2">Home</a>
+    <a href="{% url 'about' %}" class="text-on-surface/70 py-2">About</a>
+    <a href="{% url 'contact' %}" class="text-on-surface/70 py-2">Contact</a>
+    {% if request.user.is_authenticated %}
+      <a href="{% url 'account' %}" class="text-on-surface/70 py-2">Account</a>
+      <a href="{% url 'logout' %}" class="text-on-surface/70 py-2">Logout</a>
+    {% else %}
+      <a href="{% url 'login' %}" class="text-on-surface/70 py-2">Sign in</a>
+    {% endif %}
+  </div>
+  <!-- Mobile search -->
+  <form class="mt-4" action="{% url 'home' %}" method="GET">
+    <div class="relative">
+      <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline-variant">search</span>
+      <input class="w-full bg-surface-container-low border-none rounded-full py-2 pl-10 pr-4 text-sm focus:ring-2 focus:ring-secondary/20"
+             placeholder="Search stories..." type="text" name="q" value="{{ query|default:'' }}"/>
+    </div>
+  </form>
 </div>
+</header>
 
-<script type="text/javascript">
-	document.getElementById("id_q").value = "{{query}}"
-</script>
+<!-- Mobile menu toggle script -->
 <script>
-function executeQuery() {
-    var query = document.getElementById('id_q').value;
-    window.location.replace("https://nyasablog.com/?q=" + query)
-    return false
-}
-
+document.getElementById('mobile-menu-btn').addEventListener('click', function() {
+  var menu = document.getElementById('mobile-menu');
+  menu.classList.toggle('hidden');
+});
 </script>
-
-<!-- End Header -->
-

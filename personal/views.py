@@ -4,7 +4,7 @@ from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
 
 from blog.views import get_blog_queryset
 from blog.models import BlogPost
-from blog.forms import ContactForm
+from personal.forms import ContactForm
 from django.core.mail import send_mail, BadHeaderError
 from django.http import HttpResponse
 
