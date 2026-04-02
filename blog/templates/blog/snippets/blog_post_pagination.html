@@ -1,30 +1,17 @@
-<!-- FILTERED Pagination -->
-<div class="d-flex flex-column m-auto pagination mt-5">
-<nav aria-label="Page navigation">
-<ul class="pagination pg-grey justify-content-center">
-	{% if blog_posts.has_previous %}
-        <li class="page-item">
-		  <a class="page-link" href="?{% if query %}q={{query}}&{% endif %}page={{ blog_posts.previous_page_number }}">&laquo; Previous</a>
-		</li>
-    {% endif %}
-
-	{% for i in blog_posts.paginator.page_range %}
-		{% if blog_posts.number == i %}
-			<li class="page-item active"><a class="page-link">{{ i }}</a></li>
-		{% else %}
-			<li class="page-item" ><a class="page-link" href="?{% if query %}q={{query}}&{% endif %}page={{ i }}">{{ i }}</a></li>
-		{% endif %}
-	{% endfor %}
-    
-    {% if blog_posts.has_next %}
-    	<li class="page-item">
-		  <a class="page-link" href="?{% if query %}q={{query}}&{% endif %}page={{ blog_posts.next_page_number }}">Next</a>
-		</li>
-		<li class="page-item">
-		  <a class="page-link"  href="?{% if query %}q={{query}}&{% endif %}page={{ blog_posts.paginator.num_pages }}">Last &raquo;</a>
-		</li>
-    {% endif %}
-</ul>
-</nav>
+{% if blog_posts.has_other_pages %}
+<div class="flex justify-center gap-2 mt-12">
+  {% if blog_posts.has_previous %}
+  <a href="?{% if query %}q={{ query }}&{% endif %}page={{ blog_posts.previous_page_number }}"
+     class="px-4 py-2 rounded-lg bg-surface-container-high text-on-surface text-sm hover:bg-surface-container-highest transition-colors">
+    <span class="material-symbols-outlined text-sm align-middle">chevron_left</span> Previous
+  </a>
+  {% endif %}
+  <span class="px-4 py-2 text-sm text-on-surface-variant">Page {{ blog_posts.number }} of {{ blog_posts.paginator.num_pages }}</span>
+  {% if blog_posts.has_next %}
+  <a href="?{% if query %}q={{ query }}&{% endif %}page={{ blog_posts.next_page_number }}"
+     class="px-4 py-2 rounded-lg bg-surface-container-high text-on-surface text-sm hover:bg-surface-container-highest transition-colors">
+    Next <span class="material-symbols-outlined text-sm align-middle">chevron_right</span>
+  </a>
+  {% endif %}
 </div>
-<!-- end pagination-->
+{% endif %}

@@ -1,49 +1,34 @@
-<style type="text/css">
-	.card{
-		max-width: 700px;
-		width: 100%;
-	}
-	.card-body{
-		padding: 20px;
-	}
-</style>
-
 {% if blog_post %}
-<div class="container">
-	<div class="row">
-		<!-- Blog Post -->
-		<div class="card m-auto">
-			<a href="{% url 'blog:detail' post.slug %}">
-				<img class="card-img-top" src="{{blog_post.image.url}}">
-			</a>
-			<div class="card-body mt-2 mb-2">
-				<a href="{% url 'blog:detail' post.slug %}">
-					<h2 class="card-title">{{blog_post.title}}</h2>
-				</a>
-				<p class="card-text">{{blog_post.body|safe|truncatechars:180}}</p>
-				{% if blog_post.author == request.user %}
-					<a href="{% url 'blog:edit' blog_post.slug %}" class="btn btn-primary">Update</a>
-					
-				{% endif %}
-			</div>
-			<div class="card-footer text-muted">
-			  Updated  {{blog_post.date_updated|timesince}} ago by {{blog_post.author.username}}
-			</div>
-		</div>
-	</div>
-</div>
-
+<article class="group bg-surface-container-lowest rounded-xl overflow-hidden">
+  <a href="{% url 'blog:detail' blog_post.slug %}">
+    <div class="aspect-video overflow-hidden">
+      {% if blog_post.image %}
+      <img alt="{{ blog_post.title }}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" src="{{ blog_post.image.url }}"/>
+      {% else %}
+      <div class="w-full h-full bg-surface-container-high flex items-center justify-center">
+        <span class="material-symbols-outlined text-4xl text-outline-variant">article</span>
+      </div>
+      {% endif %}
+    </div>
+  </a>
+  <div class="p-5">
+    {% if blog_post.category %}
+    <span class="text-xs font-semibold uppercase tracking-widest text-secondary">{{ blog_post.category.name }}</span>
+    {% endif %}
+    <a href="{% url 'blog:detail' blog_post.slug %}">
+      <h3 class="text-lg font-bold text-primary mt-1 mb-2 line-clamp-2 group-hover:text-primary-container transition-colors">{{ blog_post.title }}</h3>
+    </a>
+    <p class="text-sm text-on-surface-variant line-clamp-2 mb-4">{{ blog_post.body|striptags|truncatechars:120 }}</p>
+    <div class="flex items-center text-xs text-on-surface-variant">
+      <span>{{ blog_post.author.username }}</span>
+      <span class="mx-2 opacity-50">·</span>
+      <span>{{ blog_post.date_updated|timesince }} ago</span>
+    </div>
+  </div>
+</article>
 {% else %}
-
-<div class="container">
-	<div class="row">
-		<div class="card m-auto">
-			<div class="card-body mt-2 mb-2">
-				<h2 class="card-title">No results</h2>
-				<p class="card-text">There were no results matching the search: "{{query}}"</p>
-			</div>
-		</div>
-	</div>
+<div class="text-center py-12">
+  <span class="material-symbols-outlined text-4xl text-outline-variant mb-2">search_off</span>
+  <p class="text-on-surface-variant">No results for "{{ query }}"</p>
 </div>
-
 {% endif %}

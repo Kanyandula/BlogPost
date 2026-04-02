@@ -1,17 +1,17 @@
 {% extends 'base.html' %}
 
+{% block title %}Sign In Required | NyasaBlog{% endblock %}
+
 {% block content %}
-
-<div class="container">
-	<div class="d-flex flex-column">
-		<p class="m-auto">You must authenticate to view this page. </p>
-		<p class="m-auto">
-			<a href="{% url 'register' %}">Create an account</a> or 
-			<a href="{% url 'login' %}">login</a>.
-		</p>
-	</div>
+<div class="min-h-[50vh] flex items-center justify-center px-6">
+  <div class="text-center">
+    <span class="material-symbols-outlined text-6xl text-outline-variant mb-4">lock</span>
+    <h1 class="text-2xl font-bold text-primary mb-2">Authentication Required</h1>
+    <p class="text-on-surface-variant mb-6">You must sign in to view this page.</p>
+    <div class="flex gap-3 justify-center">
+      <a href="{% url 'login' %}" class="bg-primary-container text-on-primary px-6 py-2.5 rounded-lg font-semibold hover:opacity-90 transition-opacity">Sign In</a>
+      <a href="{% url 'register' %}" class="bg-surface-container-high text-on-surface px-6 py-2.5 rounded-lg font-medium hover:bg-surface-container-highest transition-colors">Register</a>
+    </div>
+  </div>
 </div>
-
 {% endblock content %}
-
-
