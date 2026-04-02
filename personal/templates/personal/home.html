@@ -15,7 +15,7 @@
       {% else %}
       <div class="w-full h-full bg-primary-container"></div>
       {% endif %}
-      <div class="absolute inset-0 bg-gradient-to-t from-primary/90 via-primary/20 to-transparent"></div>
+      <div class="absolute inset-0 bg-gradient-to-t from-[#002627]/90 via-[#002627]/20 to-transparent"></div>
     </div>
     <div class="absolute bottom-0 left-0 p-6 md:p-12 w-full lg:w-2/3">
       <span class="bg-tertiary-fixed-dim text-on-tertiary-fixed px-3 py-1 rounded text-xs font-bold tracking-widest uppercase mb-4 inline-block">Featured Story</span>
@@ -127,7 +127,7 @@
 
       <!-- Create Post CTA -->
       {% if request.user.is_authenticated %}
-      <a href="{% url 'blog:create' %}" class="block bg-primary-container text-on-primary p-6 rounded-2xl hover:opacity-90 transition-opacity">
+      <a href="{% url 'blog:create' %}" class="block bg-[#0f3d3e] text-white p-6 rounded-2xl hover:opacity-90 transition-opacity">
         <div class="flex items-center gap-3 mb-3">
           <span class="material-symbols-outlined">edit</span>
           <span class="font-bold text-lg">Write a Story</span>
@@ -155,10 +155,10 @@
       {% endif %}
 
       <!-- Newsletter -->
-      <div class="bg-primary p-6 rounded-2xl text-on-primary">
+      <div class="bg-[#002627] p-6 rounded-2xl text-white">
         <h3 class="text-lg font-black mb-2">The Weekly Savanna</h3>
-        <p class="text-sm text-on-primary/70 mb-4">The best of Malawian stories, every Monday morning.</p>
-        <input class="w-full bg-on-primary/10 border-none rounded-lg py-2.5 px-4 text-sm text-on-primary placeholder:text-on-primary/50 mb-3" placeholder="Your email address" type="email"/>
+        <p class="text-sm text-white/70 mb-4">The best of Malawian stories, every Monday morning.</p>
+        <input class="w-full bg-white/10 border-none rounded-lg py-2.5 px-4 text-sm text-white placeholder:text-white/50 mb-3" placeholder="Your email address" type="email"/>
         <button class="w-full bg-tertiary-fixed-dim text-on-tertiary-fixed py-2.5 rounded-lg text-sm font-bold hover:opacity-90 transition-opacity">Subscribe</button>
       </div>
 
