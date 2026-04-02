@@ -35,7 +35,7 @@
 
     {% if request.user.is_authenticated %}
       <!-- Bookmarks -->
-      <a href="{% url 'home' %}" class="hidden md:block p-2" title="Bookmarks">
+      <a href="{% url 'blog:bookmarks' %}" class="hidden md:block p-2" title="Bookmarks">
         <span class="material-symbols-outlined text-on-surface">bookmark</span>
       </a>
       <!-- Account dropdown -->

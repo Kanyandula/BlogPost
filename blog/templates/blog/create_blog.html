@@ -1,52 +1,75 @@
 {% extends 'base.html' %}
 
+{% block title %}Create Post | NyasaBlog{% endblock %}
+
+{% block extra_head %}
+{{ form.media }}
+{% endblock %}
 
 {% block content %}
+<div class="max-w-4xl mx-auto px-6 md:px-12">
+  <h1 class="text-3xl md:text-4xl font-black text-primary mb-8">Write a Story</h1>
 
-<style type="text/css">
-  .create-form {
-	    width: 100%;
-	    max-width: 100%;
-	    padding: 15px;
-	    margin: auto;
-  	}
+  <form method="POST" enctype="multipart/form-data" class="space-y-6">
+    {% csrf_token %}
 
-  	.submit-button{
-  		max-width: 200px;
-  	}
-</style>
+    <!-- Title -->
+    <div>
+      <input type="text" name="title" placeholder="Post title..."
+             value="{{ form.title.value|default:'' }}"
+             class="w-full bg-transparent text-3xl md:text-4xl font-bold text-primary placeholder:text-outline-variant border-none focus:ring-0 px-0"/>
+      {% for error in form.title.errors %}
+      <p class="text-xs text-error mt-1">{{ error }}</p>
+      {% endfor %}
+    </div>
 
-<div class="container">
-	<div class="row">
-		<div class="col-lg-7 offset-lg-1">
-			<form class="create-form" method="post" enctype="multipart/form-data">{% csrf_token %}
+    <!-- Category, Status & Image -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div>
+        <label class="block text-sm font-medium text-on-surface mb-2">Category</label>
+        {{ form.category }}
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-on-surface mb-2">Status</label>
+        {{ form.status }}
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-on-surface mb-2">Featured Image</label>
+        <div class="border-2 border-dashed border-outline-variant/30 rounded-xl p-6 text-center hover:bg-surface-container-low transition-colors cursor-pointer" onclick="document.getElementById('id_image').click()">
+          <span class="material-symbols-outlined text-3xl text-outline-variant">add_photo_alternate</span>
+          <p class="text-sm text-on-surface-variant mt-2">Click to upload</p>
+          <input type="file" name="image" id="id_image" class="hidden" accept="image/*"/>
+        </div>
+      </div>
+    </div>
 
-				<!-- title -->
-				<div class="form-group">
-					<label for="id_title">Title</label>
-					<input class="form-control" type="text" name="title" id="id_title" placeholder="Title" required autofocus>
-				</div>
+    <!-- Tags -->
+    <div>
+      <label class="block text-sm font-medium text-on-surface mb-2">Tags</label>
+      <div class="flex flex-wrap gap-3">
+        {% for checkbox in form.tags %}
+        <label class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-surface-container-low text-sm text-on-surface-variant hover:bg-secondary-container/30 cursor-pointer transition-colors">
+          {{ checkbox.tag }} {{ checkbox.choice_label }}
+        </label>
+        {% endfor %}
+      </div>
+    </div>
 
-				<!-- Body -->
-				<div class="form-group">
-					<label for="id_body">Content</label>
-					<textarea class="form-control" rows="10" type="text" name="body" id="id_body" placeholder="This blog is about..." required></textarea> 
-				</div>
+    <!-- Body -->
+    <div>
+      <label class="block text-sm font-medium text-on-surface mb-2">Content</label>
+      {{ form.body }}
+      {% for error in form.body.errors %}
+      <p class="text-xs text-error mt-1">{{ error }}</p>
+      {% endfor %}
+    </div>
 
-				<!-- Image -->
-				<div class="form-group">
-					<label for="id_image">Image</label>
-					<input  type="file" name="image" id="id_image" accept="image/*" required>
-				</div>
-
-				<!-- Submit btn -->
-				<button class="submit-button btn btn-lg btn-primary btn-block" type="submit">POST</button>
-			</form>	
-		</div>
-	</div>
+    <!-- Actions -->
+    <div class="flex gap-3 pt-4">
+      <button type="submit" name="status" value="published" class="bg-primary-container text-on-primary px-8 py-3 rounded-lg font-semibold hover:opacity-90 transition-opacity">Publish</button>
+      <button type="submit" name="status" value="draft" class="bg-surface-container-high text-on-surface px-8 py-3 rounded-lg font-medium hover:bg-surface-container-highest transition-colors">Save Draft</button>
+      <a href="{% url 'home' %}" class="bg-surface-container text-on-surface-variant px-8 py-3 rounded-lg font-medium hover:bg-surface-container-high transition-colors">Cancel</a>
+    </div>
+  </form>
 </div>
-
-
-
-
 {% endblock content %}

@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from account.models import Account
+from account.models import Account, UserProfile
 
 
 class AccountAdmin(UserAdmin):
@@ -13,7 +13,14 @@ class AccountAdmin(UserAdmin):
 	fieldsets = ()
 
 
-admin.site.register(Account, AccountAdmin)
+class UserProfileInline(admin.StackedInline):
+	model = UserProfile
+	can_delete = False
 
 
+class AccountAdminWithProfile(AccountAdmin):
+	inlines = [UserProfileInline]
 
+
+admin.site.register(Account, AccountAdminWithProfile)
+admin.site.register(UserProfile)

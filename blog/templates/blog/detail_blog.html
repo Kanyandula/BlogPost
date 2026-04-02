@@ -1,42 +1,223 @@
 {% extends 'base.html' %}
+{% load static %}
 
+{% block title %}{{ blog_post.title }} | NyasaBlog{% endblock %}
+
+{% block og_meta %}
+<meta property="og:title" content="{{ blog_post.title }}"/>
+<meta property="og:description" content="{{ blog_post.body|striptags|truncatechars:160 }}"/>
+<meta property="og:type" content="article"/>
+{% if blog_post.image %}<meta property="og:image" content="{{ blog_post.image.url }}"/>{% endif %}
+{% endblock %}
 
 {% block content %}
+<div class="max-w-[1440px] mx-auto px-6 md:px-12">
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
 
+  <!-- Sticky Side Actions (Desktop) -->
+  <aside class="hidden lg:flex lg:col-span-1 flex-col items-center gap-4 sticky top-28 self-start pt-8">
+    <button onclick="toggleLike('{{ blog_post.slug }}')" id="like-btn" class="p-3 rounded-[10px] hover:bg-surface-container-low transition-colors {% if is_liked %}text-error{% else %}text-on-surface-variant{% endif %}">
+      <span class="material-symbols-outlined" id="like-icon" {% if is_liked %}style="font-variation-settings: 'FILL' 1"{% endif %}>favorite</span>
+    </button>
+    <span class="text-xs text-on-surface-variant" id="like-count">{{ like_count }}</span>
+    <div class="w-px h-8 bg-outline-variant/30"></div>
+    <button onclick="toggleBookmark('{{ blog_post.slug }}')" id="bookmark-btn" class="p-3 rounded-[10px] hover:bg-surface-container-low transition-colors {% if is_bookmarked %}text-secondary{% else %}text-on-surface-variant{% endif %}">
+      <span class="material-symbols-outlined" id="bookmark-icon" {% if is_bookmarked %}style="font-variation-settings: 'FILL' 1"{% endif %}>bookmark</span>
+    </button>
+    <div class="w-px h-8 bg-outline-variant/30"></div>
+    <a href="https://wa.me/?text={{ blog_post.title|urlencode }}%20{{ request.build_absolute_uri }}" target="_blank" class="p-3 rounded-[10px] text-[#25D366] hover:bg-surface-container-low transition-colors">
+      <span class="material-symbols-outlined">share</span>
+    </a>
+  </aside>
 
-<style type="text/css">
-	.card{
-		max-width: 700px;
-	}
-	.card-body{
-		padding: 20px;
-	}
-</style>
+  <!-- Main Content -->
+  <article class="lg:col-span-8">
+    {% if blog_post.category %}
+    <span class="inline-block px-3 py-1 bg-tertiary-container text-on-tertiary rounded text-xs font-bold tracking-widest uppercase mb-4">{{ blog_post.category.name }}</span>
+    {% endif %}
 
-<div class="container">
-	<div class="row">
+    <h1 class="text-3xl md:text-4xl lg:text-5xl font-black text-primary leading-tight mb-6">{{ blog_post.title }}</h1>
 
-		<!-- Blog Post -->
-		<div class="card m-auto">
-			<img class="card-img-top" src="{{blog_post.image.url}}">
-			<div class="card-body mt-2 mb-2">
-			  <h2 class="card-title">{{blog_post.title | title}}</h2>
-			  <p class="card-text">{{blog_post.body|linebreaks|urlize}}</p>
-			  {% if blog_post.author == request.user %}
-			  	<a href="{% url 'blog:edit' blog_post.slug %}" class="btn btn-primary">Update</a>
-				 <a href="{% url 'blog:delete' blog_post.id %}" class="btn btn-primary">Delete</a>
-			  {% endif %}
-			</div>
-			<div class="card-footer text-muted">
-			  Updated  {{blog_post.date_updated|timesince}} ago by {{blog_post.author.username}}
-			</div>
-		</div>
-	</div>
+    <!-- Author Row -->
+    <div class="flex flex-wrap items-center gap-4 py-4 border-y border-outline-variant/20 mb-8">
+      <a href="{% url 'author_profile' blog_post.author.username %}" class="flex items-center gap-3">
+        <span class="material-symbols-outlined text-3xl text-primary">account_circle</span>
+        <span class="text-sm font-bold text-on-surface">{{ blog_post.author.username }}</span>
+      </a>
+      <div class="flex items-center gap-4 text-xs text-on-surface-variant">
+        <span class="flex items-center gap-1"><span class="material-symbols-outlined text-sm">calendar_today</span>{{ blog_post.date_published|date:"M d, Y" }}</span>
+        <span class="flex items-center gap-1"><span class="material-symbols-outlined text-sm">schedule</span>{{ blog_post.reading_time }} min read</span>
+        <span class="flex items-center gap-1"><span class="material-symbols-outlined text-sm">visibility</span>{{ blog_post.view_count }} views</span>
+      </div>
+      <!-- Mobile Social -->
+      <div class="flex lg:hidden items-center gap-2 ml-auto">
+        <button onclick="toggleLike('{{ blog_post.slug }}')" class="p-2 {% if is_liked %}text-error{% else %}text-on-surface-variant{% endif %}">
+          <span class="material-symbols-outlined text-xl">favorite</span>
+        </button>
+        <button onclick="toggleBookmark('{{ blog_post.slug }}')" class="p-2 {% if is_bookmarked %}text-secondary{% else %}text-on-surface-variant{% endif %}">
+          <span class="material-symbols-outlined text-xl">bookmark</span>
+        </button>
+        <a href="https://wa.me/?text={{ blog_post.title|urlencode }}%20{{ request.build_absolute_uri }}" target="_blank" class="p-2 text-[#25D366]">
+          <span class="material-symbols-outlined text-xl">share</span>
+        </a>
+      </div>
+    </div>
+
+    {% if blog_post.image %}
+    <div class="rounded-2xl overflow-hidden mb-10">
+      <img alt="{{ blog_post.title }}" class="w-full h-auto object-cover" src="{{ blog_post.image.url }}"/>
+    </div>
+    {% endif %}
+
+    <!-- Article Body -->
+    <div class="prose prose-lg max-w-none mb-12 text-on-surface">{{ blog_post.body|safe }}</div>
+
+    <!-- Tags -->
+    {% if blog_post.tags.all %}
+    <div class="flex flex-wrap gap-2 mb-12">
+      {% for tag in blog_post.tags.all %}
+      <a href="{% url 'home' %}?q={{ tag.name }}" class="px-4 py-2 rounded-full bg-surface-container text-on-surface-variant text-sm hover:bg-secondary-container transition-colors">{{ tag.name }}</a>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Share Bar -->
+    <div class="flex flex-wrap gap-3 mb-12 p-6 bg-surface-container-low rounded-2xl">
+      <span class="text-sm font-bold text-on-surface self-center mr-2">Share:</span>
+      <a href="https://wa.me/?text={{ blog_post.title|urlencode }}%20{{ request.build_absolute_uri }}" target="_blank" class="bg-[#25D366] text-white px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90 flex items-center gap-2">
+        <span class="material-symbols-outlined text-base">chat</span> WhatsApp
+      </a>
+      <a href="https://www.facebook.com/sharer/sharer.php?u={{ request.build_absolute_uri }}" target="_blank" class="bg-[#1877F2] text-white px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90">Facebook</a>
+      <a href="https://twitter.com/intent/tweet?url={{ request.build_absolute_uri }}&text={{ blog_post.title|urlencode }}" target="_blank" class="bg-[#1DA1F2] text-white px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90">Twitter</a>
+      <button onclick="navigator.clipboard.writeText(window.location.href)" class="bg-surface-container-high text-on-surface px-4 py-2 rounded-lg text-sm font-medium hover:bg-surface-container-highest transition-colors flex items-center gap-1">
+        <span class="material-symbols-outlined text-base">link</span> Copy Link
+      </button>
+    </div>
+
+    <!-- Author Card -->
+    <div class="bg-surface-container-low p-6 md:p-8 rounded-2xl mb-12 flex flex-col md:flex-row gap-6">
+      <span class="material-symbols-outlined text-7xl text-primary">account_circle</span>
+      <div class="flex-1">
+        <a href="{% url 'author_profile' blog_post.author.username %}" class="text-xl font-bold text-primary hover:text-primary-container">{{ blog_post.author.username }}</a>
+        {% if blog_post.author.profile.bio %}
+        <p class="text-sm text-on-surface-variant mt-2">{{ blog_post.author.profile.bio }}</p>
+        {% endif %}
+        <a href="{% url 'author_profile' blog_post.author.username %}" class="inline-block mt-4 bg-primary text-on-primary px-6 py-2 rounded-lg text-sm font-semibold hover:opacity-90 transition-opacity">View Profile</a>
+      </div>
+    </div>
+
+    <!-- Comments -->
+    <section class="mb-12">
+      <h2 class="text-2xl font-black text-primary mb-6">Comments ({{ comment_count }})</h2>
+
+      {% if request.user.is_authenticated %}
+      <form method="POST" class="mb-8">
+        {% csrf_token %}
+        <textarea name="body" rows="3" placeholder="Write a comment..." class="w-full bg-surface-container-lowest border border-outline-variant/20 rounded-xl py-3 px-4 text-sm focus:ring-2 focus:ring-secondary/20 focus:border-secondary resize-none"></textarea>
+        <button type="submit" class="mt-3 bg-primary-container text-on-primary px-6 py-2 rounded-lg text-sm font-semibold hover:opacity-90 transition-opacity">Post Comment</button>
+      </form>
+      {% else %}
+      <p class="text-sm text-on-surface-variant mb-8"><a href="{% url 'login' %}" class="text-secondary font-medium">Sign in</a> to leave a comment.</p>
+      {% endif %}
+
+      {% for comment in comments %}
+      <div class="mb-6">
+        <div class="flex gap-3">
+          <span class="material-symbols-outlined text-2xl text-primary mt-1">account_circle</span>
+          <div class="flex-1">
+            <div class="flex items-center gap-2 mb-1">
+              <span class="text-sm font-bold text-on-surface">{{ comment.author.username }}</span>
+              <span class="text-xs text-on-surface-variant">{{ comment.created_at|timesince }} ago</span>
+            </div>
+            <p class="text-sm text-on-surface mb-2">{{ comment.body }}</p>
+            {% if request.user.is_authenticated %}
+            <button onclick="document.getElementById('reply-{{ comment.pk }}').classList.toggle('hidden')" class="text-xs text-secondary font-medium">Reply</button>
+            {% endif %}
+            {% if comment.author == request.user %}
+            <form method="POST" action="{% url 'blog:delete_comment' comment.pk %}" class="inline">
+              {% csrf_token %}
+              <button type="submit" class="text-xs text-error font-medium ml-3">Delete</button>
+            </form>
+            {% endif %}
+
+            <form method="POST" class="hidden mt-3" id="reply-{{ comment.pk }}">
+              {% csrf_token %}
+              <input type="hidden" name="parent_id" value="{{ comment.pk }}"/>
+              <textarea name="body" rows="2" placeholder="Write a reply..." class="w-full bg-surface-container-low border-none rounded-lg py-2 px-3 text-sm resize-none"></textarea>
+              <button type="submit" class="mt-2 bg-surface-container-high text-on-surface px-4 py-1.5 rounded-lg text-xs font-medium">Reply</button>
+            </form>
+
+            {% for reply in comment.replies.all %}
+            <div class="ml-8 mt-4 pl-4 border-l-2 border-outline-variant/20">
+              <div class="flex items-center gap-2 mb-1">
+                <span class="material-symbols-outlined text-lg text-primary">account_circle</span>
+                <span class="text-sm font-bold text-on-surface">{{ reply.author.username }}</span>
+                <span class="text-xs text-on-surface-variant">{{ reply.created_at|timesince }} ago</span>
+              </div>
+              <p class="text-sm text-on-surface">{{ reply.body }}</p>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+      {% empty %}
+      <p class="text-sm text-on-surface-variant">No comments yet. Be the first to share your thoughts!</p>
+      {% endfor %}
+    </section>
+
+    <!-- Related Posts -->
+    {% if related_posts %}
+    <section>
+      <h2 class="text-2xl font-black text-primary mb-6">Related Stories</h2>
+      <div class="flex gap-6 overflow-x-auto hide-scrollbar pb-4">
+        {% for post in related_posts %}
+        <a href="{% url 'blog:detail' post.slug %}" class="min-w-[280px] group">
+          <div class="h-48 rounded-xl overflow-hidden mb-3">
+            {% if post.image %}
+            <img alt="{{ post.title }}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" src="{{ post.image.url }}"/>
+            {% else %}
+            <div class="w-full h-full bg-surface-container-high"></div>
+            {% endif %}
+          </div>
+          <h4 class="text-sm font-bold text-on-surface group-hover:text-primary-container transition-colors line-clamp-2">{{ post.title }}</h4>
+          <span class="text-xs text-on-surface-variant">{{ post.reading_time }} min read</span>
+        </a>
+        {% endfor %}
+      </div>
+    </section>
+    {% endif %}
+  </article>
+
+  <!-- Right Sidebar -->
+  <aside class="hidden lg:block lg:col-span-3">
+    <div class="sticky top-28">
+      {% if request.user.is_authenticated and blog_post.author == request.user %}
+      <a href="{% url 'blog:edit' blog_post.slug %}" class="block w-full bg-primary-container text-on-primary text-center px-6 py-2.5 rounded-lg text-sm font-semibold hover:opacity-90 transition-opacity mb-6">
+        <span class="material-symbols-outlined text-sm align-middle mr-1">edit</span> Edit Post
+      </a>
+      {% endif %}
+    </div>
+  </aside>
+
+</div>
 </div>
 
-	
-
+<script>
+function toggleAction(slug, action, iconId, countId) {
+  fetch('/blog/' + slug + '/' + action + '/', {
+    method: 'POST',
+    headers: {'X-CSRFToken': '{{ csrf_token }}'},
+    credentials: 'same-origin'
+  })
+  .then(function(r) { if (r.status === 401) { window.location.href = '{% url "login" %}'; throw 'redirect'; } if (!r.ok) throw new Error(r.status); return r.json(); })
+  .then(function(data) {
+    var active = data.liked !== undefined ? data.liked : data.bookmarked;
+    document.getElementById(iconId).style.fontVariationSettings = active ? "'FILL' 1" : "'FILL' 0";
+    if (countId && data.count !== undefined) document.getElementById(countId).textContent = data.count;
+  })
+  .catch(function(e) { if (e !== 'redirect') console.error(e); });
+}
+function toggleLike(slug) { toggleAction(slug, 'like', 'like-icon', 'like-count'); }
+function toggleBookmark(slug) { toggleAction(slug, 'bookmark', 'bookmark-icon', null); }
+</script>
 {% endblock content %}
-
-
-

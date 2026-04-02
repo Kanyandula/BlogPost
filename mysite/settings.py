@@ -37,7 +37,7 @@ INSTALLED_APPS = [
     'personal',
     'account',
     'blog',
-    'ckeditor',
+    'django_ckeditor_5',
     
     'django.contrib.admin',
     'django.contrib.auth',
@@ -186,7 +186,20 @@ else:
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-
-
-
+# CKEditor 5
+CKEDITOR_5_CONFIGS = {
+    'default': {
+        'toolbar': [
+            'heading', '|',
+            'bold', 'italic', 'underline', 'strikethrough', '|',
+            'bulletedList', 'numberedList', '|',
+            'blockQuote', 'codeBlock', '|',
+            'link', 'imageUpload', '|',
+            'undo', 'redo',
+        ],
+        'height': '400px',
+        'width': '100%',
+    },
+}
+CK_EDITOR_5_UPLOAD_FILE_VIEW_NAME = "ck_editor_5_upload_file"
 
