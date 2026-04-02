@@ -1,10 +1,10 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.db.models import Q, F, Count
 from django.http import HttpResponse, JsonResponse
+from django.views.decorators.http import require_POST
 
 from blog.models import BlogPost, Category, Comment, Like, Bookmark
 from blog.forms import CreateBlogPostForm, UpdateBlogPostForm, CommentForm
-from account.models import Account
 
 
 def create_blog_view(request):
@@ -16,8 +16,7 @@ def create_blog_view(request):
 	form = CreateBlogPostForm(request.POST or None, request.FILES or None)
 	if form.is_valid():
 		obj = form.save(commit=False)
-		author = Account.objects.filter(email=user.email).first()
-		obj.author = author
+		obj.author = request.user
 		obj.save()
 		form.save_m2m()
 		return redirect('home')
@@ -29,7 +28,10 @@ def create_blog_view(request):
 
 def detail_blog_view(request, slug):
 	context = {}
-	blog_post = get_object_or_404(BlogPost, slug=slug)
+	blog_post = get_object_or_404(
+		BlogPost.objects.select_related('author__profile', 'category').prefetch_related('tags'),
+		slug=slug
+	)
 
 	# Increment view count
 	BlogPost.objects.filter(pk=blog_post.pk).update(view_count=F('view_count') + 1)
@@ -43,14 +45,20 @@ def detail_blog_view(request, slug):
 			comment.author = request.user
 			parent_id = request.POST.get('parent_id')
 			if parent_id:
-				comment.parent = get_object_or_404(Comment, pk=parent_id)
+				parent = get_object_or_404(Comment, pk=parent_id)
+				if parent.parent is not None:
+					comment.parent = parent.parent
+				else:
+					comment.parent = parent
 			comment.save()
 			return redirect('blog:detail', slug=slug)
 	else:
 		comment_form = CommentForm()
 
 	# Get comments (top-level only, replies via prefetch)
-	comments = blog_post.comments.filter(parent=None, is_active=True).select_related('author').prefetch_related('replies__author')
+	comments = blog_post.comments.filter(
+		parent=None, is_active=True
+	).select_related('author').prefetch_related('replies__author')
 
 	# Like and bookmark status
 	is_liked = False
@@ -86,6 +94,7 @@ def edit_blog_view(request, slug):
 		if form.is_valid():
 			obj = form.save(commit=False)
 			obj.save()
+			form.save_m2m()
 			context['success_message'] = "Updated"
 			blog_post = obj
 
@@ -104,16 +113,12 @@ def edit_blog_view(request, slug):
 
 
 def get_blog_queryset(query=None):
-	queryset = []
-	queries = query.split(" ")
-	for q in queries:
-		posts = BlogPost.objects.filter(
-			Q(title__icontains=q) | Q(body__icontains=q),
-			status='published'
-		).distinct()
-		for post in posts:
-			queryset.append(post)
-	return list(set(queryset))
+	if not query:
+		return BlogPost.objects.filter(status='published')
+	q_objects = Q()
+	for term in query.split():
+		q_objects |= Q(title__icontains=term) | Q(body__icontains=term)
+	return BlogPost.objects.filter(q_objects, status='published').distinct()
 
 
 def delete_blog_post(request, pk):
@@ -141,6 +146,7 @@ def delete_comment_view(request, pk):
 	return redirect('blog:detail', slug=slug)
 
 
+@require_POST
 def toggle_like_view(request, slug):
 	if not request.user.is_authenticated:
 		return JsonResponse({'error': 'Login required'}, status=401)
@@ -154,6 +160,7 @@ def toggle_like_view(request, slug):
 	return JsonResponse({'liked': liked, 'count': post.likes.count()})
 
 
+@require_POST
 def toggle_bookmark_view(request, slug):
 	if not request.user.is_authenticated:
 		return JsonResponse({'error': 'Login required'}, status=401)
@@ -172,5 +179,5 @@ def bookmarks_view(request):
 		return redirect('login')
 	bookmarked_posts = BlogPost.objects.filter(
 		bookmarks__user=request.user
-	).order_by('-bookmarks__created_at')
+	).select_related('author', 'category').order_by('-bookmarks__created_at')
 	return render(request, 'blog/bookmarks.html', {'blog_posts': bookmarked_posts})

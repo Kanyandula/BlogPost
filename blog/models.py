@@ -126,6 +126,12 @@ def submission_delete(sender, instance, **kwargs):
 
 def pre_save_blog_post_receiver(sender, instance, *args, **kwargs):
 	if not instance.slug:
-		instance.slug = slugify(instance.author.username + "-" + instance.title)
+		base_slug = slugify(instance.author.username + "-" + instance.title)
+		slug = base_slug
+		counter = 1
+		while BlogPost.objects.filter(slug=slug).exclude(pk=instance.pk).exists():
+			slug = f"{base_slug}-{counter}"
+			counter += 1
+		instance.slug = slug
 
 pre_save.connect(pre_save_blog_post_receiver, sender=BlogPost)

@@ -34,7 +34,7 @@
         <p class="text-sm text-on-surface-variant line-clamp-2 mb-4">{{ post.body|striptags|truncatechars:100 }}</p>
         <div class="flex items-center justify-between text-xs text-on-surface-variant">
           <span>{{ post.author.username }} · {{ post.reading_time }} min</span>
-          <button onclick="fetch('/blog/{{ post.slug }}/bookmark/', {method:'POST', headers:{'X-CSRFToken':'{{ csrf_token }}'}}).then(()=>this.closest('article').remove())"
+          <button onclick="fetch('/blog/{{ post.slug }}/bookmark/', {method:'POST', headers:{'X-CSRFToken':'{{ csrf_token }}'}, credentials:'same-origin'}).then(()=>this.closest('article').remove())"
                   class="p-1 text-on-surface-variant hover:text-error transition-colors" title="Remove bookmark">
             <span class="material-symbols-outlined text-lg">bookmark_remove</span>
           </button>

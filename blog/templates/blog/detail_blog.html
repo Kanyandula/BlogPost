@@ -204,12 +204,31 @@
 
 <script>
 function toggleLike(slug) {
-  fetch('/blog/' + slug + '/like/', {method: 'POST', headers: {'X-CSRFToken': '{{ csrf_token }}'}})
-    .then(r => r.json()).then(data => { document.getElementById('like-count').textContent = data.count; });
+  fetch('/blog/' + slug + '/like/', {
+    method: 'POST',
+    headers: {'X-CSRFToken': '{{ csrf_token }}'},
+    credentials: 'same-origin'
+  })
+  .then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
+  .then(data => {
+    document.getElementById('like-count').textContent = data.count;
+    var icon = document.getElementById('like-icon');
+    icon.style.fontVariationSettings = data.liked ? "'FILL' 1" : "'FILL' 0";
+  })
+  .catch(e => { if (e.message === '401') window.location.href = '{% url "login" %}'; });
 }
 function toggleBookmark(slug) {
-  fetch('/blog/' + slug + '/bookmark/', {method: 'POST', headers: {'X-CSRFToken': '{{ csrf_token }}'}})
-    .then(r => r.json());
+  fetch('/blog/' + slug + '/bookmark/', {
+    method: 'POST',
+    headers: {'X-CSRFToken': '{{ csrf_token }}'},
+    credentials: 'same-origin'
+  })
+  .then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
+  .then(data => {
+    var icon = document.getElementById('bookmark-icon');
+    icon.style.fontVariationSettings = data.bookmarked ? "'FILL' 1" : "'FILL' 0";
+  })
+  .catch(e => { if (e.message === '401') window.location.href = '{% url "login" %}'; });
 }
 </script>
 {% endblock content %}
