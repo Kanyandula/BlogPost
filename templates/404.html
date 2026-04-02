@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+
+{% block title %}Page Not Found | NyasaBlog{% endblock %}
+
+{% block content %}
+<div class="min-h-[70vh] flex items-center justify-center px-6">
+  <div class="text-center">
+    <p class="text-[10rem] font-black text-surface-container-high leading-none">404</p>
+    <h1 class="text-3xl font-bold text-primary mb-3">Story Not Found</h1>
+    <p class="text-on-surface-variant text-lg max-w-md mx-auto mb-8">The page you're looking for has wandered off into the savanna.</p>
+    <div class="flex gap-3 justify-center">
+      <a href="{% url 'home' %}" class="bg-primary-container text-on-primary px-8 py-3 rounded-lg font-semibold hover:opacity-90 transition-opacity">Go Home</a>
+      <a href="{% url 'home' %}" class="bg-surface-container-high text-primary px-8 py-3 rounded-lg font-medium hover:bg-surface-container-highest transition-colors">Search Stories</a>
+    </div>
+  </div>
+</div>
+{% endblock content %}

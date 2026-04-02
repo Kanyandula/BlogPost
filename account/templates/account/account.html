@@ -1,105 +1,67 @@
 {% extends 'base.html' %}
 
+{% block title %}Account | NyasaBlog{% endblock %}
 
 {% block content %}
+<div class="max-w-2xl mx-auto px-6 md:px-12">
 
-<style type="text/css">
-  .form-signin {
-    width: 100%;
-    max-width: 330px;
-    padding: 15px;
-    margin: auto;
-  }
-
-  .form-signin .form-control {
-    position: relative;
-    box-sizing: border-box;
-    height: auto;
-    padding: 10px;
-    font-size: 16px;
-  }
-  .form-signin .form-control:focus {
-    z-index: 2;
-  }
-  .form-signin input[type="email"] {
-    margin-bottom: 10px;
-    border-bottom-right-radius: 0;
-    border-bottom-left-radius: 0;
-  }
-  .form-signin input[type="username"] {
-    margin-bottom: 10px;
-    border-top-left-radius: 0;
-    border-top-right-radius: 0;
-  }
-  .h3{
-    text-align: center;
-  }
-
-  .blog-posts{
-    max-width: 500px;
-    width: 100%;
-    margin: auto;
-  }
-</style>
-
-
-<form class="form-signin" method="post">{% csrf_token %}
-
-  <h1 class="h3 mb-3 font-weight-normal">Account</h1>
-
-  <input type="email" name="email" id="inputEmail" class="form-control" placeholder="Email address" required autofocus value={{account_form.initial.email}}>
-  
-  <input type="text" name="username" id="inputUsername" class="form-control" placeholder="Username" required
-  value="{{account_form.initial.username}}">
-
-  {% for field in account_form %}
-      <p>
-        {% for error in field.errors %}
-          <p style="color: red">{{ error }}</p>
-        {% endfor %}
-      </p>
-  {% endfor %}
-  {% if account_form.non_field_errors %}
-    <div style="color: red">
-      <p>{{account_form.non_field_errors}}</p>
-    </div>
-      
-  {% endif %}
+  <h1 class="text-3xl font-black text-primary mb-8">Account Settings</h1>
 
   {% if success_message %}
-    <p style="color:green; text-align: center;">{{success_message}}</p>
-  {% endif  %}
-
-  <button class="btn btn-lg btn-primary btn-block" type="submit">Save changes</button>
-
-</form>
-
-<div class="d-flex flex-column">
-  <a class="m-auto" href="{% url 'password_change' %}">Change password</a>
-</div>
-
-<div class="container mt-4 p-4">
-  <div class="row">
-    <div class="blog-posts">
-      <h3 class="mb-3 font-weight-normal">Blog posts:</h3>
-      {% if blog_posts %}
-        <ul class="list-group">
-        {% for post in blog_posts %}
-          <a href="{% url 'blog:detail' post.slug %}" style="text-decoration: none;"><li class="list-group-item">{{post}}</li></a>
-        {% endfor %}
-        </ul>
-      {% else %}
-        <p>You have no blog posts. Create a post <a href="{% url 'blog:create' %}">here</a>.</p>
-      {% endif %}
-    </div>
+  <div class="bg-primary-fixed text-on-primary-fixed px-4 py-3 rounded-lg mb-6 text-sm">
+    <span class="material-symbols-outlined text-base align-middle mr-1">check_circle</span>{{ success_message }}
   </div>
+  {% endif %}
+
+  <div class="bg-surface-container-lowest rounded-xl p-6 md:p-8 mb-8">
+    <h2 class="text-lg font-bold text-primary mb-4">Profile Information</h2>
+
+    <form method="POST" class="space-y-4">
+      {% csrf_token %}
+
+      <div>
+        <label class="block text-sm font-medium text-on-surface mb-1">Email</label>
+        <input type="email" name="email" value="{{ account_form.initial.email }}" required
+               class="w-full bg-surface-container-lowest border border-outline-variant/20 rounded-lg py-3 px-4 text-sm focus:ring-2 focus:ring-secondary/20 focus:border-secondary"/>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-on-surface mb-1">Username</label>
+        <input type="text" name="username" value="{{ account_form.initial.username }}" required
+               class="w-full bg-surface-container-lowest border border-outline-variant/20 rounded-lg py-3 px-4 text-sm focus:ring-2 focus:ring-secondary/20 focus:border-secondary"/>
+      </div>
+
+      {% for field in account_form %}
+        {% for error in field.errors %}
+        <p class="text-xs text-error">{{ error }}</p>
+        {% endfor %}
+      {% endfor %}
+      {% if account_form.non_field_errors %}
+      <p class="text-xs text-error">{{ account_form.non_field_errors }}</p>
+      {% endif %}
+
+      <button type="submit" class="bg-primary-container text-on-primary px-6 py-2.5 rounded-lg font-semibold hover:opacity-90 transition-opacity">Save Changes</button>
+    </form>
+
+    <a href="{% url 'password_change' %}" class="inline-block mt-4 text-sm text-secondary hover:underline">Change password</a>
+  </div>
+
+  <div class="bg-surface-container-lowest rounded-xl p-6 md:p-8">
+    <h2 class="text-lg font-bold text-primary mb-4">Your Posts</h2>
+
+    {% if blog_posts %}
+    <div class="space-y-3">
+      {% for post in blog_posts %}
+      <a href="{% url 'blog:detail' post.slug %}" class="block px-4 py-3 rounded-lg bg-surface-container-low hover:bg-surface-container transition-colors">
+        <span class="text-sm font-medium text-on-surface">{{ post.title }}</span>
+        <span class="text-xs text-on-surface-variant ml-2">{{ post.get_status_display }}</span>
+      </a>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p class="text-sm text-on-surface-variant">You have no blog posts. <a href="{% url 'blog:create' %}" class="text-secondary font-medium hover:underline">Create one</a>.</p>
+    {% endif %}
+  </div>
+
 </div>
-
-
-
-
-
-
 {% endblock content %}
-
-
