@@ -178,8 +178,9 @@
         <h4 class="text-xl font-bold mb-2">The Weekly Pulse</h4>
         <p class="text-sm text-white/80 mb-6 leading-relaxed">Subscribe for stories from {{ author.username }} and the NyasaBlog community.</p>
         <div class="space-y-3">
-          <input class="w-full px-4 py-3 rounded-lg bg-white/10 border-none text-white placeholder:text-white/50 focus:ring-2 focus:ring-tertiary-fixed-dim text-sm" placeholder="Email address" type="email"/>
-          <button class="w-full py-3 bg-tertiary-fixed-dim text-[#002627] font-bold rounded-lg hover:opacity-90 transition-opacity">Subscribe</button>
+          <input id="newsletter-email-profile" class="w-full px-4 py-3 rounded-lg bg-white/10 border-none text-white placeholder:text-white/50 focus:ring-2 focus:ring-tertiary-fixed-dim text-sm" placeholder="Email address" type="email"/>
+          <button onclick="submitNewsletter('newsletter-email-profile', 'newsletter-msg-profile')" class="w-full py-3 bg-tertiary-fixed-dim text-[#002627] font-bold rounded-lg hover:opacity-90 transition-opacity">Subscribe</button>
+          <p id="newsletter-msg-profile" class="text-xs text-white/70 hidden"></p>
         </div>
       </section>
     </aside>

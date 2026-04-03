@@ -54,6 +54,25 @@ document.addEventListener('DOMContentLoaded', function() {
   var icon = document.getElementById('theme-icon');
   if (icon) icon.textContent = document.documentElement.classList.contains('dark') ? 'light_mode' : 'dark_mode';
 });
+
+function submitNewsletter(inputId, msgId) {
+  var email = document.getElementById(inputId).value.trim();
+  var msg = document.getElementById(msgId);
+  if (!email) { msg.textContent = 'Please enter your email.'; msg.classList.remove('hidden'); return; }
+  fetch('{% url "subscribe" %}', {
+    method: 'POST',
+    headers: {'X-CSRFToken': '{{ csrf_token }}', 'Content-Type': 'application/x-www-form-urlencoded'},
+    credentials: 'same-origin',
+    body: 'email=' + encodeURIComponent(email)
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    msg.textContent = data.message || data.error;
+    msg.classList.remove('hidden');
+    if (data.success) document.getElementById(inputId).value = '';
+  })
+  .catch(function() { msg.textContent = 'Something went wrong.'; msg.classList.remove('hidden'); });
+}
 </script>
 </body>
 </html>

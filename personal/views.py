@@ -7,7 +7,10 @@ from blog.views import get_blog_queryset
 from blog.models import BlogPost, Category, Tag
 from personal.forms import ContactForm
 from django.core.mail import send_mail, BadHeaderError
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
+from django.views.decorators.http import require_POST
+
+from personal.models import Subscriber
 
 BLOG_POSTS_PER_PAGE = 10
 
@@ -136,3 +139,15 @@ def contact_screen_view(request):
 				return HttpResponse('Invalid header found')
 			return render(request, 'personal/contact.html', {'form': ContactForm(), 'success': True})
 	return render(request, 'personal/contact.html', {'form': form})
+
+
+@require_POST
+def subscribe_view(request):
+	email = request.POST.get('email', '').strip().lower()
+	if not email:
+		return JsonResponse({'error': 'Email is required'}, status=400)
+
+	subscriber, created = Subscriber.objects.get_or_create(email=email)
+	if created:
+		return JsonResponse({'success': True, 'message': 'Thanks for subscribing!'})
+	return JsonResponse({'success': True, 'message': 'You are already subscribed!'})
