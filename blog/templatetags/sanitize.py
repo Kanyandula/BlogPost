@@ -14,7 +14,7 @@ ALLOWED_TAGS = {
 
 ALLOWED_ATTRIBUTES = {
     "*": {"class", "style"},
-    "a": {"href", "title", "target", "rel"},
+    "a": {"href", "title", "target"},
     "img": {"src", "alt", "width", "height", "loading"},
     "iframe": {"src", "width", "height", "frameborder", "allowfullscreen"},
     "td": {"colspan", "rowspan"},

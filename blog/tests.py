@@ -283,8 +283,7 @@ class EditPostViewTests(ModelTestMixin, TestCase):
 	def test_edit_denied_for_non_author(self):
 		self.client.login(email='other@nyasablog.com', password='testpass123')
 		response = self.client.get(reverse('blog:edit', args=[self.post.slug]))
-		self.assertEqual(response.status_code, 200)
-		self.assertContains(response, 'You are not the author')
+		self.assertEqual(response.status_code, 403)
 
 	def test_edit_page_loads_for_author(self):
 		self.client.login(email='test@nyasablog.com', password='testpass123')
@@ -313,7 +312,7 @@ class DeletePostViewTests(ModelTestMixin, TestCase):
 	def test_delete_denied_for_non_author(self):
 		self.client.login(email='other@nyasablog.com', password='testpass123')
 		response = self.client.get(reverse('blog:delete', args=[self.post.pk]))
-		self.assertContains(response, 'You are not the author')
+		self.assertEqual(response.status_code, 403)
 
 	def test_delete_confirmation_page_loads(self):
 		self.client.login(email='test@nyasablog.com', password='testpass123')
@@ -372,7 +371,7 @@ class CommentSubmissionTests(ModelTestMixin, TestCase):
 		self.client.login(email='other@nyasablog.com', password='testpass123')
 		comment = Comment.objects.create(post=self.post, author=self.user, body='Not yours')
 		response = self.client.get(reverse('blog:delete_comment', args=[comment.pk]))
-		self.assertContains(response, 'You are not the author')
+		self.assertEqual(response.status_code, 403)
 
 
 class BookmarkTogglePostMethodTests(ModelTestMixin, TestCase):

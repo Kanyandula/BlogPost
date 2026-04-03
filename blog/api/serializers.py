@@ -76,6 +76,8 @@ class BlogPostSerializer(serializers.ModelSerializer):
 
 	def validate_image_url(self, blog_post):
 		image = blog_post.image
+		if not image:
+			return None
 		new_url = image.url
 		if "?" in new_url:
 			new_url = image.url[:image.url.rfind("?")]

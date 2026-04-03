@@ -20,6 +20,6 @@ urlpatterns = [
 	path('properties/update', update_account_view, name="update"),
  	path('login', ObtainAuthTokenView.as_view(), name="login"),
 	path('register', registration_view, name="register"),
-	path('profile/<str:username>/', api_author_profile_view, name="author_profile"),
 	path('profile/update/', api_update_profile_view, name="update_profile"),
+	path('profile/<str:username>/', api_author_profile_view, name="author_profile"),
 ]
