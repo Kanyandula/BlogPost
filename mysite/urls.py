@@ -36,6 +36,7 @@ from personal.views import (
   contact_screen_view,
   api_screen_view,
   search_view,
+  subscribe_view,
 )
 
 from account.views import (
@@ -63,6 +64,7 @@ def robots_txt(request):
 urlpatterns = [
     path('', home_screen_view, name="home"),
     path('search/', search_view, name="search"),
+    path('subscribe/', subscribe_view, name="subscribe"),
     path('robots.txt', robots_txt, name="robots"),
     path('sitemap.xml', cache_page(86400)(sitemap), {'sitemaps': sitemaps}, name='sitemap'),
     path('account/', account_view, name="account"),
