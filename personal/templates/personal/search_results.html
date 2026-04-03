@@ -1,0 +1,149 @@
+{% extends 'base.html' %}
+
+{% block title %}Search: {{ query }} | NyasaBlog{% endblock %}
+
+{% block content %}
+<div class="max-w-[1440px] mx-auto px-6 md:px-12">
+
+<!-- Search Header -->
+<header class="mb-12 md:mb-16">
+  <div class="flex items-end justify-between border-b-2 border-primary-container pb-4 mb-6">
+    <div class="flex-1">
+      <form action="{% url 'search' %}" method="GET">
+        <input class="w-full text-3xl md:text-5xl font-bold bg-transparent border-none p-0 focus:ring-0 text-primary placeholder-outline-variant"
+               placeholder="Search NyasaBlog..." type="text" name="q" value="{{ query }}"/>
+      </form>
+    </div>
+    <div class="flex items-center gap-2 text-on-surface-variant pb-2">
+      <span class="material-symbols-outlined">tune</span>
+      <span class="text-sm font-medium">{{ result_count }} stories found</span>
+    </div>
+  </div>
+
+  <!-- Category Filter Pills -->
+  <div class="flex flex-wrap items-center justify-between gap-4">
+    <div class="flex gap-2 overflow-x-auto hide-scrollbar">
+      <a href="{% url 'search' %}?q={{ query }}" class="px-6 py-2 rounded-full font-medium text-sm transition-all whitespace-nowrap {% if not active_category %}bg-primary text-on-primary{% else %}bg-surface-container-high text-primary hover:bg-surface-container-highest{% endif %}">All</a>
+      {% for cat in categories %}
+      <a href="{% url 'search' %}?q={{ query }}&category={{ cat.slug }}" class="px-6 py-2 rounded-full font-medium text-sm transition-all whitespace-nowrap {% if active_category == cat.slug %}bg-primary text-on-primary{% else %}bg-surface-container-high text-primary hover:bg-surface-container-highest{% endif %}">{{ cat.name }}</a>
+      {% endfor %}
+    </div>
+  </div>
+</header>
+
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-12">
+
+  <!-- Search Results -->
+  <section class="lg:col-span-8 flex flex-col gap-12">
+    {% if blog_posts %}
+      {% for post in blog_posts %}
+      <article class="flex flex-col md:flex-row gap-6 md:gap-8 group">
+        <a href="{% url 'blog:detail' post.slug %}" class="w-full md:w-64 shrink-0">
+          <div class="aspect-[16/10] rounded-xl overflow-hidden bg-surface-container-low">
+            {% if post.image %}
+            <img alt="{{ post.title }}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" src="{{ post.image.url }}"/>
+            {% else %}
+            <div class="w-full h-full flex items-center justify-center">
+              <span class="material-symbols-outlined text-4xl text-outline-variant">article</span>
+            </div>
+            {% endif %}
+          </div>
+        </a>
+        <div class="flex flex-col justify-center">
+          <div class="flex items-center gap-3 mb-3">
+            {% if post.category %}
+            <span class="text-[10px] tracking-widest font-bold text-secondary uppercase">{{ post.category.name }}</span>
+            <span class="w-1 h-1 rounded-full bg-outline-variant"></span>
+            {% endif %}
+            <span class="text-xs text-on-surface-variant">{{ post.date_published|date:"M d, Y" }}</span>
+          </div>
+          <a href="{% url 'blog:detail' post.slug %}">
+            <h3 class="text-xl md:text-2xl font-bold text-primary mb-3 leading-tight group-hover:text-secondary transition-colors">{{ post.title }}</h3>
+          </a>
+          <p class="text-on-surface-variant leading-relaxed mb-4 line-clamp-2 text-sm">{{ post.body|striptags|truncatechars:180 }}</p>
+          <div class="flex items-center gap-3">
+            <span class="material-symbols-outlined text-base text-outline">account_circle</span>
+            <a href="{% url 'author_profile' post.author.username %}" class="text-xs font-semibold text-on-surface hover:text-primary">{{ post.author.username }}</a>
+            <span class="text-xs text-outline">· {{ post.reading_time }} min read</span>
+          </div>
+        </div>
+      </article>
+      {% endfor %}
+
+      <!-- Pagination -->
+      {% if blog_posts.has_other_pages %}
+      <div class="py-12 flex justify-center">
+        {% if blog_posts.has_next %}
+        <a href="?q={{ query }}{% if active_category %}&category={{ active_category }}{% endif %}&page={{ blog_posts.next_page_number }}"
+           class="px-8 py-3 rounded-full border border-outline-variant text-primary font-bold hover:bg-surface-container-low transition-all">
+          Load More Stories
+        </a>
+        {% endif %}
+      </div>
+      {% endif %}
+
+    {% else %}
+      <!-- Empty State -->
+      <div class="text-center py-20">
+        <span class="material-symbols-outlined text-7xl text-outline-variant mb-6">search_off</span>
+        <h2 class="text-3xl font-bold text-primary mb-3">No stories found</h2>
+        <p class="text-on-surface-variant text-lg max-w-md mx-auto mb-8">
+          {% if query %}We couldn't find anything matching "{{ query }}". Try different keywords or browse categories.
+          {% else %}Enter a search term to find stories.{% endif %}
+        </p>
+        <a href="{% url 'home' %}" class="px-8 py-3 rounded-lg bg-[#0f3d3e] text-white font-semibold hover:opacity-90 transition-opacity">Browse All Stories</a>
+      </div>
+    {% endif %}
+  </section>
+
+  <!-- Sidebar -->
+  <aside class="lg:col-span-4">
+    <div class="sticky top-28 space-y-10">
+
+      <!-- Related Topics -->
+      {% if tags %}
+      <section class="p-6 md:p-8 rounded-2xl bg-surface-container-low">
+        <h4 class="text-lg font-bold text-primary mb-6">Related Topics</h4>
+        <div class="flex flex-wrap gap-2">
+          {% for tag in tags %}
+          <a href="{% url 'search' %}?q={{ tag.name }}" class="px-4 py-2 rounded-full bg-surface-container-lowest text-on-surface-variant text-sm font-medium hover:text-secondary transition-colors">#{{ tag.name }}</a>
+          {% endfor %}
+        </div>
+      </section>
+      {% endif %}
+
+      <!-- Popular Searches -->
+      <section class="p-6 md:p-8 rounded-2xl bg-surface-container-low">
+        <h4 class="text-lg font-bold text-primary mb-6">Popular Searches</h4>
+        <ul class="space-y-4">
+          {% for cat in categories|slice:":5" %}
+          <li>
+            <a href="{% url 'search' %}?q={{ cat.name }}" class="flex items-center gap-3 group">
+              <div class="w-8 h-8 rounded-full bg-primary-container/10 flex items-center justify-center text-primary">
+                <span class="material-symbols-outlined text-base">trending_up</span>
+              </div>
+              <span class="text-sm font-medium text-on-surface-variant group-hover:text-primary transition-colors">{{ cat.name }} in Malawi</span>
+            </a>
+          </li>
+          {% endfor %}
+        </ul>
+      </section>
+
+      <!-- Newsletter -->
+      <section class="p-6 md:p-8 rounded-2xl bg-[#002627] text-white">
+        <h4 class="text-xl font-bold mb-3">Never miss a story.</h4>
+        <p class="text-white/70 text-sm mb-6">Weekly insights into Malawian culture and lifestyle delivered to your inbox.</p>
+        <div class="flex gap-2">
+          <input class="flex-1 bg-white/10 border-none rounded-lg text-sm px-4 py-2 text-white placeholder:text-white/50 focus:ring-2 focus:ring-tertiary-fixed-dim" placeholder="Your email" type="email"/>
+          <button class="p-2 rounded-lg bg-tertiary-fixed-dim text-[#002627]">
+            <span class="material-symbols-outlined">arrow_forward</span>
+          </button>
+        </div>
+      </section>
+
+    </div>
+  </aside>
+
+</div>
+</div>
+{% endblock content %}

@@ -22,14 +22,14 @@
   <!-- Right side: search + auth -->
   <div class="flex items-center gap-4 md:gap-6">
     <!-- Desktop search -->
-    <form class="relative hidden lg:block" action="{% url 'home' %}" method="GET">
+    <form class="relative hidden lg:block" action="{% url 'search' %}" method="GET">
       <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline-variant">search</span>
       <input class="bg-surface-container-low border-none rounded-full py-2 pl-10 pr-4 text-sm focus:ring-2 focus:ring-secondary/20 w-64"
              placeholder="Search stories..." type="text" name="q" value="{{ query|default:'' }}"/>
     </form>
 
     <!-- Mobile search button -->
-    <a href="{% url 'home' %}" class="lg:hidden p-2">
+    <a href="{% url 'search' %}" class="lg:hidden p-2">
       <span class="material-symbols-outlined text-on-surface">search</span>
     </a>
 
@@ -86,7 +86,7 @@
     {% endif %}
   </div>
   <!-- Mobile search -->
-  <form class="mt-4" action="{% url 'home' %}" method="GET">
+  <form class="mt-4" action="{% url 'search' %}" method="GET">
     <div class="relative">
       <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline-variant">search</span>
       <input class="w-full bg-surface-container-low border-none rounded-full py-2 pl-10 pr-4 text-sm focus:ring-2 focus:ring-secondary/20"

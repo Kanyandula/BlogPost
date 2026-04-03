@@ -24,6 +24,7 @@ from personal.views import (
   about_screen_view,
   contact_screen_view,
   api_screen_view,
+  search_view,
 )
 
 from account.views import (
@@ -37,6 +38,7 @@ from account.views import (
 
 urlpatterns = [
     path('', home_screen_view, name="home"),
+    path('search/', search_view, name="search"),
     path('account/', account_view, name="account"),
     path('admin/', admin.site.urls),
     path('blog/', include('blog.urls', 'blog')),

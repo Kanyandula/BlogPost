@@ -4,7 +4,7 @@ from django.db.models import Count
 from django.conf import settings
 
 from blog.views import get_blog_queryset
-from blog.models import BlogPost, Category
+from blog.models import BlogPost, Category, Tag
 from personal.forms import ContactForm
 from django.core.mail import send_mail, BadHeaderError
 from django.http import HttpResponse
@@ -74,6 +74,43 @@ def home_screen_view(request):
 	context['active_category'] = category_slug
 
 	return render(request, "personal/home.html", context)
+
+
+def search_view(request):
+	context = {}
+	query = request.GET.get('q', '')
+	category_slug = request.GET.get('category', '')
+	context['query'] = query
+
+	if query:
+		blog_posts = _annotate_posts(
+			get_blog_queryset(query)
+		).order_by('-date_updated')
+
+		if category_slug:
+			blog_posts = blog_posts.filter(category__slug=category_slug)
+
+		context['result_count'] = blog_posts.count()
+	else:
+		blog_posts = BlogPost.objects.none()
+		context['result_count'] = 0
+
+	# Pagination
+	page = request.GET.get('page', 1)
+	paginator = Paginator(blog_posts, BLOG_POSTS_PER_PAGE)
+	try:
+		blog_posts = paginator.page(page)
+	except PageNotAnInteger:
+		blog_posts = paginator.page(1)
+	except EmptyPage:
+		blog_posts = paginator.page(paginator.num_pages)
+
+	context['blog_posts'] = blog_posts
+	context['categories'] = Category.objects.all()
+	context['active_category'] = category_slug
+	context['tags'] = Tag.objects.all()[:20]
+
+	return render(request, 'personal/search_results.html', context)
 
 
 def about_screen_view(request):
