@@ -1,67 +1,155 @@
 {% extends 'base.html' %}
 
-{% block title %}Account | NyasaBlog{% endblock %}
+{% block title %}Account Settings | NyasaBlog{% endblock %}
 
 {% block content %}
-<div class="max-w-2xl mx-auto px-6 md:px-12">
+<!-- Banner -->
+<div class="relative w-full h-[120px] md:h-[180px] bg-gradient-to-br from-[#002627] to-[#0f3d3e] -mt-24">
+  <div class="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
+</div>
 
-  <h1 class="text-3xl font-black text-primary mb-8">Account Settings</h1>
+<div class="max-w-[1280px] mx-auto px-6 md:px-12 -mt-16 relative z-10">
 
-  {% if success_message %}
-  <div class="bg-primary-fixed text-on-primary-fixed px-4 py-3 rounded-lg mb-6 text-sm">
-    <span class="material-symbols-outlined text-base align-middle mr-1">check_circle</span>{{ success_message }}
+  <!-- Profile Header -->
+  <div class="flex flex-col md:flex-row items-start md:items-end gap-6 mb-10">
+    <div class="p-1 bg-surface-container-lowest rounded-full">
+      <div class="w-24 h-24 md:w-32 md:h-32 rounded-full border-4 border-surface-container-lowest bg-surface-container-high flex items-center justify-center">
+        <span class="material-symbols-outlined text-4xl md:text-5xl text-primary">account_circle</span>
+      </div>
+    </div>
+    <div class="mb-2">
+      <h1 class="text-2xl md:text-3xl font-bold text-primary">{{ request.user.username }}</h1>
+      <p class="text-sm text-on-surface-variant">{{ request.user.email }}</p>
+    </div>
+    <div class="md:ml-auto mb-2">
+      <a href="{% url 'author_profile' request.user.username %}" class="px-5 py-2 bg-surface-container-high text-primary font-medium rounded-lg hover:bg-surface-container-highest transition-colors text-sm">
+        <span class="material-symbols-outlined text-sm align-middle mr-1">visibility</span> View Public Profile
+      </a>
+    </div>
   </div>
-  {% endif %}
 
-  <div class="bg-surface-container-lowest rounded-xl p-6 md:p-8 mb-8">
-    <h2 class="text-lg font-bold text-primary mb-4">Profile Information</h2>
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-12">
 
-    <form method="POST" class="space-y-4">
-      {% csrf_token %}
+    <!-- Left: Settings -->
+    <div class="lg:col-span-8 space-y-8">
 
-      <div>
-        <label class="block text-sm font-medium text-on-surface mb-1">Email</label>
-        <input type="email" name="email" value="{{ account_form.initial.email }}" required
-               class="w-full bg-surface-container-lowest border border-outline-variant/20 rounded-lg py-3 px-4 text-sm focus:ring-2 focus:ring-secondary/20 focus:border-secondary"/>
+      {% if success_message %}
+      <div class="bg-primary-fixed text-on-primary-fixed px-4 py-3 rounded-lg text-sm flex items-center gap-2">
+        <span class="material-symbols-outlined text-base">check_circle</span>{{ success_message }}
       </div>
-
-      <div>
-        <label class="block text-sm font-medium text-on-surface mb-1">Username</label>
-        <input type="text" name="username" value="{{ account_form.initial.username }}" required
-               class="w-full bg-surface-container-lowest border border-outline-variant/20 rounded-lg py-3 px-4 text-sm focus:ring-2 focus:ring-secondary/20 focus:border-secondary"/>
-      </div>
-
-      {% for field in account_form %}
-        {% for error in field.errors %}
-        <p class="text-xs text-error">{{ error }}</p>
-        {% endfor %}
-      {% endfor %}
-      {% if account_form.non_field_errors %}
-      <p class="text-xs text-error">{{ account_form.non_field_errors }}</p>
       {% endif %}
 
-      <button type="submit" class="bg-primary-container text-on-primary px-6 py-2.5 rounded-lg font-semibold hover:opacity-90 transition-opacity">Save Changes</button>
-    </form>
+      <!-- Account Info -->
+      <div class="bg-surface-container-lowest rounded-xl p-6 md:p-8">
+        <h2 class="text-lg font-bold text-primary mb-6">Account Information</h2>
+        <form method="POST" class="space-y-5">
+          {% csrf_token %}
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div>
+              <label class="block text-xs font-bold tracking-widest uppercase text-outline mb-2">Email</label>
+              <input type="email" name="email" value="{{ account_form.initial.email }}" required
+                     class="w-full bg-surface-container-low border-none rounded-lg py-3 px-4 text-sm text-on-surface focus:ring-2 focus:ring-secondary/20"/>
+            </div>
+            <div>
+              <label class="block text-xs font-bold tracking-widest uppercase text-outline mb-2">Username</label>
+              <input type="text" name="username" value="{{ account_form.initial.username }}" required
+                     class="w-full bg-surface-container-low border-none rounded-lg py-3 px-4 text-sm text-on-surface focus:ring-2 focus:ring-secondary/20"/>
+            </div>
+          </div>
 
-    <a href="{% url 'password_change' %}" class="inline-block mt-4 text-sm text-secondary hover:underline">Change password</a>
-  </div>
+          {% for field in account_form %}
+            {% for error in field.errors %}
+            <p class="text-xs text-error">{{ error }}</p>
+            {% endfor %}
+          {% endfor %}
+          {% if account_form.non_field_errors %}
+          <p class="text-xs text-error">{{ account_form.non_field_errors }}</p>
+          {% endif %}
 
-  <div class="bg-surface-container-lowest rounded-xl p-6 md:p-8">
-    <h2 class="text-lg font-bold text-primary mb-4">Your Posts</h2>
+          <div class="flex items-center gap-4 pt-2">
+            <button type="submit" class="px-6 py-2.5 bg-[#0f3d3e] text-white font-semibold rounded-lg hover:opacity-90 transition-opacity">Save Changes</button>
+            <a href="{% url 'password_change' %}" class="text-sm text-secondary font-medium hover:underline">Change password</a>
+          </div>
+        </form>
+      </div>
 
-    {% if blog_posts %}
-    <div class="space-y-3">
-      {% for post in blog_posts %}
-      <a href="{% url 'blog:detail' post.slug %}" class="block px-4 py-3 rounded-lg bg-surface-container-low hover:bg-surface-container transition-colors">
-        <span class="text-sm font-medium text-on-surface">{{ post.title }}</span>
-        <span class="text-xs text-on-surface-variant ml-2">{{ post.get_status_display }}</span>
-      </a>
-      {% endfor %}
+      <!-- Your Posts -->
+      <div class="bg-surface-container-lowest rounded-xl p-6 md:p-8">
+        <div class="flex items-center justify-between mb-6">
+          <h2 class="text-lg font-bold text-primary">Your Posts</h2>
+          <a href="{% url 'blog:create' %}" class="text-sm text-secondary font-medium hover:underline flex items-center gap-1">
+            <span class="material-symbols-outlined text-sm">add</span> New Post
+          </a>
+        </div>
+
+        {% if blog_posts %}
+        <div class="space-y-3">
+          {% for post in blog_posts %}
+          <div class="flex items-center justify-between px-4 py-3 rounded-lg bg-surface-container-low hover:bg-surface-container transition-colors">
+            <a href="{% url 'blog:detail' post.slug %}" class="flex-1 min-w-0">
+              <span class="text-sm font-medium text-on-surface truncate block">{{ post.title }}</span>
+              <span class="text-xs text-on-surface-variant">{{ post.date_updated|timesince }} ago</span>
+            </a>
+            <div class="flex items-center gap-3 ml-4 shrink-0">
+              <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider {% if post.status == 'published' %}bg-primary-fixed text-on-primary-fixed{% else %}bg-surface-container-high text-on-surface-variant{% endif %}">{{ post.get_status_display }}</span>
+              <a href="{% url 'blog:edit' post.slug %}" class="text-on-surface-variant hover:text-primary">
+                <span class="material-symbols-outlined text-lg">edit</span>
+              </a>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-8">
+          <span class="material-symbols-outlined text-4xl text-outline-variant mb-2">article</span>
+          <p class="text-sm text-on-surface-variant">You have no blog posts yet.</p>
+          <a href="{% url 'blog:create' %}" class="inline-block mt-3 px-5 py-2 bg-[#0f3d3e] text-white text-sm font-semibold rounded-lg hover:opacity-90 transition-opacity">Write Your First Story</a>
+        </div>
+        {% endif %}
+      </div>
+
     </div>
-    {% else %}
-    <p class="text-sm text-on-surface-variant">You have no blog posts. <a href="{% url 'blog:create' %}" class="text-secondary font-medium hover:underline">Create one</a>.</p>
-    {% endif %}
-  </div>
 
+    <!-- Right: Sidebar -->
+    <aside class="lg:col-span-4 space-y-8">
+
+      <!-- Quick Stats -->
+      <div class="bg-surface-container-lowest rounded-xl p-6">
+        <h3 class="text-sm font-bold text-primary uppercase tracking-widest mb-4">Quick Stats</h3>
+        <div class="space-y-4">
+          <div class="flex items-center justify-between">
+            <span class="text-sm text-on-surface-variant">Total Posts</span>
+            <span class="text-lg font-black text-primary">{{ blog_posts|length }}</span>
+          </div>
+          <div class="w-full h-px bg-outline-variant/20"></div>
+          <div class="flex items-center justify-between">
+            <span class="text-sm text-on-surface-variant">Member Since</span>
+            <span class="text-sm font-bold text-primary">{{ request.user.date_joined|date:"M Y" }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Links -->
+      <div class="bg-surface-container-lowest rounded-xl p-6">
+        <h3 class="text-sm font-bold text-primary uppercase tracking-widest mb-4">Quick Links</h3>
+        <nav class="space-y-2">
+          <a href="{% url 'blog:bookmarks' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-on-surface-variant hover:bg-surface-container-low hover:text-primary transition-colors">
+            <span class="material-symbols-outlined text-lg">bookmark</span> Your Bookmarks
+          </a>
+          <a href="{% url 'author_profile' request.user.username %}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-on-surface-variant hover:bg-surface-container-low hover:text-primary transition-colors">
+            <span class="material-symbols-outlined text-lg">person</span> Public Profile
+          </a>
+          <a href="{% url 'blog:create' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-on-surface-variant hover:bg-surface-container-low hover:text-primary transition-colors">
+            <span class="material-symbols-outlined text-lg">edit</span> Write a Story
+          </a>
+          <a href="{% url 'password_change' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-on-surface-variant hover:bg-surface-container-low hover:text-primary transition-colors">
+            <span class="material-symbols-outlined text-lg">key</span> Change Password
+          </a>
+        </nav>
+      </div>
+
+    </aside>
+
+  </div>
 </div>
 {% endblock content %}
