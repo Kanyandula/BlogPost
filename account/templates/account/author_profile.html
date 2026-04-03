@@ -4,94 +4,186 @@
 
 {% block content %}
 <!-- Banner -->
-<div class="w-full h-48 md:h-72 bg-gradient-to-br from-[#002627] to-[#0f3d3e] relative -mt-24">
-  <div class="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent"></div>
+<div class="relative w-full h-[200px] md:h-[320px] bg-surface-container overflow-hidden -mt-24">
+  <div class="w-full h-full bg-gradient-to-br from-[#002627] to-[#0f3d3e]"></div>
+  <div class="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent"></div>
 </div>
 
-<div class="max-w-[1440px] mx-auto px-6 md:px-12 -mt-20 relative z-10">
-  <!-- Profile Info -->
-  <div class="bg-surface-container-lowest rounded-xl p-6 md:p-10 mb-8">
-    <div class="flex flex-col md:flex-row md:items-end gap-6">
-      <span class="material-symbols-outlined text-[120px] text-primary -mt-16 md:-mt-20">account_circle</span>
-      <div class="flex-1">
+<!-- Profile Info -->
+<div class="max-w-[1280px] mx-auto px-6 md:px-12 -mt-24 relative z-10 pb-12">
+
+  <!-- Header Row: Avatar + Name + Actions -->
+  <div class="flex flex-col md:flex-row items-start md:items-end justify-between gap-6 mb-10">
+    <div class="flex flex-col md:flex-row items-start md:items-end gap-6">
+      <!-- Avatar -->
+      <div class="p-1 bg-surface-container-lowest rounded-full">
+        {% if author.profile.avatar %}
+        <img class="w-32 h-32 md:w-40 md:h-40 rounded-full border-4 border-surface-container-lowest object-cover" src="{{ author.profile.avatar.url }}" alt="{{ author.username }}"/>
+        {% else %}
+        <div class="w-32 h-32 md:w-40 md:h-40 rounded-full border-4 border-surface-container-lowest bg-surface-container-high flex items-center justify-center">
+          <span class="material-symbols-outlined text-6xl md:text-7xl text-primary">account_circle</span>
+        </div>
+        {% endif %}
+      </div>
+      <!-- Name & Location -->
+      <div class="mb-4">
         <h1 class="text-3xl md:text-4xl font-bold text-primary">{{ author.username }}</h1>
         {% if author.profile.location %}
-        <div class="flex items-center gap-1 text-sm text-on-surface-variant mt-1">
+        <div class="flex items-center gap-2 mt-2 text-on-surface-variant text-sm">
           <span class="material-symbols-outlined text-sm">location_on</span>
-          {{ author.profile.location }}
+          <span>{{ author.profile.location }}</span>
         </div>
         {% endif %}
-        {% if author.profile.bio %}
-        <p class="text-sm text-on-surface-variant mt-3 max-w-xl">{{ author.profile.bio }}</p>
-        {% endif %}
       </div>
     </div>
-
-    <!-- Stats -->
-    <div class="grid grid-cols-3 gap-4 mt-6 bg-surface-container-low p-4 rounded-xl">
-      <div class="text-center">
-        <span class="text-2xl font-black text-primary">{{ post_count }}</span>
-        <p class="text-xs text-on-surface-variant">Posts</p>
-      </div>
-      <div class="text-center">
-        <span class="text-2xl font-black text-primary">{{ total_views }}</span>
-        <p class="text-xs text-on-surface-variant">Views</p>
-      </div>
-      <div class="text-center">
-        <span class="text-2xl font-black text-primary">{{ author.date_joined|date:"Y" }}</span>
-        <p class="text-xs text-on-surface-variant">Joined</p>
-      </div>
-    </div>
-
-    <!-- Social Links -->
-    {% if author.profile.website or author.profile.twitter or author.profile.facebook %}
-    <div class="flex gap-4 mt-4">
-      {% if author.profile.website %}
-      <a href="{{ author.profile.website }}" target="_blank" class="text-on-surface-variant hover:text-primary"><span class="material-symbols-outlined">language</span></a>
-      {% endif %}
-      {% if author.profile.twitter %}
-      <a href="https://twitter.com/{{ author.profile.twitter }}" target="_blank" class="text-on-surface-variant hover:text-primary"><span class="material-symbols-outlined">alternate_email</span></a>
+    <!-- Actions -->
+    <div class="flex gap-3 mb-4">
+      {% if request.user == author %}
+      <a href="{% url 'account' %}" class="px-6 py-2.5 bg-surface-container-high text-primary font-bold rounded-lg hover:bg-surface-container-highest transition-all">Edit Profile</a>
       {% endif %}
     </div>
-    {% endif %}
   </div>
 
-  <!-- Posts Grid -->
-  <h2 class="text-2xl font-black text-primary mb-6">Posts by {{ author.username }}</h2>
+  <!-- Stats Bar -->
+  <div class="bg-surface-container-lowest p-6 md:p-8 rounded-xl flex flex-wrap gap-8 md:gap-12 mb-12">
+    <div>
+      <span class="block text-2xl font-black text-primary">{{ post_count }}</span>
+      <span class="text-xs uppercase tracking-widest text-on-surface-variant font-bold">Posts</span>
+    </div>
+    <div class="w-[1px] bg-outline-variant/30 hidden md:block"></div>
+    <div>
+      <span class="block text-2xl font-black text-primary">{{ total_views }}</span>
+      <span class="text-xs uppercase tracking-widest text-on-surface-variant font-bold">Views</span>
+    </div>
+    <div class="w-[1px] bg-outline-variant/30 hidden md:block"></div>
+    <div>
+      <span class="block text-2xl font-black text-primary">{{ author.date_joined|date:"M Y" }}</span>
+      <span class="text-xs uppercase tracking-widest text-on-surface-variant font-bold">Joined</span>
+    </div>
+  </div>
 
-  {% if posts %}
-  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-    {% for post in posts %}
-    <article class="group bg-surface-container-lowest rounded-xl overflow-hidden hover:-translate-y-1 transition-transform duration-300">
-      <a href="{% url 'blog:detail' post.slug %}">
-        <div class="h-48 overflow-hidden">
-          {% if post.image %}
-          <img alt="{{ post.title }}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" src="{{ post.image.url }}"/>
-          {% else %}
-          <div class="w-full h-full bg-surface-container-high flex items-center justify-center">
-            <span class="material-symbols-outlined text-4xl text-outline-variant">article</span>
+  <!-- Profile Layout: Content + Sidebar -->
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-12">
+
+    <!-- Left: Posts -->
+    <div class="lg:col-span-8">
+      <!-- Tabs -->
+      <div class="flex gap-8 border-b border-outline-variant/20 mb-8">
+        <button class="pb-4 text-primary border-b-2 border-primary-container font-bold text-lg px-2">Posts</button>
+      </div>
+
+      <!-- Post Grid -->
+      {% if posts %}
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        {% for post in posts %}
+        {% if forloop.first %}
+        <!-- Featured Large Card -->
+        <article class="col-span-1 md:col-span-2 bg-surface-container-lowest rounded-xl overflow-hidden group">
+          <div class="grid md:grid-cols-2">
+            <div class="h-64 md:h-full overflow-hidden">
+              {% if post.image %}
+              <img class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" src="{{ post.image.url }}" alt="{{ post.title }}"/>
+              {% else %}
+              <div class="w-full h-full bg-surface-container-high flex items-center justify-center">
+                <span class="material-symbols-outlined text-5xl text-outline-variant">article</span>
+              </div>
+              {% endif %}
+            </div>
+            <div class="p-6 md:p-8 flex flex-col justify-center">
+              {% if post.category %}
+              <span class="text-xs font-bold text-secondary uppercase tracking-widest mb-3">{{ post.category.name }}</span>
+              {% endif %}
+              <a href="{% url 'blog:detail' post.slug %}">
+                <h3 class="text-xl md:text-2xl font-bold text-primary mb-4 leading-tight group-hover:text-primary-container transition-colors">{{ post.title }}</h3>
+              </a>
+              <p class="text-on-surface-variant line-clamp-3 mb-6 text-sm">{{ post.body|striptags|truncatechars:180 }}</p>
+              <div class="flex items-center gap-3 text-sm text-on-surface-variant">
+                <span>{{ post.date_published|date:"M d, Y" }}</span>
+                <span class="w-1 h-1 rounded-full bg-outline-variant"></span>
+                <span>{{ post.reading_time }} min read</span>
+              </div>
+            </div>
           </div>
-          {% endif %}
-        </div>
-      </a>
-      <div class="p-5">
-        {% if post.category %}
-        <span class="text-xs font-semibold uppercase tracking-widest text-secondary">{{ post.category.name }}</span>
+        </article>
+        {% else %}
+        <!-- Regular Card -->
+        <article class="bg-surface-container-lowest rounded-xl overflow-hidden group">
+          <a href="{% url 'blog:detail' post.slug %}">
+            <div class="h-48 overflow-hidden">
+              {% if post.image %}
+              <img class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" src="{{ post.image.url }}" alt="{{ post.title }}"/>
+              {% else %}
+              <div class="w-full h-full bg-surface-container-high flex items-center justify-center">
+                <span class="material-symbols-outlined text-4xl text-outline-variant">article</span>
+              </div>
+              {% endif %}
+            </div>
+          </a>
+          <div class="p-6">
+            {% if post.category %}
+            <span class="text-xs font-bold text-secondary uppercase tracking-widest mb-2 block">{{ post.category.name }}</span>
+            {% endif %}
+            <a href="{% url 'blog:detail' post.slug %}">
+              <h3 class="text-lg font-bold text-primary mb-3 leading-tight group-hover:text-primary-container transition-colors">{{ post.title }}</h3>
+            </a>
+            <p class="text-on-surface-variant text-sm line-clamp-2 mb-4">{{ post.body|striptags|truncatechars:120 }}</p>
+            <div class="text-xs text-on-surface-variant">{{ post.date_published|date:"M d, Y" }} · {{ post.reading_time }} min read</div>
+          </div>
+        </article>
         {% endif %}
-        <a href="{% url 'blog:detail' post.slug %}">
-          <h3 class="text-lg font-bold text-primary mt-1 mb-2 line-clamp-2 group-hover:text-primary-container transition-colors">{{ post.title }}</h3>
-        </a>
-        <div class="flex items-center text-xs text-on-surface-variant">
-          <span>{{ post.date_published|date:"M d, Y" }}</span>
-          <span class="mx-2 opacity-50">·</span>
-          <span>{{ post.reading_time }} min read</span>
-        </div>
+        {% endfor %}
       </div>
-    </article>
-    {% endfor %}
+      {% else %}
+      <p class="text-on-surface-variant">No published posts yet.</p>
+      {% endif %}
+    </div>
+
+    <!-- Right: Sidebar -->
+    <aside class="lg:col-span-4 space-y-10">
+      <!-- About Widget -->
+      <section class="bg-surface-container-low p-6 md:p-8 rounded-xl">
+        <h4 class="text-lg font-bold text-primary mb-4">About the Author</h4>
+        {% if author.profile.bio %}
+        <p class="text-on-surface-variant text-sm leading-relaxed mb-6">{{ author.profile.bio }}</p>
+        {% else %}
+        <p class="text-on-surface-variant text-sm leading-relaxed mb-6">{{ author.username }} is a content creator on NyasaBlog.</p>
+        {% endif %}
+
+        {% if author.profile.website or author.profile.twitter %}
+        <div class="space-y-3">
+          {% if author.profile.website %}
+          <a class="flex items-center gap-3 text-secondary hover:underline underline-offset-4 font-medium" href="{{ author.profile.website }}" target="_blank">
+            <span class="material-symbols-outlined text-lg">language</span>
+            <span class="text-sm">{{ author.profile.website }}</span>
+          </a>
+          {% endif %}
+          <div class="flex gap-3">
+            {% if author.profile.twitter %}
+            <a class="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center text-primary hover:bg-primary hover:text-on-primary transition-all" href="https://twitter.com/{{ author.profile.twitter }}" target="_blank">
+              <span class="material-symbols-outlined text-xl">alternate_email</span>
+            </a>
+            {% endif %}
+            {% if author.profile.facebook %}
+            <a class="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center text-primary hover:bg-primary hover:text-on-primary transition-all" href="https://facebook.com/{{ author.profile.facebook }}" target="_blank">
+              <span class="material-symbols-outlined text-xl">share</span>
+            </a>
+            {% endif %}
+          </div>
+        </div>
+        {% endif %}
+      </section>
+
+      <!-- Newsletter -->
+      <section class="bg-[#0f3d3e] p-6 md:p-8 rounded-xl text-white">
+        <h4 class="text-xl font-bold mb-2">The Weekly Pulse</h4>
+        <p class="text-sm text-white/80 mb-6 leading-relaxed">Subscribe for stories from {{ author.username }} and the NyasaBlog community.</p>
+        <div class="space-y-3">
+          <input class="w-full px-4 py-3 rounded-lg bg-white/10 border-none text-white placeholder:text-white/50 focus:ring-2 focus:ring-tertiary-fixed-dim text-sm" placeholder="Email address" type="email"/>
+          <button class="w-full py-3 bg-tertiary-fixed-dim text-[#002627] font-bold rounded-lg hover:opacity-90 transition-opacity">Subscribe</button>
+        </div>
+      </section>
+    </aside>
+
   </div>
-  {% else %}
-  <p class="text-on-surface-variant">No published posts yet.</p>
-  {% endif %}
 </div>
 {% endblock content %}
