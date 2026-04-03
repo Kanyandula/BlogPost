@@ -178,7 +178,9 @@
           <h4 class="text-xs font-bold uppercase tracking-widest text-secondary mb-4">Query Parameters</h4>
           <ul class="space-y-3 text-sm">
             <li class="flex justify-between border-b border-outline-variant/20 pb-2"><span class="font-mono font-semibold">search</span> <span class="text-on-surface-variant italic">String</span></li>
-            <li class="flex justify-between border-b border-outline-variant/20 pb-2"><span class="font-mono font-semibold">ordering</span> <span class="text-on-surface-variant italic">title, body, date_updated</span></li>
+            <li class="flex justify-between border-b border-outline-variant/20 pb-2"><span class="font-mono font-semibold">category</span> <span class="text-on-surface-variant italic">Slug (e.g. culture)</span></li>
+            <li class="flex justify-between border-b border-outline-variant/20 pb-2"><span class="font-mono font-semibold">status</span> <span class="text-on-surface-variant italic">published / draft</span></li>
+            <li class="flex justify-between border-b border-outline-variant/20 pb-2"><span class="font-mono font-semibold">ordering</span> <span class="text-on-surface-variant italic">title, date_updated, view_count</span></li>
             <li class="flex justify-between border-b border-outline-variant/20 pb-2"><span class="font-mono font-semibold">page</span> <span class="text-on-surface-variant italic">Int (10 per page)</span></li>
           </ul>
         </div>
@@ -192,6 +194,110 @@
     {"title": "...", "slug": "...", ...}
   ]
 }</pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 7: Categories -->
+    <section id="categories" class="mb-16 scroll-mt-28 border-t border-outline-variant/10 pt-12">
+      <div class="flex items-center gap-3 mb-6">
+        <span class="px-3 py-1 text-xs font-bold rounded-lg bg-secondary text-on-secondary uppercase tracking-wider">GET</span>
+        <h2 class="text-2xl font-bold text-primary">List Categories</h2>
+      </div>
+      <p class="text-sm text-on-surface-variant mb-4">Public — no authentication required.</p>
+      <div class="bg-surface-container-low rounded-lg p-4 mb-6 font-mono text-sm text-primary overflow-x-auto">
+        GET /api/blog/categories/
+      </div>
+    </section>
+
+    <!-- Section 8: Tags -->
+    <section id="tags" class="mb-16 scroll-mt-28 border-t border-outline-variant/10 pt-12">
+      <div class="flex items-center gap-3 mb-6">
+        <span class="px-3 py-1 text-xs font-bold rounded-lg bg-secondary text-on-secondary uppercase tracking-wider">GET</span>
+        <h2 class="text-2xl font-bold text-primary">List Tags</h2>
+      </div>
+      <p class="text-sm text-on-surface-variant mb-4">Public — no authentication required.</p>
+      <div class="bg-surface-container-low rounded-lg p-4 mb-6 font-mono text-sm text-primary overflow-x-auto">
+        GET /api/blog/tags/
+      </div>
+    </section>
+
+    <!-- Section 9: Comments -->
+    <section id="comments" class="mb-16 scroll-mt-28 border-t border-outline-variant/10 pt-12">
+      <div class="flex items-center gap-3 mb-6">
+        <span class="px-3 py-1 text-xs font-bold rounded-lg bg-secondary text-on-secondary uppercase tracking-wider">GET</span>
+        <span class="px-3 py-1 text-xs font-bold rounded-lg bg-tertiary-fixed-dim text-on-tertiary-fixed uppercase tracking-wider">POST</span>
+        <h2 class="text-2xl font-bold text-primary">Comments</h2>
+      </div>
+      <div class="space-y-6">
+        <div>
+          <p class="text-sm font-medium text-on-surface mb-2">List comments (public):</p>
+          <div class="bg-surface-container-low rounded-lg p-4 font-mono text-sm text-primary overflow-x-auto">GET /api/blog/&lt;slug&gt;/comments/</div>
+        </div>
+        <div>
+          <p class="text-sm font-medium text-on-surface mb-2">Create comment (auth required):</p>
+          <div class="bg-surface-container-low rounded-lg p-4 font-mono text-sm text-primary overflow-x-auto">POST /api/blog/&lt;slug&gt;/comments/create/</div>
+          <div class="bg-surface-container-low rounded-lg px-4 py-3 text-sm space-y-1 mt-3">
+            <p><strong>body</strong> — Comment text (required)</p>
+            <p><strong>parent</strong> — Parent comment ID for replies (optional)</p>
+          </div>
+        </div>
+        <div>
+          <p class="text-sm font-medium text-on-surface mb-2">Delete own comment (auth required):</p>
+          <div class="bg-surface-container-low rounded-lg p-4 font-mono text-sm text-primary overflow-x-auto">DELETE /api/blog/comments/&lt;pk&gt;/delete/</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 10: Likes & Bookmarks -->
+    <section id="interactions" class="mb-16 scroll-mt-28 border-t border-outline-variant/10 pt-12">
+      <div class="flex items-center gap-3 mb-6">
+        <span class="px-3 py-1 text-xs font-bold rounded-lg bg-tertiary-fixed-dim text-on-tertiary-fixed uppercase tracking-wider">POST</span>
+        <h2 class="text-2xl font-bold text-primary">Likes & Bookmarks</h2>
+      </div>
+      <div class="flex items-center gap-2 mb-6">
+        <span class="material-symbols-outlined text-sm text-secondary">lock</span>
+        <span class="text-xs font-medium text-secondary">All require authentication</span>
+      </div>
+      <div class="space-y-6">
+        <div>
+          <p class="text-sm font-medium text-on-surface mb-2">Toggle like:</p>
+          <div class="bg-surface-container-low rounded-lg p-4 font-mono text-sm text-primary overflow-x-auto">POST /api/blog/&lt;slug&gt;/like/</div>
+          <pre class="bg-[#002627] text-[#a3cfcf] p-4 rounded-lg text-xs leading-relaxed overflow-x-auto mt-3">{"liked": true, "count": 25}</pre>
+        </div>
+        <div>
+          <p class="text-sm font-medium text-on-surface mb-2">Toggle bookmark:</p>
+          <div class="bg-surface-container-low rounded-lg p-4 font-mono text-sm text-primary overflow-x-auto">POST /api/blog/&lt;slug&gt;/bookmark/</div>
+          <pre class="bg-[#002627] text-[#a3cfcf] p-4 rounded-lg text-xs leading-relaxed overflow-x-auto mt-3">{"bookmarked": true}</pre>
+        </div>
+        <div>
+          <p class="text-sm font-medium text-on-surface mb-2">List bookmarked posts:</p>
+          <div class="bg-surface-container-low rounded-lg p-4 font-mono text-sm text-primary overflow-x-auto">GET /api/blog/bookmarks/</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 11: User Profile -->
+    <section id="profile" class="scroll-mt-28 border-t border-outline-variant/10 pt-12">
+      <div class="flex items-center gap-3 mb-6">
+        <span class="px-3 py-1 text-xs font-bold rounded-lg bg-secondary text-on-secondary uppercase tracking-wider">GET</span>
+        <span class="px-3 py-1 text-xs font-bold rounded-lg bg-primary-container text-on-primary uppercase tracking-wider">PUT</span>
+        <h2 class="text-2xl font-bold text-primary">User Profile</h2>
+      </div>
+      <div class="space-y-6">
+        <div>
+          <p class="text-sm font-medium text-on-surface mb-2">Get author profile (public):</p>
+          <div class="bg-surface-container-low rounded-lg p-4 font-mono text-sm text-primary overflow-x-auto">GET /api/account/profile/&lt;username&gt;/</div>
+        </div>
+        <div>
+          <p class="text-sm font-medium text-on-surface mb-2">Update own profile (auth required):</p>
+          <div class="bg-surface-container-low rounded-lg p-4 font-mono text-sm text-primary overflow-x-auto">PUT /api/account/profile/update/</div>
+          <div class="bg-surface-container-low rounded-lg px-4 py-3 text-sm space-y-1 mt-3">
+            <p><strong>bio</strong> — Text (max 500)</p>
+            <p><strong>location</strong> — e.g. "Lilongwe, Malawi"</p>
+            <p><strong>website</strong> — URL</p>
+            <p><strong>twitter</strong>, <strong>facebook</strong>, <strong>instagram</strong>, <strong>linkedin</strong> — handles</p>
+          </div>
         </div>
       </div>
     </section>
@@ -223,6 +329,21 @@
         </a>
         <a href="#list" class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-on-surface-variant hover:bg-surface-container hover:text-primary transition-colors">
           <span class="px-1.5 py-0.5 text-[10px] font-bold rounded bg-secondary/20 text-secondary">GET</span> List Posts
+        </a>
+        <a href="#categories" class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-on-surface-variant hover:bg-surface-container hover:text-primary transition-colors">
+          <span class="px-1.5 py-0.5 text-[10px] font-bold rounded bg-secondary/20 text-secondary">GET</span> Categories
+        </a>
+        <a href="#tags" class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-on-surface-variant hover:bg-surface-container hover:text-primary transition-colors">
+          <span class="px-1.5 py-0.5 text-[10px] font-bold rounded bg-secondary/20 text-secondary">GET</span> Tags
+        </a>
+        <a href="#comments" class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-on-surface-variant hover:bg-surface-container hover:text-primary transition-colors">
+          <span class="px-1.5 py-0.5 text-[10px] font-bold rounded bg-tertiary-fixed-dim/20 text-tertiary">MIX</span> Comments
+        </a>
+        <a href="#interactions" class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-on-surface-variant hover:bg-surface-container hover:text-primary transition-colors">
+          <span class="px-1.5 py-0.5 text-[10px] font-bold rounded bg-tertiary-fixed-dim/20 text-tertiary">POST</span> Likes/Bookmarks
+        </a>
+        <a href="#profile" class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-on-surface-variant hover:bg-surface-container hover:text-primary transition-colors">
+          <span class="px-1.5 py-0.5 text-[10px] font-bold rounded bg-secondary/20 text-secondary">GET</span> Profile
         </a>
       </nav>
 

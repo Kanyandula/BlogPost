@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from account.models import Account
+from account.models import Account, UserProfile
 
 
 # class LoginSerializer(serializers.ModelSerializer):
@@ -51,6 +51,16 @@ class ChangePasswordSerializer(serializers.Serializer):
 
 	old_password 				= serializers.CharField(required=True)
 	new_password 				= serializers.CharField(required=True)
-	confirm_new_password 		= serializers.CharField(required=True)		
+	confirm_new_password 		= serializers.CharField(required=True)
 
 
+class UserProfileSerializer(serializers.ModelSerializer):
+	username = serializers.CharField(source='user.username', read_only=True)
+	email = serializers.CharField(source='user.email', read_only=True)
+	date_joined = serializers.DateTimeField(source='user.date_joined', read_only=True)
+
+	class Meta:
+		model = UserProfile
+		fields = ['username', 'email', 'date_joined', 'bio', 'avatar', 'location',
+				  'website', 'twitter', 'facebook', 'instagram', 'linkedin']
+		read_only_fields = ['username', 'email', 'date_joined']

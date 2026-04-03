@@ -42,6 +42,17 @@ class CommentSerializer(serializers.ModelSerializer):
 		return []
 
 
+class CommentCreateSerializer(serializers.ModelSerializer):
+	class Meta:
+		model = Comment
+		fields = ['body', 'parent']
+
+	def validate_parent(self, value):
+		if value and value.parent is not None:
+			raise serializers.ValidationError("Replies can only be one level deep.")
+		return value
+
+
 class BlogPostSerializer(serializers.ModelSerializer):
 
 	username = serializers.SerializerMethodField('get_username_from_author')
