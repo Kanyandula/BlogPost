@@ -7,69 +7,106 @@
 {% endblock %}
 
 {% block content %}
-<div class="max-w-4xl mx-auto px-6 md:px-12">
-  <h1 class="text-3xl md:text-4xl font-black text-primary mb-8">Write a Story</h1>
+<div class="max-w-[1440px] mx-auto px-6 md:px-12">
+<form method="POST" enctype="multipart/form-data">
+  {% csrf_token %}
 
-  <form method="POST" enctype="multipart/form-data" class="space-y-6">
-    {% csrf_token %}
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-12">
 
-    <!-- Title -->
-    <div>
-      <input type="text" name="title" placeholder="Post title..."
-             value="{{ form.title.value|default:'' }}"
-             class="w-full bg-transparent text-3xl md:text-4xl font-bold text-primary placeholder:text-outline-variant border-none focus:ring-0 px-0"/>
-      {% for error in form.title.errors %}
-      <p class="text-xs text-error mt-1">{{ error }}</p>
-      {% endfor %}
-    </div>
+    <!-- Left: Writing Area -->
+    <div class="lg:col-span-8 flex flex-col gap-8">
 
-    <!-- Category, Status & Image -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-      <div>
-        <label class="block text-sm font-medium text-on-surface mb-2">Category</label>
-        {{ form.category }}
-      </div>
-      <div>
-        <label class="block text-sm font-medium text-on-surface mb-2">Status</label>
-        {{ form.status }}
-      </div>
-      <div>
-        <label class="block text-sm font-medium text-on-surface mb-2">Featured Image</label>
-        <div class="border-2 border-dashed border-outline-variant/30 rounded-xl p-6 text-center hover:bg-surface-container-low transition-colors cursor-pointer" onclick="document.getElementById('id_image').click()">
-          <span class="material-symbols-outlined text-3xl text-outline-variant">add_photo_alternate</span>
-          <p class="text-sm text-on-surface-variant mt-2">Click to upload</p>
-          <input type="file" name="image" id="id_image" class="hidden" accept="image/*"/>
-        </div>
-      </div>
-    </div>
-
-    <!-- Tags -->
-    <div>
-      <label class="block text-sm font-medium text-on-surface mb-2">Tags</label>
-      <div class="flex flex-wrap gap-3">
-        {% for checkbox in form.tags %}
-        <label class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-surface-container-low text-sm text-on-surface-variant hover:bg-secondary-container/30 cursor-pointer transition-colors">
-          {{ checkbox.tag }} {{ checkbox.choice_label }}
-        </label>
+      <!-- Title Input -->
+      <div class="relative group">
+        <input type="text" name="title" placeholder="Enter a compelling title"
+               value="{{ form.title.value|default:'' }}"
+               class="w-full bg-transparent border-none focus:ring-0 text-3xl md:text-5xl font-extrabold text-primary placeholder:text-outline-variant/40 leading-tight p-0"/>
+        <div class="absolute -bottom-3 left-0 w-0 h-[2px] bg-tertiary-fixed-dim group-focus-within:w-full transition-all duration-700"></div>
+        {% for error in form.title.errors %}
+        <p class="text-xs text-error mt-2">{{ error }}</p>
         {% endfor %}
       </div>
+
+      <!-- Body / Content Editor -->
+      <div class="min-h-[500px]">
+        {{ form.body }}
+        {% for error in form.body.errors %}
+        <p class="text-xs text-error mt-2">{{ error }}</p>
+        {% endfor %}
+      </div>
+
     </div>
 
-    <!-- Body -->
-    <div>
-      <label class="block text-sm font-medium text-on-surface mb-2">Content</label>
-      {{ form.body }}
-      {% for error in form.body.errors %}
-      <p class="text-xs text-error mt-1">{{ error }}</p>
-      {% endfor %}
-    </div>
+    <!-- Right: Settings Sidebar -->
+    <aside class="lg:col-span-4 flex flex-col gap-8 lg:sticky lg:top-28 h-fit">
 
-    <!-- Actions -->
-    <div class="flex gap-3 pt-4">
-      <button type="submit" name="status" value="published" class="bg-primary-container text-on-primary px-8 py-3 rounded-lg font-semibold hover:opacity-90 transition-opacity">Publish</button>
-      <button type="submit" name="status" value="draft" class="bg-surface-container-high text-on-surface px-8 py-3 rounded-lg font-medium hover:bg-surface-container-highest transition-colors">Save Draft</button>
-      <a href="{% url 'home' %}" class="bg-surface-container text-on-surface-variant px-8 py-3 rounded-lg font-medium hover:bg-surface-container-high transition-colors">Cancel</a>
-    </div>
-  </form>
+      <!-- Featured Image Dropzone -->
+      <div class="group relative overflow-hidden rounded-xl bg-surface-container-low border-2 border-dashed border-outline-variant/30 hover:border-secondary/50 transition-all aspect-video flex flex-col items-center justify-center p-6 text-center cursor-pointer"
+           onclick="document.getElementById('id_image').click()">
+        <span class="material-symbols-outlined text-4xl text-outline-variant group-hover:text-secondary transition-colors mb-2">add_photo_alternate</span>
+        <p class="text-sm font-medium text-on-surface-variant">Featured Image</p>
+        <p class="text-xs text-outline mt-1">Click to upload</p>
+        <input type="file" name="image" id="id_image" class="hidden" accept="image/*"
+               onchange="this.parentElement.querySelector('p').textContent = this.files[0]?.name || 'Featured Image'"/>
+        <div class="absolute inset-0 bg-primary-container/0 group-hover:bg-primary-container/5 transition-all pointer-events-none"></div>
+      </div>
+
+      <!-- Post Settings Card -->
+      <div class="bg-surface-container-lowest rounded-xl p-6 md:p-8 space-y-6">
+
+        <!-- Category -->
+        <div class="space-y-2">
+          <label class="text-xs font-bold tracking-widest uppercase text-outline">Category</label>
+          <div class="relative">
+            {{ form.category }}
+            <span class="material-symbols-outlined absolute right-3 top-3 pointer-events-none text-outline-variant">expand_more</span>
+          </div>
+        </div>
+
+        <!-- Tags -->
+        <div class="space-y-2">
+          <label class="text-xs font-bold tracking-widest uppercase text-outline">Tags</label>
+          <div class="flex flex-wrap gap-2">
+            {% for checkbox in form.tags %}
+            <label class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-secondary-container/10 text-sm text-on-surface-variant hover:bg-secondary-container/20 cursor-pointer transition-colors">
+              {{ checkbox.tag }} {{ checkbox.choice_label }}
+            </label>
+            {% endfor %}
+          </div>
+        </div>
+
+        <!-- Status -->
+        <div class="space-y-2">
+          <label class="text-xs font-bold tracking-widest uppercase text-outline">Status</label>
+          {{ form.status }}
+        </div>
+
+      </div>
+
+      <!-- Tip Card -->
+      <div class="p-6 rounded-xl bg-tertiary-fixed/30">
+        <div class="flex items-start gap-3">
+          <span class="material-symbols-outlined text-tertiary">lightbulb</span>
+          <div>
+            <p class="text-xs font-bold text-tertiary uppercase tracking-wider mb-1">Editor's Tip</p>
+            <p class="text-sm text-tertiary/80 leading-snug">Articles with high-quality images and clear structure perform best with our readers.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="flex gap-3">
+        <button type="submit" name="status" value="published" class="flex-1 px-6 py-3 rounded-lg bg-[#0f3d3e] text-white font-bold active:scale-95 transition-all">
+          Publish
+        </button>
+        <button type="submit" name="status" value="draft" class="px-6 py-3 rounded-lg bg-surface-container-high text-on-surface font-medium hover:bg-surface-container-highest transition-colors">
+          Save Draft
+        </button>
+      </div>
+
+    </aside>
+
+  </div>
+</form>
 </div>
 {% endblock content %}
