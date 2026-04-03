@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load sanitize %}
 
 {% block title %}{{ blog_post.title }} | NyasaBlog{% endblock %}
 
@@ -70,7 +71,7 @@
     {% endif %}
 
     <!-- Article Body -->
-    <div class="prose prose-lg max-w-none mb-12 text-on-surface">{{ blog_post.body|safe }}</div>
+    <div class="prose prose-lg max-w-none mb-12 text-on-surface">{{ blog_post.body|sanitize_html }}</div>
 
     <!-- Tags -->
     {% if blog_post.tags.all %}

@@ -1,17 +1,16 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.db.models import Q, F, Count
-from django.http import HttpResponse, JsonResponse
+from django.http import HttpResponseForbidden, JsonResponse
 from django.views.decorators.http import require_POST
+from django.contrib.auth.decorators import login_required
 
 from blog.models import BlogPost, Category, Comment, Like, Bookmark
 from blog.forms import CreateBlogPostForm, UpdateBlogPostForm, CommentForm
 
 
+@login_required(login_url='must_authenticate')
 def create_blog_view(request):
 	context = {}
-	user = request.user
-	if not user.is_authenticated:
-		return redirect('must_authenticate')
 
 	form = CreateBlogPostForm(request.POST or None, request.FILES or None)
 	if form.is_valid():
@@ -77,15 +76,13 @@ def detail_blog_view(request, slug):
 	return render(request, 'blog/detail_blog.html', context)
 
 
+@login_required(login_url='must_authenticate')
 def edit_blog_view(request, slug):
 	context = {}
-	user = request.user
-	if not user.is_authenticated:
-		return redirect("must_authenticate")
 
 	blog_post = get_object_or_404(BlogPost, slug=slug)
-	if blog_post.author != user:
-		return HttpResponse('You are not the author of that post.')
+	if blog_post.author != request.user:
+		return HttpResponseForbidden('You are not the author of that post.')
 
 	if request.POST:
 		form = UpdateBlogPostForm(request.POST or None, request.FILES or None, instance=blog_post)
@@ -116,12 +113,11 @@ def get_blog_queryset(query=None):
 	return BlogPost.objects.filter(q_objects, status='published').distinct()
 
 
+@login_required(login_url='must_authenticate')
 def delete_blog_post(request, pk):
-	if not request.user.is_authenticated:
-		return redirect('must_authenticate')
 	post = get_object_or_404(BlogPost, id=pk)
 	if post.author != request.user:
-		return HttpResponse('You are not the author of that post.')
+		return HttpResponseForbidden('You are not the author of that post.')
 	if request.method == 'POST':
 		post.delete()
 		return redirect('home')
@@ -129,12 +125,11 @@ def delete_blog_post(request, pk):
 	return render(request, 'blog/post_delete.html', context)
 
 
+@login_required(login_url='must_authenticate')
 def delete_comment_view(request, pk):
-	if not request.user.is_authenticated:
-		return redirect('must_authenticate')
 	comment = get_object_or_404(Comment, pk=pk)
 	if comment.author != request.user:
-		return HttpResponse('You are not the author of this comment.')
+		return HttpResponseForbidden('You are not the author of this comment.')
 	slug = comment.post.slug
 	if request.method == 'POST':
 		comment.delete()
@@ -169,9 +164,8 @@ def toggle_bookmark_view(request, slug):
 	return JsonResponse({'bookmarked': bookmarked})
 
 
+@login_required(login_url='login')
 def bookmarks_view(request):
-	if not request.user.is_authenticated:
-		return redirect('login')
 	bookmarked_posts = BlogPost.objects.filter(
 		bookmarks__user=request.user
 	).select_related('author', 'category').order_by('-bookmarks__created_at')

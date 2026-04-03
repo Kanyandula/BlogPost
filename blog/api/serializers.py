@@ -12,7 +12,7 @@ MIN_BODY_LENGTH = 50
 
 from blog.models import BlogPost, Category, Tag, Comment
 
-from blog.utils import is_image_aspect_ratio_valid, is_image_size_valid
+from blog.utils import is_image_aspect_ratio_valid, is_image_size_valid, validate_image_upload
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -93,31 +93,33 @@ class BlogPostUpdateSerializer(serializers.ModelSerializer):
 			title = blog_post['title']
 			if len(title) < MIN_TITLE_LENGTH:
 				raise serializers.ValidationError({"response": "Enter a title longer than " + str(MIN_TITLE_LENGTH) + " characters."})
-			
+
 			body = blog_post['body']
 			if len(body) < MIN_BODY_LENGTH:
 				raise serializers.ValidationError({"response": "Enter a body longer than " + str(MIN_BODY_LENGTH) + " characters."})
-			
+		except KeyError:
+			pass
+
+		try:
 			image = blog_post['image']
-			url = os.path.join(settings.TEMP , str(image))
+
+			# Validate MIME type and size before writing to disk
+			is_valid, error_msg = validate_image_upload(image)
+			if not is_valid:
+				raise serializers.ValidationError({"response": error_msg})
+
+			url = os.path.join(settings.TEMP, str(image))
 			storage = FileSystemStorage(location=url)
+			try:
+				with storage.open('', 'wb+') as destination:
+					for chunk in image.chunks():
+						destination.write(chunk)
 
-			with storage.open('', 'wb+') as destination:
-				for chunk in image.chunks():
-					destination.write(chunk)
-				destination.close()
-
-			# Check image size
-			if not is_image_size_valid(url, IMAGE_SIZE_MAX_BYTES):
-				os.remove(url)
-				raise serializers.ValidationError({"response": "That image is too large. Images must be less than 2 MB. Try a different image."})
-
-			# Check image aspect ratio
-			if not is_image_aspect_ratio_valid(url):
-				os.remove(url)
-				raise serializers.ValidationError({"response": "Image height must not exceed image width. Try a different image."})
-
-			os.remove(url)
+				if not is_image_aspect_ratio_valid(url):
+					raise serializers.ValidationError({"response": "Image height must not exceed image width. Try a different image."})
+			finally:
+				if os.path.exists(url):
+					os.remove(url)
 		except KeyError:
 			pass
 		return blog_post
@@ -133,17 +135,21 @@ class BlogPostCreateSerializer(serializers.ModelSerializer):
 
 
 	def save(self):
-		
 		try:
 			image = self.validated_data['image']
 			title = self.validated_data['title']
 			if len(title) < MIN_TITLE_LENGTH:
 				raise serializers.ValidationError({"response": "Enter a title longer than " + str(MIN_TITLE_LENGTH) + " characters."})
-			
+
 			body = self.validated_data['body']
 			if len(body) < MIN_BODY_LENGTH:
 				raise serializers.ValidationError({"response": "Enter a body longer than " + str(MIN_BODY_LENGTH) + " characters."})
-			
+
+			# Validate MIME type and size before writing to disk
+			is_valid, error_msg = validate_image_upload(image)
+			if not is_valid:
+				raise serializers.ValidationError({"response": error_msg})
+
 			blog_post = BlogPost(
 								author=self.validated_data['author'],
 								title=title,
@@ -151,25 +157,19 @@ class BlogPostCreateSerializer(serializers.ModelSerializer):
 								image=image,
 								)
 
-			url = os.path.join(settings.TEMP , str(image))
+			url = os.path.join(settings.TEMP, str(image))
 			storage = FileSystemStorage(location=url)
+			try:
+				with storage.open('', 'wb+') as destination:
+					for chunk in image.chunks():
+						destination.write(chunk)
 
-			with storage.open('', 'wb+') as destination:
-				for chunk in image.chunks():
-					destination.write(chunk)
-				destination.close()
+				if not is_image_aspect_ratio_valid(url):
+					raise serializers.ValidationError({"response": "Image height must not exceed image width. Try a different image."})
+			finally:
+				if os.path.exists(url):
+					os.remove(url)
 
-			# Check image size
-			if not is_image_size_valid(url, IMAGE_SIZE_MAX_BYTES):
-				os.remove(url)
-				raise serializers.ValidationError({"response": "That image is too large. Images must be less than 2 MB. Try a different image."})
-
-			# Check image aspect ratio
-			if not is_image_aspect_ratio_valid(url):
-				os.remove(url)
-				raise serializers.ValidationError({"response": "Image height must not exceed image width. Try a different image."})
-
-			os.remove(url)
 			blog_post.save()
 			return blog_post
 		except KeyError:
