@@ -9,8 +9,11 @@ from rest_framework.filters import SearchFilter, OrderingFilter
 
 
 from account.models import Account
-from blog.models import BlogPost
-from blog.api.serializers import BlogPostSerializer, BlogPostUpdateSerializer,BlogPostCreateSerializer
+from blog.models import BlogPost, Category, Tag, Comment, Like, Bookmark
+from blog.api.serializers import (
+	BlogPostSerializer, BlogPostUpdateSerializer, BlogPostCreateSerializer,
+	CategorySerializer, TagSerializer, CommentSerializer, CommentCreateSerializer,
+)
 
 SUCCESS = 'success'
 ERROR = 'error'
@@ -145,10 +148,121 @@ def api_create_blog_view(request):
 #		4) search + pagination + ordering: <your-domain>/api/blog/list?search=mitch&page=2&ordering=-date_updated
 # Headers: Authorization: Token <token>
 class ApiBlogListView(ListAPIView):
-	queryset = BlogPost.objects.all()
 	serializer_class = BlogPostSerializer
 	authentication_classes = (TokenAuthentication,)
 	permission_classes = (IsAuthenticated,)
 	pagination_class = PageNumberPagination
 	filter_backends = (SearchFilter, OrderingFilter)
 	search_fields = ('title', 'body', 'author__username')
+	ordering_fields = ('date_updated', 'view_count', 'title')
+
+	def get_queryset(self):
+		queryset = BlogPost.objects.all()
+		category = self.request.query_params.get('category')
+		status_filter = self.request.query_params.get('status')
+		if category:
+			queryset = queryset.filter(category__slug=category)
+		if status_filter:
+			queryset = queryset.filter(status=status_filter)
+		return queryset
+
+
+# --- Categories & Tags ---
+
+@api_view(['GET'])
+@permission_classes([])
+def api_categories_view(request):
+	categories = Category.objects.all()
+	serializer = CategorySerializer(categories, many=True)
+	return Response(serializer.data)
+
+
+@api_view(['GET'])
+@permission_classes([])
+def api_tags_view(request):
+	tags = Tag.objects.all()
+	serializer = TagSerializer(tags, many=True)
+	return Response(serializer.data)
+
+
+# --- Comments ---
+
+@api_view(['GET'])
+@permission_classes([])
+def api_comments_view(request, slug):
+	try:
+		post = BlogPost.objects.get(slug=slug)
+	except BlogPost.DoesNotExist:
+		return Response(status=status.HTTP_404_NOT_FOUND)
+	comments = post.comments.filter(parent=None, is_active=True).select_related('author').prefetch_related('replies__author')
+	serializer = CommentSerializer(comments, many=True)
+	return Response(serializer.data)
+
+
+@api_view(['POST'])
+@permission_classes((IsAuthenticated,))
+def api_create_comment_view(request, slug):
+	try:
+		post = BlogPost.objects.get(slug=slug)
+	except BlogPost.DoesNotExist:
+		return Response(status=status.HTTP_404_NOT_FOUND)
+
+	serializer = CommentCreateSerializer(data=request.data)
+	if serializer.is_valid():
+		serializer.save(post=post, author=request.user)
+		return Response(serializer.data, status=status.HTTP_201_CREATED)
+	return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['DELETE'])
+@permission_classes((IsAuthenticated,))
+def api_delete_comment_view(request, pk):
+	try:
+		comment = Comment.objects.get(pk=pk)
+	except Comment.DoesNotExist:
+		return Response(status=status.HTTP_404_NOT_FOUND)
+
+	if comment.author != request.user:
+		return Response({'response': "You don't have permission to delete this comment."}, status=status.HTTP_403_FORBIDDEN)
+	comment.delete()
+	return Response({'response': 'deleted'})
+
+
+# --- Likes & Bookmarks ---
+
+@api_view(['POST'])
+@permission_classes((IsAuthenticated,))
+def api_toggle_like_view(request, slug):
+	try:
+		post = BlogPost.objects.get(slug=slug)
+	except BlogPost.DoesNotExist:
+		return Response(status=status.HTTP_404_NOT_FOUND)
+
+	like, created = Like.objects.get_or_create(post=post, user=request.user)
+	if not created:
+		like.delete()
+		return Response({'liked': False, 'count': post.likes.count()})
+	return Response({'liked': True, 'count': post.likes.count()})
+
+
+@api_view(['POST'])
+@permission_classes((IsAuthenticated,))
+def api_toggle_bookmark_view(request, slug):
+	try:
+		post = BlogPost.objects.get(slug=slug)
+	except BlogPost.DoesNotExist:
+		return Response(status=status.HTTP_404_NOT_FOUND)
+
+	bookmark, created = Bookmark.objects.get_or_create(post=post, user=request.user)
+	if not created:
+		bookmark.delete()
+		return Response({'bookmarked': False})
+	return Response({'bookmarked': True})
+
+
+@api_view(['GET'])
+@permission_classes((IsAuthenticated,))
+def api_bookmarks_view(request):
+	bookmarked_posts = BlogPost.objects.filter(bookmarks__user=request.user).order_by('-bookmarks__created_at')
+	serializer = BlogPostSerializer(bookmarked_posts, many=True)
+	return Response(serializer.data)

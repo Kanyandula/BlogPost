@@ -6,6 +6,8 @@ from account.api.views import(
 	update_account_view,
 	does_account_exist_view,
 	ChangePasswordView,
+	api_author_profile_view,
+	api_update_profile_view,
 )
 from rest_framework.authtoken.views import obtain_auth_token
 
@@ -16,7 +18,8 @@ urlpatterns = [
 	path('change_password/', ChangePasswordView.as_view(), name="change_password"),
 	path('properties', account_properties_view, name="properties"),
 	path('properties/update', update_account_view, name="update"),
- 	path('login', ObtainAuthTokenView.as_view(), name="login"), 
+ 	path('login', ObtainAuthTokenView.as_view(), name="login"),
 	path('register', registration_view, name="register"),
-
+	path('profile/<str:username>/', api_author_profile_view, name="author_profile"),
+	path('profile/update/', api_update_profile_view, name="update_profile"),
 ]

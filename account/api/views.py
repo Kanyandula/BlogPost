@@ -8,9 +8,10 @@ from django.contrib.auth import authenticate
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 
-from account.api.serializers import RegistrationSerializer,AccountPropertiesSerializer,ChangePasswordSerializer
-from account.models import Account
+from account.api.serializers import RegistrationSerializer, AccountPropertiesSerializer, ChangePasswordSerializer, UserProfileSerializer
+from account.models import Account, UserProfile
 from rest_framework.authtoken.models import Token
+from django.db.models import Sum, Count
 
 
 # Register
@@ -179,3 +180,34 @@ class ChangePasswordView(UpdateAPIView):
 
 		return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
+@api_view(['GET'])
+@permission_classes([])
+def api_author_profile_view(request, username):
+	try:
+		account = Account.objects.select_related('profile').get(username=username)
+	except Account.DoesNotExist:
+		return Response(status=status.HTTP_404_NOT_FOUND)
+
+	from blog.models import BlogPost
+	posts = BlogPost.objects.filter(author=account, status='published')
+	stats = posts.aggregate(
+		total_views=Sum('view_count'),
+		post_count=Count('id'),
+	)
+
+	profile_data = UserProfileSerializer(account.profile).data
+	profile_data['post_count'] = stats['post_count']
+	profile_data['total_views'] = stats['total_views'] or 0
+	return Response(profile_data)
+
+
+@api_view(['PUT'])
+@permission_classes((IsAuthenticated,))
+def api_update_profile_view(request):
+	profile = request.user.profile
+	serializer = UserProfileSerializer(profile, data=request.data, partial=True)
+	if serializer.is_valid():
+		serializer.save()
+		return Response(serializer.data)
+	return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
