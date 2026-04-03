@@ -91,7 +91,7 @@
               <span class="text-xs text-on-surface-variant">{{ post.date_updated|timesince }} ago</span>
             </a>
             <div class="flex items-center gap-3 ml-4 shrink-0">
-              <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider {% if post.status == 'published' %}bg-primary-fixed text-on-primary-fixed{% else %}bg-surface-container-high text-on-surface-variant{% endif %}">{{ post.get_status_display }}</span>
+              <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider {% if post.status == 'published' %}bg-[#beebeb] text-[#002627]{% else %}bg-surface-container-high text-on-surface-variant{% endif %}">{{ post.get_status_display }}</span>
               <a href="{% url 'blog:edit' post.slug %}" class="text-on-surface-variant hover:text-primary">
                 <span class="material-symbols-outlined text-lg">edit</span>
               </a>
