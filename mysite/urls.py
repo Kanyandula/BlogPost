@@ -14,10 +14,21 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
+from django.contrib.sitemaps.views import sitemap
 from django.urls import path, include
 from django.contrib.auth import views as auth_views
 from django.conf.urls.static import static
 from django.conf import settings
+from django.http import HttpResponse
+from django.views.decorators.cache import cache_page
+
+from blog.sitemaps import BlogPostSitemap, CategorySitemap, StaticSitemap
+
+sitemaps = {
+    'posts': BlogPostSitemap,
+    'categories': CategorySitemap,
+    'static': StaticSitemap,
+}
 
 from personal.views import (
 	home_screen_view,
@@ -36,9 +47,24 @@ from account.views import (
 	author_profile_view,
 )
 
+def robots_txt(request):
+    lines = [
+        "User-agent: *",
+        "Allow: /",
+        "Disallow: /admin/",
+        "Disallow: /api/",
+        "Disallow: /account/",
+        "",
+        f"Sitemap: {request.scheme}://{request.get_host()}/sitemap.xml",
+    ]
+    return HttpResponse("\n".join(lines), content_type="text/plain")
+
+
 urlpatterns = [
     path('', home_screen_view, name="home"),
     path('search/', search_view, name="search"),
+    path('robots.txt', robots_txt, name="robots"),
+    path('sitemap.xml', cache_page(86400)(sitemap), {'sitemaps': sitemaps}, name='sitemap'),
     path('account/', account_view, name="account"),
     path('admin/', admin.site.urls),
     path('blog/', include('blog.urls', 'blog')),
