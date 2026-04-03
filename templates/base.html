@@ -8,78 +8,9 @@
 <meta name="description" content="{% block meta_description %}NyasaBlog is the most trusted source for Malawian content — Culture, Entertainment, Entrepreneurship, and more.{% endblock %}"/>
 {% block og_meta %}{% endblock %}
 <link rel="shortcut icon" type="image/png" href="{% static 'nyasa.png' %}"/>
-<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="{% static 'css/tailwind.min.css' %}" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
-<script>
-tailwind.config = {
-  darkMode: "class",
-  theme: {
-    extend: {
-      colors: {
-        "background": "var(--color-background)",
-        "primary": "var(--color-primary)",
-        "primary-container": "var(--color-primary-container)",
-        "primary-fixed": "var(--color-primary-fixed)",
-        "primary-fixed-dim": "var(--color-primary-fixed-dim)",
-        "on-primary": "var(--color-on-primary)",
-        "on-primary-container": "var(--color-on-primary-container)",
-        "on-primary-fixed": "#002020",
-        "on-primary-fixed-variant": "#224d4e",
-        "secondary": "var(--color-secondary)",
-        "secondary-container": "var(--color-secondary-container)",
-        "secondary-fixed": "#dce1ff",
-        "secondary-fixed-dim": "var(--color-secondary-fixed-dim)",
-        "on-secondary": "var(--color-on-secondary)",
-        "on-secondary-container": "#1d3989",
-        "on-secondary-fixed": "#00164e",
-        "on-secondary-fixed-variant": "#264191",
-        "tertiary": "var(--color-tertiary)",
-        "tertiary-container": "var(--color-tertiary-container)",
-        "tertiary-fixed": "var(--color-tertiary-fixed)",
-        "tertiary-fixed-dim": "var(--color-tertiary-fixed-dim)",
-        "on-tertiary": "var(--color-on-tertiary)",
-        "on-tertiary-container": "var(--color-on-tertiary-container)",
-        "on-tertiary-fixed": "var(--color-on-tertiary-fixed)",
-        "on-tertiary-fixed-variant": "#653e00",
-        "surface": "var(--color-surface)",
-        "surface-bright": "var(--color-background)",
-        "surface-dim": "#d9dadb",
-        "surface-tint": "#3b6566",
-        "surface-variant": "var(--color-surface-container-highest)",
-        "surface-container": "var(--color-surface-container)",
-        "surface-container-low": "var(--color-surface-container-low)",
-        "surface-container-high": "var(--color-surface-container-high)",
-        "surface-container-highest": "var(--color-surface-container-highest)",
-        "surface-container-lowest": "var(--color-surface-container-lowest)",
-        "on-surface": "var(--color-on-surface)",
-        "on-surface-variant": "var(--color-on-surface-variant)",
-        "on-background": "var(--color-on-surface)",
-        "outline": "var(--color-outline)",
-        "outline-variant": "var(--color-outline-variant)",
-        "error": "var(--color-error)",
-        "error-container": "var(--color-error-container)",
-        "on-error": "var(--color-on-error)",
-        "on-error-container": "var(--color-on-error-container)",
-        "inverse-surface": "#2e3132",
-        "inverse-on-surface": "#f0f1f2",
-        "inverse-primary": "#a3cfcf"
-      },
-      fontFamily: {
-        "headline": ["Inter", "sans-serif"],
-        "body": ["Inter", "sans-serif"],
-        "label": ["Inter", "sans-serif"]
-      },
-      borderRadius: {
-        "DEFAULT": "0.25rem",
-        "lg": "0.5rem",
-        "xl": "0.75rem",
-        "full": "9999px"
-      },
-    },
-  },
-}
-</script>
 {% include 'snippets/base_css.html' %}
 <script>
 // Apply theme before render to prevent flash
