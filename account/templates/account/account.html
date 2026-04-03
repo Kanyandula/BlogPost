@@ -12,10 +12,14 @@
 
   <!-- Profile Header -->
   <div class="flex flex-col md:flex-row items-start md:items-end gap-6 mb-10">
-    <div class="p-1 bg-surface-container-lowest rounded-full">
+    <div class="p-1 bg-surface-container-lowest rounded-full relative group">
+      {% if profile.avatar %}
+      <img class="w-24 h-24 md:w-32 md:h-32 rounded-full border-4 border-surface-container-lowest object-cover" src="{{ profile.avatar.url }}" alt="{{ request.user.username }}"/>
+      {% else %}
       <div class="w-24 h-24 md:w-32 md:h-32 rounded-full border-4 border-surface-container-lowest bg-surface-container-high flex items-center justify-center">
         <span class="material-symbols-outlined text-4xl md:text-5xl text-primary">account_circle</span>
       </div>
+      {% endif %}
     </div>
     <div class="mb-2">
       <h1 class="text-2xl md:text-3xl font-bold text-primary">{{ request.user.username }}</h1>
@@ -42,8 +46,32 @@
       <!-- Account Info -->
       <div class="bg-surface-container-lowest rounded-xl p-6 md:p-8">
         <h2 class="text-lg font-bold text-primary mb-6">Account Information</h2>
-        <form method="POST" class="space-y-5">
+        <form method="POST" enctype="multipart/form-data" class="space-y-5">
           {% csrf_token %}
+
+          <!-- Avatar Upload -->
+          <div>
+            <label class="block text-xs font-bold tracking-widest uppercase text-outline mb-2">Profile Picture</label>
+            <div class="flex items-center gap-4">
+              {% if profile.avatar %}
+              <img class="w-16 h-16 rounded-full object-cover border-2 border-outline-variant/20" src="{{ profile.avatar.url }}" alt="Current avatar"/>
+              {% else %}
+              <div class="w-16 h-16 rounded-full bg-surface-container-high flex items-center justify-center border-2 border-outline-variant/20">
+                <span class="material-symbols-outlined text-2xl text-outline-variant">account_circle</span>
+              </div>
+              {% endif %}
+              <div>
+                <input type="file" name="avatar" accept="image/*" id="id_avatar" class="hidden"
+                       onchange="document.getElementById('avatar-label').textContent = this.files[0]?.name || 'Choose file'"/>
+                <button type="button" onclick="document.getElementById('id_avatar').click()" class="px-4 py-2 bg-surface-container-high text-on-surface text-sm font-medium rounded-lg hover:bg-surface-container-highest transition-colors">
+                  <span class="material-symbols-outlined text-sm align-middle mr-1">upload</span>
+                  <span id="avatar-label">Upload Photo</span>
+                </button>
+                <p class="text-xs text-on-surface-variant mt-1">JPG, PNG. Max 2MB.</p>
+              </div>
+            </div>
+          </div>
+
           <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div>
               <label class="block text-xs font-bold tracking-widest uppercase text-outline mb-2">Email</label>
@@ -53,6 +81,38 @@
             <div>
               <label class="block text-xs font-bold tracking-widest uppercase text-outline mb-2">Username</label>
               <input type="text" name="username" value="{{ account_form.initial.username }}" required
+                     class="w-full bg-surface-container-low border-none rounded-lg py-3 px-4 text-sm text-on-surface focus:ring-2 focus:ring-secondary/20"/>
+            </div>
+          </div>
+
+          <!-- Profile Fields -->
+          <div>
+            <label class="block text-xs font-bold tracking-widest uppercase text-outline mb-2">Bio</label>
+            <textarea name="bio" rows="3" class="w-full bg-surface-container-low border-none rounded-lg py-3 px-4 text-sm text-on-surface focus:ring-2 focus:ring-secondary/20 resize-none" placeholder="Tell readers about yourself...">{{ profile.bio }}</textarea>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div>
+              <label class="block text-xs font-bold tracking-widest uppercase text-outline mb-2">Location</label>
+              <input type="text" name="location" value="{{ profile.location }}" placeholder="e.g. Lilongwe, Malawi"
+                     class="w-full bg-surface-container-low border-none rounded-lg py-3 px-4 text-sm text-on-surface focus:ring-2 focus:ring-secondary/20"/>
+            </div>
+            <div>
+              <label class="block text-xs font-bold tracking-widest uppercase text-outline mb-2">Website</label>
+              <input type="url" name="website" value="{{ profile.website }}" placeholder="https://yoursite.com"
+                     class="w-full bg-surface-container-low border-none rounded-lg py-3 px-4 text-sm text-on-surface focus:ring-2 focus:ring-secondary/20"/>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div>
+              <label class="block text-xs font-bold tracking-widest uppercase text-outline mb-2">Twitter</label>
+              <input type="text" name="twitter" value="{{ profile.twitter }}" placeholder="@username"
+                     class="w-full bg-surface-container-low border-none rounded-lg py-3 px-4 text-sm text-on-surface focus:ring-2 focus:ring-secondary/20"/>
+            </div>
+            <div>
+              <label class="block text-xs font-bold tracking-widest uppercase text-outline mb-2">LinkedIn</label>
+              <input type="text" name="linkedin" value="{{ profile.linkedin }}" placeholder="linkedin.com/in/username"
                      class="w-full bg-surface-container-low border-none rounded-lg py-3 px-4 text-sm text-on-surface focus:ring-2 focus:ring-secondary/20"/>
             </div>
           </div>

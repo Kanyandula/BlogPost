@@ -67,6 +67,8 @@ def account_view(request):
 			return redirect("login")
 
 	context = {}
+	profile = request.user.profile
+
 	if request.POST:
 		form = AccountUpdateForm(request.POST, instance=request.user)
 		if form.is_valid():
@@ -75,17 +77,27 @@ def account_view(request):
 					"username": request.POST['username'],
 			}
 			form.save()
+
+			# Update profile fields
+			if request.FILES.get('avatar'):
+				profile.avatar = request.FILES['avatar']
+			profile.bio = request.POST.get('bio', profile.bio)
+			profile.location = request.POST.get('location', profile.location)
+			profile.website = request.POST.get('website', profile.website)
+			profile.twitter = request.POST.get('twitter', profile.twitter)
+			profile.save()
+
 			context['success_message'] = "Updated"
 	else:
 		form = AccountUpdateForm(
-
 			initial={
-					"email": request.user.email, 
+					"email": request.user.email,
 					"username": request.user.username,
 				}
 			)
 
 	context['account_form'] = form
+	context['profile'] = profile
 
 	blog_posts = BlogPost.objects.filter(author=request.user)
 	context['blog_posts'] = blog_posts
