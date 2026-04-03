@@ -62,10 +62,13 @@ def api_update_blog_view(request, slug):
 			data['body'] = blog_post.body
 			data['slug'] = blog_post.slug
 			data['date_updated'] = blog_post.date_updated
-			image_url = str(request.build_absolute_uri(blog_post.image.url))
-			if "?" in image_url:
-				image_url = image_url[:image_url.rfind("?")]
-			data['image'] = image_url
+			if blog_post.image:
+				image_url = str(request.build_absolute_uri(blog_post.image.url))
+				if "?" in image_url:
+					image_url = image_url[:image_url.rfind("?")]
+				data['image'] = image_url
+			else:
+				data['image'] = None
 			data['username'] = blog_post.author.username
 			return Response(data=data)
 		return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -117,7 +120,7 @@ def api_create_blog_view(request):
 
 	if request.method == 'POST':
 
-		data = request.data
+		data = request.data.copy()
 		data['author'] = request.user.pk
 		serializer = BlogPostCreateSerializer(data=data)
 
@@ -130,10 +133,13 @@ def api_create_blog_view(request):
 			data['body'] = blog_post.body
 			data['slug'] = blog_post.slug
 			data['date_updated'] = blog_post.date_updated
-			image_url = str(request.build_absolute_uri(blog_post.image.url))
-			if "?" in image_url:
-				image_url = image_url[:image_url.rfind("?")]
-			data['image'] = image_url
+			if blog_post.image:
+				image_url = str(request.build_absolute_uri(blog_post.image.url))
+				if "?" in image_url:
+					image_url = image_url[:image_url.rfind("?")]
+				data['image'] = image_url
+			else:
+				data['image'] = None
 			data['username'] = blog_post.author.username
 			return Response(data=data)
 		return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
