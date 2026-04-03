@@ -7,7 +7,7 @@
 <!-- Hero: Featured Post -->
 {% if featured_posts %}
 {% with post=featured_posts.0 %}
-<section class="relative mb-12 group cursor-pointer overflow-hidden rounded-xl">
+<section class="relative mb-20 group cursor-pointer overflow-hidden rounded-xl">
   <a href="{% url 'blog:detail' post.slug %}">
     <div class="aspect-[21/9] w-full relative">
       {% if post.image %}
@@ -30,6 +30,35 @@
   </a>
 </section>
 {% endwith %}
+{% else %}
+{% if blog_posts %}
+{% with post=blog_posts.0 %}
+<section class="relative mb-20 group cursor-pointer overflow-hidden rounded-xl">
+  <a href="{% url 'blog:detail' post.slug %}">
+    <div class="aspect-[21/9] w-full relative">
+      {% if post.image %}
+      <img alt="{{ post.title }}" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" src="{{ post.image.url }}"/>
+      {% else %}
+      <div class="w-full h-full bg-[#0f3d3e]"></div>
+      {% endif %}
+      <div class="absolute inset-0 bg-gradient-to-t from-[#002627]/90 via-[#002627]/20 to-transparent"></div>
+    </div>
+    <div class="absolute bottom-0 left-0 p-6 md:p-12 w-full lg:w-2/3">
+      {% if post.category %}
+      <span class="bg-tertiary-fixed-dim text-on-tertiary-fixed px-3 py-1 rounded text-xs font-bold tracking-widest uppercase mb-4 inline-block">{{ post.category.name }}</span>
+      {% endif %}
+      <h1 class="text-white text-2xl md:text-4xl lg:text-5xl font-black mb-4 leading-tight">{{ post.title }}</h1>
+      <div class="flex items-center gap-3 text-white/90 text-sm">
+        <span class="material-symbols-outlined text-base">person</span>
+        <span>{{ post.author.username }}</span>
+        <span class="opacity-50">·</span>
+        <span>{{ post.reading_time }} min read</span>
+      </div>
+    </div>
+  </a>
+</section>
+{% endwith %}
+{% endif %}
 {% endif %}
 
 <!-- Category Filter Pills -->
@@ -45,20 +74,30 @@
 </div>
 
 <!-- Main Grid -->
-<div class="grid grid-cols-1 lg:grid-cols-12 gap-12">
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-16">
 
   <!-- Blog Feed -->
-  <div class="lg:col-span-8">
-    <h2 class="text-2xl font-black text-primary mb-8">Latest Stories</h2>
+  <div class="lg:col-span-8 space-y-12">
+    <div class="flex items-center justify-between border-b border-outline-variant/20 pb-4">
+      <h2 class="text-2xl font-black text-primary italic">Latest Narratives</h2>
+      <div class="flex gap-4">
+        <button onclick="document.getElementById('posts-grid').className='grid grid-cols-1 md:grid-cols-2 gap-10'" title="Grid view">
+          <span class="material-symbols-outlined cursor-pointer hover:text-secondary">grid_view</span>
+        </button>
+        <button onclick="document.getElementById('posts-grid').className='grid grid-cols-1 gap-8'" title="List view">
+          <span class="material-symbols-outlined cursor-pointer text-outline hover:text-secondary">list</span>
+        </button>
+      </div>
+    </div>
 
     {% if blog_posts %}
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+    <div id="posts-grid" class="grid grid-cols-1 md:grid-cols-2 gap-10">
       {% for post in blog_posts %}
-      <article class="group bg-surface-container-lowest rounded-xl overflow-hidden">
+      <article class="flex flex-col group">
         <a href="{% url 'blog:detail' post.slug %}">
-          <div class="aspect-video overflow-hidden">
+          <div class="aspect-video mb-6 overflow-hidden rounded-lg bg-surface-container-low">
             {% if post.image %}
-            <img alt="{{ post.title }}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" src="{{ post.image.url }}"/>
+            <img alt="{{ post.title }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="{{ post.image.url }}"/>
             {% else %}
             <div class="w-full h-full bg-surface-container-high flex items-center justify-center">
               <span class="material-symbols-outlined text-4xl text-outline-variant">article</span>
@@ -66,25 +105,23 @@
             {% endif %}
           </div>
         </a>
-        <div class="p-5">
+        <div class="flex items-center gap-2 mb-3">
           {% if post.category %}
-          <span class="text-xs font-semibold uppercase tracking-widest text-secondary">{{ post.category.name }}</span>
+          <span class="text-[10px] font-black uppercase tracking-tighter text-secondary">{{ post.category.name }}</span>
+          <span class="w-1 h-1 rounded-full bg-outline-variant"></span>
           {% endif %}
-          <a href="{% url 'blog:detail' post.slug %}">
-            <h3 class="text-lg font-bold text-primary mt-1 mb-2 line-clamp-2 group-hover:text-primary-container transition-colors">{{ post.title }}</h3>
-          </a>
-          <p class="text-sm text-on-surface-variant line-clamp-2 mb-4">{{ post.body|striptags|truncatechars:120 }}</p>
-          <div class="flex items-center justify-between text-xs text-on-surface-variant">
-            <div class="flex items-center gap-2">
-              <span class="material-symbols-outlined text-sm">person</span>
-              <a href="{% url 'author_profile' post.author.username %}" class="font-medium hover:text-primary">{{ post.author.username }}</a>
-              <span class="opacity-50">·</span>
-              <span>{{ post.reading_time }} min</span>
-            </div>
-            <div class="flex items-center gap-3">
-              <span class="flex items-center gap-1"><span class="material-symbols-outlined text-sm">favorite</span>{{ post.like_count }}</span>
-              <span class="flex items-center gap-1"><span class="material-symbols-outlined text-sm">chat</span>{{ post.comment_count }}</span>
-            </div>
+          <span class="text-[10px] text-outline">{{ post.date_published|date:"M d, Y" }}</span>
+        </div>
+        <a href="{% url 'blog:detail' post.slug %}">
+          <h3 class="text-xl font-bold text-primary mb-3 leading-snug group-hover:text-secondary transition-colors line-clamp-2">{{ post.title }}</h3>
+        </a>
+        <p class="text-on-surface-variant text-sm mb-6 line-clamp-2">{{ post.body|striptags|truncatechars:140 }}</p>
+        <div class="flex items-center justify-between mt-auto text-xs">
+          <a href="{% url 'author_profile' post.author.username %}" class="font-bold text-primary hover:text-secondary">{{ post.author.username }}</a>
+          <div class="flex items-center gap-3 text-on-surface-variant">
+            <span>{{ post.reading_time }} min</span>
+            <span class="flex items-center gap-1"><span class="material-symbols-outlined text-sm">favorite</span>{{ post.like_count }}</span>
+            <span class="flex items-center gap-1"><span class="material-symbols-outlined text-sm">chat</span>{{ post.comment_count }}</span>
           </div>
         </div>
       </article>
