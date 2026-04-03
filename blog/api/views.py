@@ -157,13 +157,16 @@ class ApiBlogListView(ListAPIView):
 	ordering_fields = ('date_updated', 'view_count', 'title')
 
 	def get_queryset(self):
-		queryset = BlogPost.objects.all()
+		if self.request.user.is_staff:
+			queryset = BlogPost.objects.all()
+			status_filter = self.request.query_params.get('status')
+			if status_filter:
+				queryset = queryset.filter(status=status_filter)
+		else:
+			queryset = BlogPost.objects.filter(status='published')
 		category = self.request.query_params.get('category')
-		status_filter = self.request.query_params.get('status')
 		if category:
 			queryset = queryset.filter(category__slug=category)
-		if status_filter:
-			queryset = queryset.filter(status=status_filter)
 		return queryset
 
 
