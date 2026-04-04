@@ -193,8 +193,11 @@
   <aside class="hidden lg:block lg:col-span-3">
     <div class="sticky top-28">
       {% if request.user.is_authenticated and blog_post.author == request.user %}
-      <a href="{% url 'blog:edit' blog_post.slug %}" class="block w-full bg-primary-container text-on-primary text-center px-6 py-2.5 rounded-lg text-sm font-semibold hover:opacity-90 transition-opacity mb-6">
+      <a href="{% url 'blog:edit' blog_post.slug %}" class="block w-full bg-primary-container text-on-primary text-center px-6 py-2.5 rounded-lg text-sm font-semibold hover:opacity-90 transition-opacity mb-4">
         <span class="material-symbols-outlined text-sm align-middle mr-1">edit</span> Edit Post
+      </a>
+      <a href="{% url 'blog:delete' blog_post.pk %}" class="block w-full bg-error-container text-on-error-container text-center px-6 py-2.5 rounded-lg text-sm font-semibold hover:opacity-90 transition-opacity mb-6">
+        <span class="material-symbols-outlined text-sm align-middle mr-1">delete</span> Delete Post
       </a>
       {% endif %}
     </div>

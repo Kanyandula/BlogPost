@@ -63,9 +63,12 @@
     </div>
 
     <!-- Actions -->
-    <div class="flex gap-3 pt-4">
+    <div class="flex flex-wrap items-center gap-3 pt-4">
       <button type="submit" class="bg-primary-container text-on-primary px-8 py-3 rounded-lg font-semibold hover:opacity-90 transition-opacity">Save Changes</button>
       <a href="{% url 'blog:detail' blog_post.slug %}" class="bg-surface-container-high text-on-surface px-8 py-3 rounded-lg font-medium hover:bg-surface-container-highest transition-colors">Cancel</a>
+      <a href="{% url 'blog:delete' blog_post.pk %}" class="ml-auto bg-error-container text-on-error-container px-8 py-3 rounded-lg font-semibold hover:opacity-90 transition-opacity">
+        <span class="material-symbols-outlined text-sm align-middle mr-1">delete</span> Delete Post
+      </a>
     </div>
   </form>
 </div>
