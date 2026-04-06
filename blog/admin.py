@@ -21,7 +21,7 @@ class BlogPostAdmin(admin.ModelAdmin):
 	list_filter = ('status', 'is_featured', 'category')
 	search_fields = ('title', 'body')
 	filter_horizontal = ('tags',)
-	actions = ['publish_posts', 'feature_posts']
+	actions = ['publish_posts', 'feature_posts', 'unfeature_posts']
 
 	@admin.action(description="Publish selected posts")
 	def publish_posts(self, request, queryset):
@@ -30,6 +30,10 @@ class BlogPostAdmin(admin.ModelAdmin):
 	@admin.action(description="Feature selected posts")
 	def feature_posts(self, request, queryset):
 		queryset.update(is_featured=True)
+
+	@admin.action(description="Unfeature selected posts")
+	def unfeature_posts(self, request, queryset):
+		queryset.update(is_featured=False)
 
 
 @admin.register(Comment)
