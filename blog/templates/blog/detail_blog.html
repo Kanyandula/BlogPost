@@ -17,13 +17,13 @@
 
   <!-- Sticky Side Actions (Desktop) -->
   <aside class="hidden lg:flex lg:col-span-1 flex-col items-center gap-4 sticky top-28 self-start pt-8">
-    <button onclick="toggleLike('{{ blog_post.slug }}')" id="like-btn" class="p-3 rounded-[10px] hover:bg-surface-container-low transition-colors {% if is_liked %}text-error{% else %}text-on-surface-variant{% endif %}">
-      <span class="material-symbols-outlined" id="like-icon" {% if is_liked %}style="font-variation-settings: 'FILL' 1"{% endif %}>favorite</span>
+    <button onclick="toggleLike('{{ blog_post.slug }}')" class="p-3 rounded-[10px] hover:bg-surface-container-low transition-colors {% if is_liked %}text-error{% else %}text-on-surface-variant{% endif %}">
+      <span class="material-symbols-outlined like-icon" {% if is_liked %}style="font-variation-settings: 'FILL' 1"{% endif %}>favorite</span>
     </button>
-    <span class="text-xs text-on-surface-variant" id="like-count">{{ like_count }}</span>
+    <span class="text-xs text-on-surface-variant like-count">{{ like_count }}</span>
     <div class="w-px h-8 bg-outline-variant/30"></div>
-    <button onclick="toggleBookmark('{{ blog_post.slug }}')" id="bookmark-btn" class="p-3 rounded-[10px] hover:bg-surface-container-low transition-colors {% if is_bookmarked %}text-secondary{% else %}text-on-surface-variant{% endif %}">
-      <span class="material-symbols-outlined" id="bookmark-icon" {% if is_bookmarked %}style="font-variation-settings: 'FILL' 1"{% endif %}>bookmark</span>
+    <button onclick="toggleBookmark('{{ blog_post.slug }}')" class="p-3 rounded-[10px] hover:bg-surface-container-low transition-colors {% if is_bookmarked %}text-secondary{% else %}text-on-surface-variant{% endif %}">
+      <span class="material-symbols-outlined bookmark-icon" {% if is_bookmarked %}style="font-variation-settings: 'FILL' 1"{% endif %}>bookmark</span>
     </button>
     <div class="w-px h-8 bg-outline-variant/30"></div>
     <a href="https://wa.me/?text={{ blog_post.title|urlencode }}%20{{ request.build_absolute_uri }}" target="_blank" class="p-3 rounded-[10px] text-[#25D366] hover:bg-surface-container-low transition-colors">
@@ -53,10 +53,11 @@
       <!-- Mobile Social -->
       <div class="flex lg:hidden items-center gap-2 ml-auto">
         <button onclick="toggleLike('{{ blog_post.slug }}')" class="p-2 {% if is_liked %}text-error{% else %}text-on-surface-variant{% endif %}">
-          <span class="material-symbols-outlined text-xl">favorite</span>
+          <span class="material-symbols-outlined text-xl like-icon" {% if is_liked %}style="font-variation-settings: 'FILL' 1"{% endif %}>favorite</span>
         </button>
+        <span class="text-xs text-on-surface-variant like-count">{{ like_count }}</span>
         <button onclick="toggleBookmark('{{ blog_post.slug }}')" class="p-2 {% if is_bookmarked %}text-secondary{% else %}text-on-surface-variant{% endif %}">
-          <span class="material-symbols-outlined text-xl">bookmark</span>
+          <span class="material-symbols-outlined text-xl bookmark-icon" {% if is_bookmarked %}style="font-variation-settings: 'FILL' 1"{% endif %}>bookmark</span>
         </button>
         <a href="https://wa.me/?text={{ blog_post.title|urlencode }}%20{{ request.build_absolute_uri }}" target="_blank" class="p-2 text-[#25D366]">
           <span class="material-symbols-outlined text-xl">share</span>
@@ -207,7 +208,7 @@
 </div>
 
 <script>
-function toggleAction(slug, action, iconId, countId) {
+function toggleAction(slug, action, iconClass, countClass) {
   fetch('/blog/' + slug + '/' + action + '/', {
     method: 'POST',
     headers: {'X-CSRFToken': '{{ csrf_token }}'},
@@ -216,8 +217,14 @@ function toggleAction(slug, action, iconId, countId) {
   .then(function(r) { if (r.status === 401) { window.location.href = '{% url "login" %}'; throw 'redirect'; } if (!r.ok) throw new Error(r.status); return r.json(); })
   .then(function(data) {
     var active = data.liked !== undefined ? data.liked : data.bookmarked;
-    document.getElementById(iconId).style.fontVariationSettings = active ? "'FILL' 1" : "'FILL' 0";
-    if (countId && data.count !== undefined) document.getElementById(countId).textContent = data.count;
+    document.querySelectorAll('.' + iconClass).forEach(function(el) {
+      el.style.fontVariationSettings = active ? "'FILL' 1" : "'FILL' 0";
+    });
+    if (countClass && data.count !== undefined) {
+      document.querySelectorAll('.' + countClass).forEach(function(el) {
+        el.textContent = data.count;
+      });
+    }
   })
   .catch(function(e) { if (e !== 'redirect') console.error(e); });
 }
