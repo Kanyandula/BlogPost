@@ -133,13 +133,13 @@
       <section class="p-6 md:p-8 rounded-2xl bg-[#002627] text-white">
         <h4 class="text-xl font-bold mb-3">Never miss a story.</h4>
         <p class="text-white/70 text-sm mb-6">Weekly insights into Malawian culture and lifestyle delivered to your inbox.</p>
-        <div class="flex gap-2">
-          <input id="newsletter-email-search" class="flex-1 bg-white/10 border-none rounded-lg text-sm px-4 py-2 text-white placeholder:text-white/50 focus:ring-2 focus:ring-tertiary-fixed-dim" placeholder="Your email" type="email"/>
-          <button onclick="submitNewsletter('newsletter-email-search', 'newsletter-msg-search')" class="p-2 rounded-lg bg-tertiary-fixed-dim text-[#002627]">
+        <form hx-post="{% url 'subscribe' %}" hx-target="#newsletter-msg-search" hx-swap="innerHTML" hx-on::after-request="if(event.detail.successful) this.reset()" class="flex gap-2">
+          <input name="email" class="flex-1 bg-white/10 border-none rounded-lg text-sm px-4 py-2 text-white placeholder:text-white/50 focus:ring-2 focus:ring-tertiary-fixed-dim" placeholder="Your email" type="email"/>
+          <button type="submit" class="p-2 rounded-lg bg-tertiary-fixed-dim text-[#002627]">
             <span class="material-symbols-outlined">arrow_forward</span>
           </button>
-        </div>
-        <p id="newsletter-msg-search" class="text-xs text-white/70 mt-2 hidden"></p>
+        </form>
+        <p id="newsletter-msg-search" class="text-xs text-white/70 mt-2 empty:hidden"></p>
       </section>
 
     </div>
