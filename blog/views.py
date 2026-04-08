@@ -1,11 +1,12 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.db.models import Q, F, Count
-from django.http import HttpResponseForbidden, JsonResponse
+from django.http import HttpResponse, HttpResponseForbidden, JsonResponse
 from django.views.decorators.http import require_POST
 from django.contrib.auth.decorators import login_required
 
 from blog.models import BlogPost, Category, Comment, Like, Bookmark
 from blog.forms import CreateBlogPostForm, UpdateBlogPostForm, CommentForm
+from blog.utils import htmx_login_required, trigger_toast
 
 
 @login_required(login_url='must_authenticate')
@@ -137,9 +138,8 @@ def delete_comment_view(request, pk):
 
 
 @require_POST
+@htmx_login_required
 def toggle_like_view(request, slug):
-	if not request.user.is_authenticated:
-		return JsonResponse({'error': 'Login required'}, status=401)
 	post = get_object_or_404(BlogPost, slug=slug)
 	like, created = Like.objects.get_or_create(post=post, user=request.user)
 	if not created:
@@ -147,20 +147,52 @@ def toggle_like_view(request, slug):
 		liked = False
 	else:
 		liked = True
+
+	if request.htmx:
+		variant = request.GET.get('variant', 'desktop')
+		template = 'blog/partials/like_button.html'
+		if variant == 'mobile':
+			template = 'blog/partials/like_button_mobile.html'
+		response = render(request, template, {
+			'blog_post': post,
+			'is_liked': liked,
+			'like_count': post.likes.count(),
+		})
+		trigger_toast(response, 'Liked!' if liked else 'Like removed')
+		return response
 	return JsonResponse({'liked': liked, 'count': post.likes.count()})
 
 
 @require_POST
+@htmx_login_required
 def toggle_bookmark_view(request, slug):
-	if not request.user.is_authenticated:
-		return JsonResponse({'error': 'Login required'}, status=401)
 	post = get_object_or_404(BlogPost, slug=slug)
+
+	# Bookmarks page removal — skip toggle, just delete
+	if request.htmx and request.htmx.trigger and request.htmx.trigger.startswith('bookmark-remove-'):
+		post.bookmarks.filter(user=request.user).delete()
+		response = HttpResponse(status=200)
+		trigger_toast(response, 'Bookmark removed')
+		return response
+
 	bookmark, created = Bookmark.objects.get_or_create(post=post, user=request.user)
 	if not created:
 		bookmark.delete()
 		bookmarked = False
 	else:
 		bookmarked = True
+
+	if request.htmx:
+		variant = request.GET.get('variant', 'desktop')
+		template = 'blog/partials/bookmark_button.html'
+		if variant == 'mobile':
+			template = 'blog/partials/bookmark_button_mobile.html'
+		response = render(request, template, {
+			'blog_post': post,
+			'is_bookmarked': bookmarked,
+		})
+		trigger_toast(response, 'Bookmarked!' if bookmarked else 'Bookmark removed')
+		return response
 	return JsonResponse({'bookmarked': bookmarked})
 
 

@@ -17,14 +17,9 @@
 
   <!-- Sticky Side Actions (Desktop) -->
   <aside class="hidden lg:flex lg:col-span-1 flex-col items-center gap-4 sticky top-28 self-start pt-8">
-    <button onclick="toggleLike('{{ blog_post.slug }}')" class="p-3 rounded-[10px] hover:bg-surface-container-low transition-colors {% if is_liked %}text-error{% else %}text-on-surface-variant{% endif %}">
-      <span class="material-symbols-outlined like-icon" {% if is_liked %}style="font-variation-settings: 'FILL' 1"{% endif %}>favorite</span>
-    </button>
-    <span class="text-xs text-on-surface-variant like-count">{{ like_count }}</span>
+    {% include 'blog/partials/like_button.html' %}
     <div class="w-px h-8 bg-outline-variant/30"></div>
-    <button onclick="toggleBookmark('{{ blog_post.slug }}')" class="p-3 rounded-[10px] hover:bg-surface-container-low transition-colors {% if is_bookmarked %}text-secondary{% else %}text-on-surface-variant{% endif %}">
-      <span class="material-symbols-outlined bookmark-icon" {% if is_bookmarked %}style="font-variation-settings: 'FILL' 1"{% endif %}>bookmark</span>
-    </button>
+    {% include 'blog/partials/bookmark_button.html' %}
     <div class="w-px h-8 bg-outline-variant/30"></div>
     <a href="https://wa.me/?text={{ blog_post.title|urlencode }}%20{{ request.build_absolute_uri }}" target="_blank" class="p-3 rounded-[10px] text-[#25D366] hover:bg-surface-container-low transition-colors">
       <span class="material-symbols-outlined">share</span>
@@ -52,13 +47,8 @@
       </div>
       <!-- Mobile Social -->
       <div class="flex lg:hidden items-center gap-2 ml-auto">
-        <button onclick="toggleLike('{{ blog_post.slug }}')" class="p-2 {% if is_liked %}text-error{% else %}text-on-surface-variant{% endif %}">
-          <span class="material-symbols-outlined text-xl like-icon" {% if is_liked %}style="font-variation-settings: 'FILL' 1"{% endif %}>favorite</span>
-        </button>
-        <span class="text-xs text-on-surface-variant like-count">{{ like_count }}</span>
-        <button onclick="toggleBookmark('{{ blog_post.slug }}')" class="p-2 {% if is_bookmarked %}text-secondary{% else %}text-on-surface-variant{% endif %}">
-          <span class="material-symbols-outlined text-xl bookmark-icon" {% if is_bookmarked %}style="font-variation-settings: 'FILL' 1"{% endif %}>bookmark</span>
-        </button>
+        {% include 'blog/partials/like_button_mobile.html' %}
+        {% include 'blog/partials/bookmark_button_mobile.html' %}
         <a href="https://wa.me/?text={{ blog_post.title|urlencode }}%20{{ request.build_absolute_uri }}" target="_blank" class="p-2 text-[#25D366]">
           <span class="material-symbols-outlined text-xl">share</span>
         </a>
@@ -207,28 +197,4 @@
 </div>
 </div>
 
-<script>
-function toggleAction(slug, action, iconClass, countClass) {
-  fetch('/blog/' + slug + '/' + action + '/', {
-    method: 'POST',
-    headers: {'X-CSRFToken': '{{ csrf_token }}'},
-    credentials: 'same-origin'
-  })
-  .then(function(r) { if (r.status === 401) { window.location.href = '{% url "login" %}'; throw 'redirect'; } if (!r.ok) throw new Error(r.status); return r.json(); })
-  .then(function(data) {
-    var active = data.liked !== undefined ? data.liked : data.bookmarked;
-    document.querySelectorAll('.' + iconClass).forEach(function(el) {
-      el.style.fontVariationSettings = active ? "'FILL' 1" : "'FILL' 0";
-    });
-    if (countClass && data.count !== undefined) {
-      document.querySelectorAll('.' + countClass).forEach(function(el) {
-        el.textContent = data.count;
-      });
-    }
-  })
-  .catch(function(e) { if (e !== 'redirect') console.error(e); });
-}
-function toggleLike(slug) { toggleAction(slug, 'like', 'like-icon', 'like-count'); }
-function toggleBookmark(slug) { toggleAction(slug, 'bookmark', 'bookmark-icon', null); }
-</script>
 {% endblock content %}

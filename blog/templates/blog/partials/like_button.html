@@ -1,0 +1,10 @@
+<div class="flex flex-col items-center gap-1" id="like-btn"
+     hx-post="{% url 'blog:like' blog_post.slug %}"
+     hx-target="this"
+     hx-swap="outerHTML">
+  <button type="button"
+          class="p-3 rounded-[10px] hover:bg-surface-container-low transition-colors {% if is_liked %}text-error{% else %}text-on-surface-variant{% endif %}">
+    <span class="material-symbols-outlined" {% if is_liked %}style="font-variation-settings: 'FILL' 1"{% endif %}>favorite</span>
+  </button>
+  <span class="text-xs text-on-surface-variant">{{ like_count }}</span>
+</div>
