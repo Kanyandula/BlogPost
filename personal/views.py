@@ -143,11 +143,25 @@ def contact_screen_view(request):
 
 @require_POST
 def subscribe_view(request):
+	from django.core.validators import validate_email
+	from django.core.exceptions import ValidationError
+
 	email = request.POST.get('email', '').strip().lower()
 	if not email:
+		if request.htmx:
+			return HttpResponse('Please enter your email.', status=422)
 		return JsonResponse({'error': 'Email is required'}, status=400)
 
+	try:
+		validate_email(email)
+	except ValidationError:
+		if request.htmx:
+			return HttpResponse('Please enter a valid email.', status=422)
+		return JsonResponse({'error': 'Invalid email address'}, status=400)
+
 	subscriber, created = Subscriber.objects.get_or_create(email=email)
-	if created:
-		return JsonResponse({'success': True, 'message': 'Thanks for subscribing!'})
-	return JsonResponse({'success': True, 'message': 'You are already subscribed!'})
+	message = 'Thanks for subscribing!' if created else 'You are already subscribed!'
+
+	if request.htmx:
+		return HttpResponse(message)
+	return JsonResponse({'success': True, 'message': message})

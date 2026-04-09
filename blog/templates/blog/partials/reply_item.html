@@ -1,0 +1,8 @@
+<div class="ml-8 mt-4 pl-4 border-l-2 border-outline-variant/20">
+  <div class="flex items-center gap-2 mb-1">
+    <span class="material-symbols-outlined text-lg text-primary">account_circle</span>
+    <span class="text-sm font-bold text-on-surface">{{ reply.author.username }}</span>
+    <span class="text-xs text-on-surface-variant">{{ reply.created_at|timesince }} ago</span>
+  </div>
+  <p class="text-sm text-on-surface">{{ reply.body }}</p>
+</div>

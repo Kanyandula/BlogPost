@@ -342,10 +342,11 @@ class CommentSubmissionTests(ModelTestMixin, TestCase):
 	def test_comment_submission(self):
 		self.client.login(email='test@nyasablog.com', password='testpass123')
 		response = self.client.post(
-			reverse('blog:detail', args=[self.post.slug]),
-			{'body': 'Great article!'}
+			reverse('blog:comment_create', args=[self.post.slug]),
+			{'body': 'Great article!'},
+			HTTP_HX_REQUEST='true',
 		)
-		self.assertEqual(response.status_code, 302)
+		self.assertEqual(response.status_code, 200)
 		self.assertEqual(Comment.objects.count(), 1)
 		self.assertEqual(Comment.objects.first().body, 'Great article!')
 
@@ -353,10 +354,11 @@ class CommentSubmissionTests(ModelTestMixin, TestCase):
 		self.client.login(email='test@nyasablog.com', password='testpass123')
 		parent = Comment.objects.create(post=self.post, author=self.user, body='Parent comment')
 		response = self.client.post(
-			reverse('blog:detail', args=[self.post.slug]),
-			{'body': 'Reply to parent', 'parent_id': parent.pk}
+			reverse('blog:comment_create', args=[self.post.slug]),
+			{'body': 'Reply to parent', 'parent_id': parent.pk},
+			HTTP_HX_REQUEST='true',
 		)
-		self.assertEqual(response.status_code, 302)
+		self.assertEqual(response.status_code, 200)
 		reply = Comment.objects.filter(parent=parent).first()
 		self.assertIsNotNone(reply)
 		self.assertEqual(reply.body, 'Reply to parent')
@@ -371,7 +373,7 @@ class CommentSubmissionTests(ModelTestMixin, TestCase):
 	def test_delete_comment_denied_for_non_author(self):
 		self.client.login(email='other@nyasablog.com', password='testpass123')
 		comment = Comment.objects.create(post=self.post, author=self.user, body='Not yours')
-		response = self.client.get(reverse('blog:delete_comment', args=[comment.pk]))
+		response = self.client.post(reverse('blog:delete_comment', args=[comment.pk]))
 		self.assertEqual(response.status_code, 403)
 
 

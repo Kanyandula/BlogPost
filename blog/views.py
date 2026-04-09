@@ -36,22 +36,7 @@ def detail_blog_view(request, slug):
 	# Increment view count
 	BlogPost.objects.filter(pk=blog_post.pk).update(view_count=F('view_count') + 1)
 
-	# Handle comment submission
-	if request.method == 'POST' and request.user.is_authenticated:
-		comment_form = CommentForm(request.POST)
-		if comment_form.is_valid():
-			comment = comment_form.save(commit=False)
-			comment.post = blog_post
-			comment.author = request.user
-			parent_id = request.POST.get('parent_id')
-			if parent_id:
-				parent = get_object_or_404(Comment, pk=parent_id)
-				# Flatten to max 1 level: replies to replies become siblings
-				comment.parent = parent.parent or parent
-			comment.save()
-			return redirect('blog:detail', slug=slug)
-	else:
-		comment_form = CommentForm()
+	comment_form = CommentForm()
 
 	# Get comments (top-level only, replies via prefetch)
 	comments = blog_post.comments.filter(
@@ -126,15 +111,59 @@ def delete_blog_post(request, pk):
 	return render(request, 'blog/post_delete.html', context)
 
 
+@require_POST
 @login_required(login_url='must_authenticate')
 def delete_comment_view(request, pk):
 	comment = get_object_or_404(Comment, pk=pk)
 	if comment.author != request.user:
 		return HttpResponseForbidden('You are not the author of this comment.')
-	slug = comment.post.slug
-	if request.method == 'POST':
-		comment.delete()
-	return redirect('blog:detail', slug=slug)
+	post = comment.post
+	comment.delete()
+
+	if request.htmx:
+		new_count = post.comments.filter(is_active=True).count()
+		response = HttpResponse('')
+		trigger_toast(response, 'Comment deleted')
+		response.content += f'<span id="comment-count" hx-swap-oob="true">{new_count}</span>'.encode()
+		return response
+	return redirect('blog:detail', slug=post.slug)
+
+
+@require_POST
+@htmx_login_required
+def htmx_create_comment_view(request, slug):
+	post = get_object_or_404(BlogPost, slug=slug)
+	form = CommentForm(request.POST)
+	if form.is_valid():
+		comment = form.save(commit=False)
+		comment.post = post
+		comment.author = request.user
+		parent_id = request.POST.get('parent_id')
+		if parent_id:
+			parent = get_object_or_404(Comment, pk=parent_id, post=post)
+			comment.parent = parent.parent or parent
+		comment.save()
+
+		new_count = post.comments.filter(is_active=True).count()
+
+		if parent_id:
+			response = render(request, 'blog/partials/reply_item.html', {
+				'reply': comment,
+			})
+		else:
+			response = render(request, 'blog/partials/comment_item.html', {
+				'comment': comment,
+				'blog_post': post,
+			})
+		# OOB update for comment count
+		response.content += f'<span id="comment-count" hx-swap-oob="true">{new_count}</span>'.encode()
+		trigger_toast(response, 'Comment posted!')
+		return response
+
+	# Validation error
+	response = HttpResponse('Comment cannot be empty.', status=422)
+	trigger_toast(response, 'Comment cannot be empty.', 'error')
+	return response
 
 
 @require_POST
