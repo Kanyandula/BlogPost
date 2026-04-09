@@ -11,10 +11,10 @@ Tracking document for migrating NyasaBlog from a traditional server-rendered Dja
 
 | Phase | Branch | Description | Status |
 |-------|--------|-------------|--------|
-| 0 | `htmx/phase-0-foundation` | Foundation + Toast + Auth Guard + CSRF | Pending |
-| 1 | `htmx/phase-1-likes-bookmarks` | Likes & Bookmarks (validates setup) | Pending |
-| 2 | `htmx/phase-2-newsletter` | Newsletter Subscribe | Pending |
-| 3 | `htmx/phase-3-comments` | Comments (submit, delete, OOB count) | Pending |
+| 0 | `htmx/phase-0-foundation` | Foundation + Toast + Auth Guard + CSRF | Done |
+| 1 | `htmx/phase-1-likes-bookmarks` | Likes & Bookmarks (validates setup) | Done |
+| 2 | `htmx/phase-2-newsletter` | Newsletter Subscribe | Done |
+| 3 | `htmx/phase-3-comments` | Comments (submit, delete, OOB count) | Done |
 | 4 | `htmx/phase-4-pagination` | Pagination / Infinite Scroll | Pending |
 | 5 | `htmx/phase-5-category-filter` | Category Filtering (explicit ?partial=) | Pending |
 | 6 | `htmx/phase-6-live-search` | Live Search (header dropdown + page) | Pending |

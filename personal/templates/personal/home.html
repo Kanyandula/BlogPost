@@ -92,60 +92,8 @@
 
     {% if blog_posts %}
     <div id="posts-grid" class="grid grid-cols-1 md:grid-cols-2 gap-10">
-      {% for post in blog_posts %}
-      <article class="flex flex-col group">
-        <a href="{% url 'blog:detail' post.slug %}">
-          <div class="aspect-video mb-6 overflow-hidden rounded-lg bg-surface-container-low">
-            {% if post.image %}
-            <img alt="{{ post.title }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="{{ post.image.url }}"/>
-            {% else %}
-            <div class="w-full h-full bg-surface-container-high flex items-center justify-center">
-              <span class="material-symbols-outlined text-4xl text-outline-variant">article</span>
-            </div>
-            {% endif %}
-          </div>
-        </a>
-        <div class="flex items-center gap-2 mb-3">
-          {% if post.category %}
-          <span class="text-[10px] font-black uppercase tracking-tighter text-secondary">{{ post.category.name }}</span>
-          <span class="w-1 h-1 rounded-full bg-outline-variant"></span>
-          {% endif %}
-          <span class="text-[10px] text-outline">{{ post.date_published|date:"M d, Y" }}</span>
-        </div>
-        <a href="{% url 'blog:detail' post.slug %}">
-          <h3 class="text-xl font-bold text-primary mb-3 leading-snug group-hover:text-secondary transition-colors line-clamp-2">{{ post.title }}</h3>
-        </a>
-        <p class="text-on-surface-variant text-sm mb-6 line-clamp-2">{{ post.body|striptags|truncatechars:140 }}</p>
-        <div class="flex items-center justify-between mt-auto text-xs">
-          <a href="{% url 'author_profile' post.author.username %}" class="font-bold text-primary hover:text-secondary">{{ post.author.username }}</a>
-          <div class="flex items-center gap-3 text-on-surface-variant">
-            <span>{{ post.reading_time }} min</span>
-            <span class="flex items-center gap-1"><span class="material-symbols-outlined text-sm">favorite</span>{{ post.like_count }}</span>
-            <span class="flex items-center gap-1"><span class="material-symbols-outlined text-sm">chat</span>{{ post.comment_count }}</span>
-          </div>
-        </div>
-      </article>
-      {% endfor %}
+      {% include 'personal/partials/post_grid.html' %}
     </div>
-
-    <!-- Pagination -->
-    {% if blog_posts.has_other_pages %}
-    <div class="flex justify-center gap-2 mt-12">
-      {% if blog_posts.has_previous %}
-      <a href="?page={{ blog_posts.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if active_category %}&category={{ active_category }}{% endif %}"
-         class="px-4 py-2 rounded-lg bg-surface-container-high text-on-surface text-sm hover:bg-surface-container-highest transition-colors">
-        <span class="material-symbols-outlined text-sm align-middle">chevron_left</span> Previous
-      </a>
-      {% endif %}
-      <span class="px-4 py-2 text-sm text-on-surface-variant">Page {{ blog_posts.number }} of {{ blog_posts.paginator.num_pages }}</span>
-      {% if blog_posts.has_next %}
-      <a href="?page={{ blog_posts.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if active_category %}&category={{ active_category }}{% endif %}"
-         class="px-4 py-2 rounded-lg bg-surface-container-high text-on-surface text-sm hover:bg-surface-container-highest transition-colors">
-        Next <span class="material-symbols-outlined text-sm align-middle">chevron_right</span>
-      </a>
-      {% endif %}
-    </div>
-    {% endif %}
 
     {% else %}
     <!-- Empty state -->

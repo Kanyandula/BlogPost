@@ -44,21 +44,6 @@ def home_screen_view(request):
 			BlogPost.objects.filter(status='published')
 		).order_by('-date_updated')
 
-	# Featured posts
-	featured_posts = BlogPost.objects.filter(
-		is_featured=True, status='published'
-	).select_related('author').order_by('-date_published')[:3]
-
-	# Trending posts
-	trending_posts = BlogPost.objects.filter(
-		status='published'
-	).annotate(
-		like_count=Count('likes')
-	).order_by('-view_count', '-like_count')[:5]
-
-	# Categories for filter pills
-	categories = Category.objects.all()
-
 	# Pagination
 	page = request.GET.get('page', 1)
 	blog_posts_paginator = Paginator(blog_posts, BLOG_POSTS_PER_PAGE)
@@ -71,11 +56,22 @@ def home_screen_view(request):
 		blog_posts = blog_posts_paginator.page(blog_posts_paginator.num_pages)
 
 	context['blog_posts'] = blog_posts
-	context['featured_posts'] = featured_posts
-	context['trending_posts'] = trending_posts
-	context['categories'] = categories
 	context['active_category'] = category_slug
 
+	# HTMX partial — skip sidebar queries
+	if request.htmx and request.GET.get('partial') == 'post_grid':
+		return render(request, 'personal/partials/post_grid.html', context)
+
+	# Full page — compute sidebar data
+	context['featured_posts'] = BlogPost.objects.filter(
+		is_featured=True, status='published'
+	).select_related('author').order_by('-date_published')[:3]
+	context['trending_posts'] = BlogPost.objects.filter(
+		status='published'
+	).annotate(
+		like_count=Count('likes')
+	).order_by('-view_count', '-like_count')[:5]
+	context['categories'] = Category.objects.all()
 	return render(request, "personal/home.html", context)
 
 
@@ -109,10 +105,15 @@ def search_view(request):
 		blog_posts = paginator.page(paginator.num_pages)
 
 	context['blog_posts'] = blog_posts
-	context['categories'] = Category.objects.all()
 	context['active_category'] = category_slug
-	context['tags'] = Tag.objects.all()[:20]
 
+	# HTMX partial — skip sidebar queries
+	if request.htmx and request.GET.get('partial') == 'search_list':
+		return render(request, 'personal/partials/search_results_list.html', context)
+
+	# Full page — compute sidebar data
+	context['categories'] = Category.objects.all()
+	context['tags'] = Tag.objects.all()[:20]
 	return render(request, 'personal/search_results.html', context)
 
 
