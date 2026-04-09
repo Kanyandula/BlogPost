@@ -175,7 +175,8 @@ class LikeToggleViewTests(ModelTestMixin, TestCase):
 
 	def test_like_requires_auth(self):
 		response = self.client.post(reverse('blog:like', args=[self.post.slug]))
-		self.assertEqual(response.status_code, 401)
+		# @htmx_login_required redirects non-HTMX unauthenticated requests
+		self.assertEqual(response.status_code, 302)
 
 	def test_like_toggle(self):
 		self.client.login(email='test@nyasablog.com', password='testpass123')
