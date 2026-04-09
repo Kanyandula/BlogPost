@@ -1,0 +1,31 @@
+{% if blog_posts %}
+<div class="py-2">
+  {% for post in blog_posts %}
+  <a href="{% url 'blog:detail' post.slug %}" class="flex gap-3 px-4 py-3 hover:bg-surface-container-low transition-colors">
+    <div class="w-12 h-12 rounded-lg overflow-hidden shrink-0 bg-surface-container-high">
+      {% if post.image %}
+      <img alt="{{ post.title }}" class="w-full h-full object-cover" src="{{ post.image.url }}"/>
+      {% else %}
+      <div class="w-full h-full flex items-center justify-center">
+        <span class="material-symbols-outlined text-sm text-outline-variant">article</span>
+      </div>
+      {% endif %}
+    </div>
+    <div class="min-w-0">
+      <h4 class="text-sm font-semibold text-on-surface line-clamp-1">{{ post.title }}</h4>
+      <div class="flex items-center gap-2 text-xs text-on-surface-variant mt-0.5">
+        {% if post.category %}<span>{{ post.category.name }}</span><span>·</span>{% endif %}
+        <span>{{ post.reading_time }} min read</span>
+      </div>
+    </div>
+  </a>
+  {% endfor %}
+  {% if result_count > 5 %}
+  <a href="{% url 'search' %}?q={{ query|urlencode }}" class="block text-center text-sm text-secondary font-medium py-3 border-t border-outline-variant/20 hover:bg-surface-container-low transition-colors">
+    View all {{ result_count }} results
+  </a>
+  {% endif %}
+</div>
+{% else %}
+<div class="p-6 text-center text-on-surface-variant text-sm">No results for "{{ query }}"</div>
+{% endif %}
