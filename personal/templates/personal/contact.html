@@ -14,31 +14,36 @@
   </div>
   {% endif %}
 
-  <form method="POST" class="space-y-5">
-    {% csrf_token %}
+  <div id="contact-form-container">
+    <form hx-post="{% url 'contact' %}"
+          hx-target="#contact-form-container"
+          hx-swap="innerHTML"
+          class="space-y-5">
+      {% csrf_token %}
 
-    {% for field in form.visible_fields %}
-    <div>
-      <label class="block text-sm font-medium text-on-surface mb-1">{{ field.label }}</label>
-      {% if field.field.widget.input_type == 'textarea' or field.name == 'message' %}
-      <textarea name="{{ field.name }}" rows="5" placeholder="{{ field.label }}"
-                class="w-full bg-surface-container-lowest border border-outline-variant/20 rounded-xl py-3 px-4 text-sm focus:ring-2 focus:ring-secondary/20 focus:border-secondary resize-none">{{ field.value|default:'' }}</textarea>
-      {% else %}
-      <input type="{{ field.field.widget.input_type|default:'text' }}"
-             name="{{ field.name }}"
-             value="{{ field.value|default:'' }}"
-             placeholder="{{ field.label }}"
-             class="w-full bg-surface-container-lowest border border-outline-variant/20 rounded-lg py-3 px-4 text-sm focus:ring-2 focus:ring-secondary/20 focus:border-secondary"/>
-      {% endif %}
-      {% for error in field.errors %}
-      <p class="text-xs text-error mt-1">{{ error }}</p>
+      {% for field in form.visible_fields %}
+      <div>
+        <label class="block text-sm font-medium text-on-surface mb-1">{{ field.label }}</label>
+        {% if field.field.widget.input_type == 'textarea' or field.name == 'message' %}
+        <textarea name="{{ field.name }}" rows="5" placeholder="{{ field.label }}"
+                  class="w-full bg-surface-container-lowest border border-outline-variant/20 rounded-xl py-3 px-4 text-sm focus:ring-2 focus:ring-secondary/20 focus:border-secondary resize-none">{{ field.value|default:'' }}</textarea>
+        {% else %}
+        <input type="{{ field.field.widget.input_type|default:'text' }}"
+               name="{{ field.name }}"
+               value="{{ field.value|default:'' }}"
+               placeholder="{{ field.label }}"
+               class="w-full bg-surface-container-lowest border border-outline-variant/20 rounded-lg py-3 px-4 text-sm focus:ring-2 focus:ring-secondary/20 focus:border-secondary"/>
+        {% endif %}
+        {% for error in field.errors %}
+        <p class="text-xs text-error mt-1">{{ error }}</p>
+        {% endfor %}
+      </div>
       {% endfor %}
-    </div>
-    {% endfor %}
 
-    {{ form.forcefield }}
+      {{ form.forcefield }}
 
-    <button type="submit" class="w-full bg-primary-container text-on-primary py-3 rounded-lg font-semibold hover:opacity-90 transition-opacity">Send Message</button>
-  </form>
+      <button type="submit" class="w-full bg-primary-container text-on-primary py-3 rounded-lg font-semibold hover:opacity-90 transition-opacity">Send Message</button>
+    </form>
+  </div>
 </div>
 {% endblock content %}
