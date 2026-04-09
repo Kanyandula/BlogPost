@@ -61,49 +61,12 @@
 {% endif %}
 {% endif %}
 
-<!-- Category Filter Pills -->
-<div class="flex gap-3 overflow-x-auto hide-scrollbar pb-4 mb-8">
-  <a href="{% url 'home' %}" class="px-5 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors {% if not active_category %}bg-primary text-on-primary{% else %}bg-surface-container-high text-on-surface-variant hover:bg-surface-container-highest{% endif %}">
-    All
-  </a>
-  {% for cat in categories %}
-  <a href="{% url 'home' %}?category={{ cat.slug }}" class="px-5 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors {% if active_category == cat.slug %}bg-primary text-on-primary{% else %}bg-surface-container-high text-on-surface-variant hover:bg-surface-container-highest{% endif %}">
-    {{ cat.name }}
-  </a>
-  {% endfor %}
-</div>
-
 <!-- Main Grid -->
 <div class="grid grid-cols-1 lg:grid-cols-12 gap-16">
 
   <!-- Blog Feed -->
-  <div class="lg:col-span-8 space-y-12">
-    <div class="flex items-center justify-between border-b border-outline-variant/20 pb-4">
-      <h2 class="text-2xl font-black text-primary italic">Latest Narratives</h2>
-      <div class="flex gap-4">
-        <button onclick="document.getElementById('posts-grid').className='grid grid-cols-1 md:grid-cols-2 gap-10'" title="Grid view">
-          <span class="material-symbols-outlined cursor-pointer hover:text-secondary">grid_view</span>
-        </button>
-        <button onclick="document.getElementById('posts-grid').className='grid grid-cols-1 gap-8'" title="List view">
-          <span class="material-symbols-outlined cursor-pointer text-outline hover:text-secondary">list</span>
-        </button>
-      </div>
-    </div>
-
-    {% if blog_posts %}
-    <div id="posts-grid" class="grid grid-cols-1 md:grid-cols-2 gap-10">
-      {% include 'personal/partials/post_grid.html' %}
-    </div>
-
-    {% else %}
-    <!-- Empty state -->
-    <div class="text-center py-20">
-      <span class="material-symbols-outlined text-6xl text-outline-variant mb-4">search_off</span>
-      <h3 class="text-xl font-bold text-primary mb-2">No stories found</h3>
-      <p class="text-on-surface-variant mb-6">Try different keywords or browse categories</p>
-      <a href="{% url 'home' %}" class="bg-primary-container text-on-primary px-6 py-2.5 rounded-lg font-semibold hover:opacity-90 transition-opacity">Browse All</a>
-    </div>
-    {% endif %}
+  <div class="lg:col-span-8 space-y-12" id="home-content">
+    {% include 'personal/partials/home_content.html' %}
   </div>
 
   <!-- Sidebar -->

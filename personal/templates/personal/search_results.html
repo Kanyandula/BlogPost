@@ -23,9 +23,19 @@
   <!-- Category Filter Pills -->
   <div class="flex flex-wrap items-center justify-between gap-4">
     <div class="flex gap-2 overflow-x-auto hide-scrollbar">
-      <a href="{% url 'search' %}?q={{ query }}" class="px-6 py-2 rounded-full font-medium text-sm transition-all whitespace-nowrap {% if not active_category %}bg-primary text-on-primary{% else %}bg-surface-container-high text-primary hover:bg-surface-container-highest{% endif %}">All</a>
+      <a href="{% url 'search' %}?q={{ query }}"
+         hx-get="{% url 'search' %}?q={{ query|urlencode }}&partial=search_list"
+         hx-target="#search-results-list"
+         hx-swap="innerHTML"
+         hx-push-url="{% url 'search' %}?q={{ query|urlencode }}"
+         class="px-6 py-2 rounded-full font-medium text-sm transition-all whitespace-nowrap {% if not active_category %}bg-primary text-on-primary{% else %}bg-surface-container-high text-primary hover:bg-surface-container-highest{% endif %}">All</a>
       {% for cat in categories %}
-      <a href="{% url 'search' %}?q={{ query }}&category={{ cat.slug }}" class="px-6 py-2 rounded-full font-medium text-sm transition-all whitespace-nowrap {% if active_category == cat.slug %}bg-primary text-on-primary{% else %}bg-surface-container-high text-primary hover:bg-surface-container-highest{% endif %}">{{ cat.name }}</a>
+      <a href="{% url 'search' %}?q={{ query }}&category={{ cat.slug }}"
+         hx-get="{% url 'search' %}?q={{ query|urlencode }}&category={{ cat.slug }}&partial=search_list"
+         hx-target="#search-results-list"
+         hx-swap="innerHTML"
+         hx-push-url="{% url 'search' %}?q={{ query|urlencode }}&category={{ cat.slug }}"
+         class="px-6 py-2 rounded-full font-medium text-sm transition-all whitespace-nowrap {% if active_category == cat.slug %}bg-primary text-on-primary{% else %}bg-surface-container-high text-primary hover:bg-surface-container-highest{% endif %}">{{ cat.name }}</a>
       {% endfor %}
     </div>
   </div>
