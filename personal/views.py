@@ -99,6 +99,11 @@ def search_view(request):
 		blog_posts = BlogPost.objects.none()
 		context['result_count'] = 0
 
+	# HTMX dropdown — compact results, no pagination
+	if request.htmx and request.GET.get('partial') == 'search_dropdown':
+		context['blog_posts'] = blog_posts[:5]
+		return render(request, 'personal/partials/search_dropdown.html', context)
+
 	# Pagination
 	page = request.GET.get('page', 1)
 	paginator = Paginator(blog_posts, BLOG_POSTS_PER_PAGE)
