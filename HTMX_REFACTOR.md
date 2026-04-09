@@ -15,11 +15,11 @@ Tracking document for migrating NyasaBlog from a traditional server-rendered Dja
 | 1 | `htmx/phase-1-likes-bookmarks` | Likes & Bookmarks (validates setup) | Done |
 | 2 | `htmx/phase-2-newsletter` | Newsletter Subscribe | Done |
 | 3 | `htmx/phase-3-comments` | Comments (submit, delete, OOB count) | Done |
-| 4 | `htmx/phase-4-pagination` | Pagination / Infinite Scroll | Pending |
-| 5 | `htmx/phase-5-category-filter` | Category Filtering (explicit ?partial=) | Pending |
-| 6 | `htmx/phase-6-live-search` | Live Search (header dropdown + page) | Pending |
-| 7 | `htmx/phase-7-forms` | Form Submissions (login, register, contact, account) | Pending |
-| 8 | `htmx/phase-8-cleanup` | Cleanup (remove dead JS, add indicators) | Pending |
+| 4 | `htmx/phase-4-pagination` | Pagination / Infinite Scroll | Done |
+| 5 | `htmx/phase-5-category-filter` | Category Filtering (explicit ?partial=) | Done |
+| 6 | `htmx/phase-6-live-search` | Live Search (header dropdown + page) | Done |
+| 7 | `htmx/phase-7-forms` | Form Submissions (login, register, contact, account) | Done |
+| 8 | `htmx/phase-8-cleanup` | Cleanup (remove dead JS, add indicators) | Done |
 
 ---
 
