@@ -58,9 +58,14 @@ def home_screen_view(request):
 	context['blog_posts'] = blog_posts
 	context['active_category'] = category_slug
 
-	# HTMX partial — skip sidebar queries
-	if request.htmx and request.GET.get('partial') == 'post_grid':
-		return render(request, 'personal/partials/post_grid.html', context)
+	# HTMX partials — skip sidebar queries
+	if request.htmx:
+		partial = request.GET.get('partial')
+		if partial == 'post_grid':
+			return render(request, 'personal/partials/post_grid.html', context)
+		if partial == 'home_content':
+			context['categories'] = Category.objects.all()
+			return render(request, 'personal/partials/home_content.html', context)
 
 	# Full page — compute sidebar data
 	context['featured_posts'] = BlogPost.objects.filter(

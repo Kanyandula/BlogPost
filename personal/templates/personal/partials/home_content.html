@@ -1,0 +1,35 @@
+<!-- Category Filter Pills -->
+<div class="flex gap-3 overflow-x-auto hide-scrollbar pb-4 mb-8">
+  <a href="{% url 'home' %}"
+     hx-get="{% url 'home' %}?partial=home_content"
+     hx-target="#home-content"
+     hx-swap="innerHTML"
+     hx-push-url="{% url 'home' %}"
+     class="px-5 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors {% if not active_category %}bg-primary text-on-primary{% else %}bg-surface-container-high text-on-surface-variant hover:bg-surface-container-highest{% endif %}">
+    All
+  </a>
+  {% for cat in categories %}
+  <a href="{% url 'home' %}?category={{ cat.slug }}"
+     hx-get="{% url 'home' %}?category={{ cat.slug }}&partial=home_content"
+     hx-target="#home-content"
+     hx-swap="innerHTML"
+     hx-push-url="{% url 'home' %}?category={{ cat.slug }}"
+     class="px-5 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors {% if active_category == cat.slug %}bg-primary text-on-primary{% else %}bg-surface-container-high text-on-surface-variant hover:bg-surface-container-highest{% endif %}">
+    {{ cat.name }}
+  </a>
+  {% endfor %}
+</div>
+
+<!-- Post Feed -->
+{% if blog_posts %}
+<div id="posts-grid" class="grid grid-cols-1 md:grid-cols-2 gap-10">
+  {% include 'personal/partials/post_grid.html' %}
+</div>
+{% else %}
+<div class="text-center py-20">
+  <span class="material-symbols-outlined text-6xl text-outline-variant mb-4">search_off</span>
+  <h3 class="text-xl font-bold text-primary mb-2">No stories found</h3>
+  <p class="text-on-surface-variant mb-6">Try different keywords or browse categories</p>
+  <a href="{% url 'home' %}" class="bg-primary-container text-on-primary px-6 py-2.5 rounded-lg font-semibold hover:opacity-90 transition-opacity">Browse All</a>
+</div>
+{% endif %}
