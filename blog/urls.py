@@ -5,6 +5,7 @@ from blog.views import (
 	edit_blog_view,
 	delete_blog_post,
 	delete_comment_view,
+	htmx_create_comment_view,
 	toggle_like_view,
 	toggle_bookmark_view,
 	bookmarks_view,
@@ -19,6 +20,7 @@ urlpatterns = [
 	path('<slug>/edit/', edit_blog_view, name="edit"),
 	path('<slug>/like/', toggle_like_view, name="like"),
 	path('<slug>/bookmark/', toggle_bookmark_view, name="bookmark"),
+	path('<slug>/comment/create/', htmx_create_comment_view, name="comment_create"),
 	path('delete/<pk>', delete_blog_post, name="delete"),
 	path('comment/delete/<int:pk>/', delete_comment_view, name="delete_comment"),
 ]

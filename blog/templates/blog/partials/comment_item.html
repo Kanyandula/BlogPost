@@ -1,0 +1,38 @@
+<div class="mb-6 comment-item" id="comment-{{ comment.pk }}">
+  <div class="flex gap-3">
+    <span class="material-symbols-outlined text-2xl text-primary mt-1">account_circle</span>
+    <div class="flex-1">
+      <div class="flex items-center gap-2 mb-1">
+        <span class="text-sm font-bold text-on-surface">{{ comment.author.username }}</span>
+        <span class="text-xs text-on-surface-variant">{{ comment.created_at|timesince }} ago</span>
+      </div>
+      <p class="text-sm text-on-surface mb-2">{{ comment.body }}</p>
+      {% if request.user.is_authenticated %}
+      <button onclick="document.getElementById('reply-{{ comment.pk }}').classList.toggle('hidden')" class="text-xs text-secondary font-medium">Reply</button>
+      {% endif %}
+      {% if comment.author == request.user %}
+      <button hx-post="{% url 'blog:delete_comment' comment.pk %}"
+              hx-target="#comment-{{ comment.pk }}"
+              hx-swap="outerHTML"
+              hx-confirm="Delete this comment?"
+              class="text-xs text-error font-medium ml-3">Delete</button>
+      {% endif %}
+
+      <form hx-post="{% url 'blog:comment_create' blog_post.slug %}"
+            hx-target="#replies-{{ comment.pk }}"
+            hx-swap="beforeend"
+            hx-on::after-request="if(event.detail.successful) this.reset()"
+            class="hidden mt-3" id="reply-{{ comment.pk }}">
+        <input type="hidden" name="parent_id" value="{{ comment.pk }}"/>
+        <textarea name="body" rows="2" placeholder="Write a reply..." class="w-full bg-surface-container-low border-none rounded-lg py-2 px-3 text-sm resize-none"></textarea>
+        <button type="submit" class="mt-2 bg-surface-container-high text-on-surface px-4 py-1.5 rounded-lg text-xs font-medium">Reply</button>
+      </form>
+
+      <div id="replies-{{ comment.pk }}">
+        {% for reply in comment.replies.all %}
+        {% include 'blog/partials/reply_item.html' %}
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
