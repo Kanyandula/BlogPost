@@ -1,0 +1,24 @@
+<form hx-post="{% url 'register' %}"
+      hx-target="#register-form-container"
+      hx-swap="innerHTML"
+      class="space-y-4">
+  {% csrf_token %}
+
+  {% for field in registration_form %}
+  <div>
+    <label class="block text-sm font-medium text-on-surface mb-1">{{ field.label }}</label>
+    <input type="{{ field.field.widget.input_type|default:'text' }}"
+           name="{{ field.name }}"
+           value="{{ field.value|default:'' }}"
+           placeholder="{{ field.label }}"
+           class="w-full bg-surface-container-lowest border border-outline-variant/20 rounded-lg py-3 px-4 text-sm focus:ring-2 focus:ring-secondary/20 focus:border-secondary"/>
+    {% for error in field.errors %}
+    <p class="text-xs text-error mt-1">{{ error }}</p>
+    {% endfor %}
+  </div>
+  {% endfor %}
+
+  <button type="submit" class="w-full bg-primary-container text-on-primary py-3 rounded-lg font-semibold hover:opacity-90 transition-opacity">Create Account</button>
+
+  <p class="text-xs text-on-surface-variant text-center">By creating an account, you agree to our Terms and Privacy Policy</p>
+</form>

@@ -148,6 +148,12 @@ def contact_screen_view(request):
 				send_mail(subject, message, sender, recipients, fail_silently=True)
 			except BadHeaderError:
 				return HttpResponse('Invalid header found')
+			if request.htmx:
+				return HttpResponse(
+					'<div class="bg-primary-fixed text-on-primary-fixed px-6 py-4 rounded-xl">'
+					'<span class="material-symbols-outlined text-base align-middle mr-2">check_circle</span>'
+					'Your message has been sent successfully!</div>'
+				)
 			return render(request, 'personal/contact.html', {'form': ContactForm(), 'success': True})
 	return render(request, 'personal/contact.html', {'form': form})
 

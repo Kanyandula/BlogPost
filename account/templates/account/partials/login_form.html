@@ -1,0 +1,29 @@
+<form hx-post="{% url 'login' %}"
+      hx-target="#login-form-container"
+      hx-swap="innerHTML"
+      class="space-y-4">
+  {% csrf_token %}
+
+  {% for field in login_form %}
+  <div>
+    <label class="block text-sm font-medium text-on-surface mb-1">{{ field.label }}</label>
+    <input type="{{ field.field.widget.input_type|default:'text' }}"
+           name="{{ field.name }}"
+           value="{{ field.value|default:'' }}"
+           placeholder="{{ field.label }}"
+           class="w-full bg-surface-container-lowest border border-outline-variant/20 rounded-lg py-3 px-4 text-sm focus:ring-2 focus:ring-secondary/20 focus:border-secondary"/>
+    {% for error in field.errors %}
+    <p class="text-xs text-error mt-1">{{ error }}</p>
+    {% endfor %}
+  </div>
+  {% endfor %}
+
+  <div class="flex items-center justify-between text-sm">
+    <label class="flex items-center gap-2 text-on-surface-variant">
+      <input type="checkbox" class="rounded border-outline-variant/20"/> Remember me
+    </label>
+    <a href="{% url 'password_reset' %}" class="text-secondary font-medium hover:underline">Forgot password?</a>
+  </div>
+
+  <button type="submit" class="w-full bg-primary-container text-on-primary py-3 rounded-lg font-semibold hover:opacity-90 transition-opacity">Sign In</button>
+</form>

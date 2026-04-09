@@ -1,10 +1,12 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, authenticate, logout
+from django.http import HttpResponse
 
 from account.forms import RegistrationForm, AccountAuthenticationForm, AccountUpdateForm
 from account.models import Account
 from django.db.models import Count, Sum
 from blog.models import BlogPost
+from blog.utils import trigger_toast
 
 
 
@@ -18,10 +20,15 @@ def registration_view(request):
 			raw_password = form.cleaned_data.get('password1')
 			account = authenticate(email=email, password=raw_password)
 			login(request, account)
+			if getattr(request, 'htmx', False):
+				response = HttpResponse(status=204)
+				response['HX-Redirect'] = '/'
+				return response
 			return redirect('home')
 		else:
 			context['registration_form'] = form
-
+			if getattr(request, 'htmx', False):
+				return render(request, 'account/partials/register_form.html', context)
 	else:
 		form = RegistrationForm()
 		context['registration_form'] = form
@@ -34,11 +41,10 @@ def logout_view(request):
 
 
 def login_view(request):
-
 	context = {}
 
 	user = request.user
-	if user.is_authenticated: 
+	if user.is_authenticated:
 		return redirect("home")
 
 	if request.POST:
@@ -50,14 +56,19 @@ def login_view(request):
 
 			if user:
 				login(request, user)
+				if getattr(request, 'htmx', False):
+					response = HttpResponse(status=204)
+					response['HX-Redirect'] = '/'
+					return response
 				return redirect("home")
 
+		if getattr(request, 'htmx', False):
+			context['login_form'] = form
+			return render(request, 'account/partials/login_form.html', context)
 	else:
 		form = AccountAuthenticationForm()
 
 	context['login_form'] = form
-
-	# print(form)
 	return render(request, "account/login.html", context)
 
 
@@ -88,6 +99,10 @@ def account_view(request):
 			profile.save()
 
 			context['success_message'] = "Updated"
+			if getattr(request, 'htmx', False):
+				response = render(request, "account/account.html", context)
+				trigger_toast(response, 'Settings saved!')
+				return response
 	else:
 		form = AccountUpdateForm(
 			initial={
