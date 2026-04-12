@@ -56,6 +56,7 @@ class CommentCreateSerializer(serializers.ModelSerializer):
 class BlogPostSerializer(serializers.ModelSerializer):
 
 	username = serializers.SerializerMethodField('get_username_from_author')
+	author_avatar = serializers.SerializerMethodField('get_author_avatar')
 	image 	 = serializers.SerializerMethodField('validate_image_url')
 	category = CategorySerializer(read_only=True)
 	tags = TagSerializer(many=True, read_only=True)
@@ -66,13 +67,22 @@ class BlogPostSerializer(serializers.ModelSerializer):
 	class Meta:
 		model = BlogPost
 		fields = ['pk', 'title', 'slug', 'body', 'image', 'date_updated', 'username',
-				  'category', 'tags', 'status', 'is_featured', 'view_count',
+				  'author_avatar', 'category', 'tags', 'status', 'is_featured', 'view_count',
 				  'like_count', 'comment_count', 'reading_time']
 
 
 	def get_username_from_author(self, blog_post):
 		username = blog_post.author.username
 		return username
+
+	def get_author_avatar(self, blog_post):
+		try:
+			avatar = blog_post.author.profile.avatar
+			if avatar:
+				return avatar.url
+		except blog_post.author.profile.RelatedObjectDoesNotExist:
+			pass
+		return None
 
 	def validate_image_url(self, blog_post):
 		image = blog_post.image
