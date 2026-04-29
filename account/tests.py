@@ -370,3 +370,25 @@ class GrandfatherMigrationTests(TransactionTestCase):
         self.assertTrue(self.Account.objects.get(pk=self.staff.pk).email_verified)
         self.assertTrue(self.Account.objects.get(pk=self.author.pk).email_verified)
         self.assertFalse(self.Account.objects.get(pk=self.lurker.pk).email_verified)
+
+
+class EmailVerificationTokenTests(TestCase):
+    def setUp(self):
+        from account.models import Account
+        self.user = Account.objects.create_user(
+            email='token@nyasablog.com', username='tokenuser', password='testpass123'  # pragma: allowlist secret
+        )
+
+    def test_token_invalidated_after_first_use(self):
+        from account.tokens import email_verification_token
+        token = email_verification_token.make_token(self.user)
+        self.assertTrue(email_verification_token.check_token(self.user, token))
+        # Simulate verification:
+        self.user.email_verified = True
+        self.user.save()
+        self.assertFalse(email_verification_token.check_token(self.user, token))
+
+    def test_token_valid_for_unverified_user(self):
+        from account.tokens import email_verification_token
+        token = email_verification_token.make_token(self.user)
+        self.assertTrue(email_verification_token.check_token(self.user, token))
