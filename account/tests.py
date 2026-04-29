@@ -984,3 +984,66 @@ class IsEmailVerifiedPermissionTests(TestCase):
         request = self.factory.get('/')
         request.user = AnonymousUser()
         self.assertFalse(permission.has_permission(request, APIView()))
+
+
+class BlogWriteEndpointGatingTests(APITestCase):
+    def setUp(self):
+        from blog.models import BlogPost, Category
+        self.unverified = Account.objects.create_user(
+            email='un@x.com', username='un', password='testpass123'  # pragma: allowlist secret
+        )
+        self.verified = Account.objects.create_user(
+            email='ver@x.com', username='ver', password='testpass123'  # pragma: allowlist secret
+        )
+        self.verified.email_verified = True
+        self.verified.save()
+        self.un_token = Token.objects.get(user=self.unverified)
+        self.ver_token = Token.objects.get(user=self.verified)
+        self.category = Category.objects.create(name='News', slug='news')
+        self.post = BlogPost.objects.create(
+            title='Existing', body='Body', author=self.verified, status='published',
+            category=self.category, slug='existing',
+        )
+
+    def _client_for(self, token):
+        c = APIClient()
+        c.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
+        return c
+
+    def test_unverified_blocked_from_create_post(self):
+        client = self._client_for(self.un_token)
+        response = client.post(reverse('blog_api:create'), {
+            'title': 'Spam', 'body': 'Spam body', 'category': self.category.pk,
+        })
+        self.assertEqual(response.status_code, 403)
+
+    def test_unverified_blocked_from_create_comment(self):
+        client = self._client_for(self.un_token)
+        response = client.post(
+            reverse('blog_api:create_comment', args=[self.post.slug]),
+            {'body': 'Spam comment'},
+        )
+        self.assertEqual(response.status_code, 403)
+
+    def test_unverified_blocked_from_toggle_like(self):
+        client = self._client_for(self.un_token)
+        response = client.post(reverse('blog_api:like', args=[self.post.slug]))
+        self.assertEqual(response.status_code, 403)
+
+    def test_verified_user_can_create_post(self):
+        client = self._client_for(self.ver_token)
+        response = client.post(reverse('blog_api:create'), {
+            'title': 'OK Post', 'body': 'Body', 'category': self.category.pk,
+        })
+        # 200 or 201 — anything but 403.
+        self.assertNotEqual(response.status_code, 403)
+
+    def test_unverified_can_still_read_blog_detail(self):
+        client = self._client_for(self.un_token)
+        response = client.get(reverse('blog_api:detail', args=[self.post.slug]))
+        self.assertEqual(response.status_code, 200)
+
+    def test_unverified_can_still_read_comments(self):
+        client = self._client_for(self.un_token)
+        response = client.get(reverse('blog_api:comments', args=[self.post.slug]))
+        self.assertEqual(response.status_code, 200)
