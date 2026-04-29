@@ -76,6 +76,8 @@ urlpatterns = [
     path('register/', registration_view, name="register"),
     # Placeholder — full handler added in Task 7
     path('confirm-email/<str:uidb64>/<str:token>/', lambda r, uidb64, token: HttpResponse('placeholder'), name='confirm_email'),
+    # Placeholder — full handler added in Task 9
+    path('resend-verification/', lambda r: HttpResponse('placeholder', status=501), name='resend_verification'),
     path('author/<str:username>/', author_profile_view, name="author_profile"),
     path('about', about_screen_view, name= "about"),
     path('contact/', contact_screen_view, name= "contact"),

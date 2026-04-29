@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+{% block title %}Check your inbox — NyasaBlog{% endblock %}
+{% block content %}
+<div class="max-w-lg mx-auto py-16 px-4 text-center">
+  <h1 class="text-2xl font-semibold text-on-surface mb-3">Check your inbox</h1>
+  <p class="text-on-surface-variant mb-2">
+    We sent a verification link to <strong>{{ email }}</strong>.
+  </p>
+  <p class="text-sm text-on-surface-variant">
+    Click the link in the email to activate your account. The link expires in 3 days.
+  </p>
+  <p class="text-sm text-on-surface-variant mt-6">
+    Didn't receive it?
+    <a href="{% url 'resend_verification' %}?email={{ email }}" class="text-secondary font-medium hover:underline">Resend</a>
+  </p>
+</div>
+{% endblock %}
