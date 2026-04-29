@@ -1,12 +1,15 @@
 from datetime import timedelta
+from io import StringIO
 from unittest.mock import patch
 
 from django.core import mail
 from django.core.cache import cache
+from django.core.management import call_command
 from django.db import connection
 from django.db.migrations.executor import MigrationExecutor
 from django.test import TestCase, TransactionTestCase, RequestFactory, Client
 from django.urls import reverse
+from django.utils import timezone
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
 from rest_framework.test import APITestCase, APIClient
@@ -656,3 +659,58 @@ class ResendVerificationViewTests(TestCase):
         before = len(mail.outbox)
         self.client.post(reverse('resend_verification'), {'email': 'RESEND@NYASABLOG.COM'})
         self.assertEqual(len(mail.outbox), before + 1)
+
+
+class PurgeUnverifiedAccountsTests(TestCase):
+    def setUp(self):
+        from account.models import Account
+        now = timezone.now()
+        old = now - timedelta(days=8)
+        recent = now - timedelta(days=1)
+
+        self.old_unverified = Account.objects.create_user(
+            email='old_unverified@x.com', username='ou', password='testpass123'  # pragma: allowlist secret
+        )
+        Account.objects.filter(pk=self.old_unverified.pk).update(date_joined=old)
+
+        self.old_verified = Account.objects.create_user(
+            email='old_verified@x.com', username='ov', password='testpass123'  # pragma: allowlist secret
+        )
+        Account.objects.filter(pk=self.old_verified.pk).update(date_joined=old, email_verified=True)
+
+        self.recent_unverified = Account.objects.create_user(
+            email='recent_unverified@x.com', username='ru', password='testpass123'  # pragma: allowlist secret
+        )
+        Account.objects.filter(pk=self.recent_unverified.pk).update(date_joined=recent)
+
+        self.recent_verified = Account.objects.create_user(
+            email='recent_verified@x.com', username='rv', password='testpass123'  # pragma: allowlist secret
+        )
+        Account.objects.filter(pk=self.recent_verified.pk).update(date_joined=recent, email_verified=True)
+
+    def test_purge_deletes_only_old_unverified(self):
+        from account.models import Account
+        call_command('purge_unverified_accounts', stdout=StringIO())
+        self.assertFalse(Account.objects.filter(pk=self.old_unverified.pk).exists())
+        self.assertTrue(Account.objects.filter(pk=self.old_verified.pk).exists())
+        self.assertTrue(Account.objects.filter(pk=self.recent_unverified.pk).exists())
+        self.assertTrue(Account.objects.filter(pk=self.recent_verified.pk).exists())
+
+    def test_purge_dry_run_does_not_delete(self):
+        from account.models import Account
+        out = StringIO()
+        call_command('purge_unverified_accounts', '--dry-run', stdout=out)
+        self.assertTrue(Account.objects.filter(pk=self.old_unverified.pk).exists())
+        self.assertIn('Would delete', out.getvalue())
+
+    def test_purged_email_can_be_reregistered(self):
+        from account.models import Account
+        call_command('purge_unverified_accounts', stdout=StringIO())
+        # Now register a brand-new account with the freed email.
+        response = self.client.post(reverse('register'), {
+            'email': 'old_unverified@x.com',
+            'username': 'newowner',
+            'password1': 'testpass123!',  # pragma: allowlist secret
+            'password2': 'testpass123!',  # pragma: allowlist secret
+        })
+        self.assertTrue(Account.objects.filter(email='old_unverified@x.com').exists())
