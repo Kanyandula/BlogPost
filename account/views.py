@@ -1,3 +1,5 @@
+from urllib.parse import urlencode
+
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, authenticate, logout
 from django.http import HttpResponse
@@ -22,7 +24,7 @@ def registration_view(request):
 			account.save()
 			email = form.cleaned_data.get('email').lower()
 			send_verification_email(account, request)
-			target = reverse('verification_sent') + '?email=' + email
+			target = f"{reverse('verification_sent')}?{urlencode({'email': email})}"
 			if getattr(request, 'htmx', False):
 				response = HttpResponse(status=204)
 				response['HX-Redirect'] = target

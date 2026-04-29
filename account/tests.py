@@ -11,11 +11,7 @@ from blog.models import BlogPost
 
 
 class WebRegistrationTests(TestCase):
-    def setUp(self):
-        self.client = Client()
-
     def test_registration_creates_inactive_unverified_account(self):
-        from account.models import Account
         response = self.client.post(reverse('register'), {
             'email': 'fresh@nyasablog.com',
             'username': 'freshuser',
@@ -25,10 +21,9 @@ class WebRegistrationTests(TestCase):
         user = Account.objects.get(email='fresh@nyasablog.com')
         self.assertFalse(user.is_active)
         self.assertFalse(user.email_verified)
+        self.assertRedirects(response, reverse('verification_sent') + '?email=fresh%40nyasablog.com')
 
     def test_registration_sends_verification_email(self):
-        from django.core import mail
-        mail.outbox = []
         self.client.post(reverse('register'), {
             'email': 'fresh@nyasablog.com',
             'username': 'freshuser',
