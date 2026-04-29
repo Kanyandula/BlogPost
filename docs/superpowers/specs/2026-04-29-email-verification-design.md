@@ -45,7 +45,7 @@ class EmailVerificationTokenGenerator(PasswordResetTokenGenerator):
 email_verification_token = EmailVerificationTokenGenerator()
 ```
 
-The hash includes `user.email_verified`, so the token becomes invalid the moment verification flips to `True`. This gives single-use semantics for free, including across resends.
+The hash includes `user.email_verified`, so **all outstanding tokens for an account become invalid the moment `email_verified` flips to `True`**. Multiple unused tokens may coexist before that point — a user who triggers two resends has three live tokens, any one of which works. The first valid click ends the verification window and burns all of them. This is sufficient for our purposes (we don't need per-token revocation) and avoids the complexity of a token table.
 
 ### URL routes (mysite/urls.py)
 
@@ -59,7 +59,7 @@ path('resend-verification/', resend_verification_view, name='resend_verification
 - **`registration_view`** — Modified. Saves account with `is_active=False`, sends verification email via `send_verification_email(account, request)`, renders `verification_sent.html`. No auto-login.
 - **`login_view`** — Modified. After `authenticate()`, reject if `user is None` OR `user.email_verified is False`; render the existing login template with a generic "Invalid credentials" error and a "Didn't receive verification email? Resend" link. The link is always shown on every failed login (no enumeration). This is the single canonical place the verification check lives — `AccountAuthenticationForm` keeps doing field-level validation only, not user resolution.
 - **`confirm_email_view(request, uidb64, token)`** — New. Decode uid, fetch account, validate token. On success: `is_active=True; email_verified=True; save()`, log the user in, redirect to `home` with a success toast. On failure: render `verification_invalid.html` with a resend form.
-- **`resend_verification_view`** — New. GET renders the form. POST always renders the same "If that email is registered and unverified, we sent a new link" page. Internally, only sends if `Account.objects.filter(email=email, email_verified=False).exists()`. Accepts an `?email=` query param for prefill from the login error link.
+- **`resend_verification_view`** — New. GET renders the form. POST always renders the same "If that email is registered and unverified, we sent a new link" page. Internally, only sends if `Account.objects.filter(email__iexact=email, email_verified=False).exists()` AND the per-email cooldown has elapsed (see Rate limiting below). The lookup and the cooldown key both use the lowercased email so an attacker can't bypass the cooldown by toggling case. Accepts an `?email=` query param for prefill from the login error link.
 
 ### Forms
 
@@ -72,7 +72,26 @@ Mirroring the password-reset templates already in `templates/registration/`:
 - `templates/registration/email_verification_subject.txt`
 - `templates/registration/email_verification_email.html`
 
-The verification URL is built with `request.build_absolute_uri(reverse('confirm_email', kwargs={...}))` so it works in dev and prod without a hardcoded domain.
+The verification URL is built with `request.build_absolute_uri(reverse('confirm_email', kwargs={...}))` so it works in dev and prod without a hardcoded domain. **Pre-flight requirement:** `ALLOWED_HOSTS` in production settings must be tight (`['nyasablog.com', 'www.nyasablog.com']`) — `build_absolute_uri` trusts the `Host` header, so a permissive `ALLOWED_HOSTS = ['*']` would let an attacker send a victim a verification link pointing at an attacker-controlled domain that proxies the real one. Verify this before deploying.
+
+### Rate limiting
+
+The resend endpoint is an unauthenticated public POST that triggers real outbound email through SMTP on a 1GB Droplet. Without a cap, a single attacker can flood the SMTP relay or mailbomb a target email address. Mitigation:
+
+```python
+from django.core.cache import cache
+
+def _can_send_resend(email: str) -> bool:
+    key = f"resend_cooldown:{email.lower()}"
+    if cache.get(key):
+        return False
+    cache.set(key, True, timeout=60)  # 60-second per-email cooldown
+    return True
+```
+
+Applied inside `resend_verification_view` *before* sending. The outer response is identical regardless of cooldown state — the user just doesn't receive a duplicate email. Keys are scoped per-email, not per-IP, because per-IP would be circumvented trivially and per-email is what matters for mailbomb prevention.
+
+The default cache backend (`LocMemCache`) is acceptable for a single-Gunicorn-worker deploy; if Gunicorn workers are scaled later, the backend should move to Redis or filesystem cache so cooldown state is shared. Note this in the runbook when scaling.
 
 ### User-facing pages
 
@@ -148,7 +167,7 @@ The exact venv path will be verified via SSH before installing.
 | `templates/registration/email_verification_email.html` | new |
 | `templates/account/verification_sent.html` | new |
 | `templates/account/verification_invalid.html` | new |
-| `account/tests.py` | + ~12 tests |
+| `account/tests.py` | + ~16 tests |
 
 ## Test plan
 
@@ -165,7 +184,11 @@ Automated (`account/tests.py`):
 9. `test_resend_verification_sends_new_email_for_unverified_account`
 10. `test_resend_verification_silent_for_unknown_or_verified_email` (no enumeration)
 11. `test_purge_command_deletes_old_unverified_only` (matrix of 4 accounts)
-12. `test_grandfather_migration` (staff, contributor, lurker)
+12. `test_grandfather_migration` (staff, contributor, lurker — assert correct verified state)
+13. `test_grandfather_migration_idempotent` — re-running the data migration after an already-verified user has signed up, verified normally, or had their email changed must not regress their state. Asserts `.update()` semantics hold and no user is un-verified by a second run.
+14. `test_login_with_wrong_password_for_unverified_account_does_not_send_email` — failed login must never trigger a verification email. Only the explicit resend endpoint sends. Guards against accidentally wiring email-send into the login error path during implementation.
+15. `test_purged_email_can_be_reregistered` — create unverified account, age it 8 days, run purge, register a brand-new account with the same email, assert success. Validates the "free up email/username" goal of the cleanup feature end-to-end.
+16. `test_resend_rate_limited_within_cooldown` — two POSTs in quick succession; only the first sends mail. Outer response identical. Third POST after `cache.clear()` (or time advance) sends again.
 
 Manual (post-deploy, throwaway email):
 
@@ -174,9 +197,21 @@ Manual (post-deploy, throwaway email):
 - Click an expired link → see resend form.
 - `python manage.py purge_unverified_accounts --dry-run` → expected count, no deletions.
 
+## Decision history
+
+These are the decisions made during brainstorming and the reasoning behind them. Code review will ask "why this and not X?" — the answers live here.
+
+- **Custom token flow over `django-allauth`.** The `Account` model is custom (`AbstractBaseUser`, `USERNAME_FIELD='email'`), the registration form is HTMX-wired, and Django's password-reset templates already exist in `templates/registration/`. Allauth would mean reshaping working code to fit its conventions and adding a real dependency to a 1GB Droplet for ~150 LoC of native-Django logic.
+- **Hard gate over soft gate.** Soft-gating (login allowed, but commenting/posting blocked until verified) requires permission checks scattered through the codebase — every new contribution surface is a place to forget the check. Hard-gating concentrates the risk in exactly one place: SMTP delivery. Since password reset is already proving SMTP works in production, the delivery risk is well-understood and bounded; the soft-gate's permission-surface risk is open-ended.
+- **Grandfather contributors, not just staff.** Staff-only grandfathering would force every existing author through verification on next login, with the cost being one author's typo'd-or-abandoned email = one locked-out real contributor. That cost is worse than letting lurkers re-verify; the point of verification is forward-looking spam prevention, not retroactive cleanup of legitimate users.
+- **3-day token lifetime, matching `PASSWORD_RESET_TIMEOUT`.** One timeout to reason about across two flows. 24 hours is unforgiving on Malawian mobile networks where mail delivery can lag; 7 days is forgiving but mostly buys time for already-abandoned signups.
+- **Hybrid login UX (generic error + always-shown resend link, always-200 resend response).** Account enumeration matters more for a public site than an internal tool. The hybrid pattern costs nothing extra to implement and handles the wrong-email-at-signup recovery case gracefully.
+- **7-day purge window.** Equals two consecutive 3-day token windows: signup link (days 0–3) plus one resend window (days 4–7). A user who misses the first link has one shot to recover before purge frees the email/username.
+- **`email_verified` as a separate field from `is_active`.** Verification semantics ("did you click the link?") and activation semantics ("are you allowed to log in?") will diverge — a banned user is `is_active=False` but stays verified. Coupling them now means uncoupling later.
+
 ## Out of scope
 
 - Social/OAuth signup (no Google/Facebook login currently).
 - Changing email after signup (would need re-verification — separate feature).
-- Rate-limiting the resend endpoint (Django doesn't ship this; would need `django-ratelimit` or similar — separate concern).
+- IP-based rate limiting (per-email cooldown is in scope and is the meaningful defence; per-IP is trivially circumvented and adds complexity for marginal value).
 - 2FA / MFA.
