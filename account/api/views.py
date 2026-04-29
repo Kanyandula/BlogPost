@@ -121,24 +121,21 @@ class ObtainAuthTokenView(APIView):
 	def post(self, request):
 		context = {}
 
-		email = request.data.get('username', '0')
-		password = request.data.get('password', '0')
+		email = request.data.get('username', '')
+		password = request.data.get('password', '')
 		is_v2 = (request.version == '2')
 		account = authenticate(email=email, password=password)
 
 		if account is None:
 			# Maybe inactive-unverified - check manually so v2 can give the right error code.
-			try:
-				candidate = Account.objects.get(email__iexact=email)
-				if candidate.check_password(password) and not candidate.email_verified:
-					if is_v2:
-						return Response({
-							'response': 'Error',
-							'error_message': 'Email not verified',
-							'error_code': 'email_not_verified',
-						})
-			except Account.DoesNotExist:
-				pass
+			candidate = Account.objects.filter(email__iexact=email).first()
+			if candidate and candidate.check_password(password) and not candidate.email_verified:
+				if is_v2:
+					return Response({
+						'response': 'Error',
+						'error_message': 'Email not verified',
+						'error_code': 'email_not_verified',
+					})
 			return Response({'response': 'Error', 'error_message': 'Invalid credentials'})
 
 		if is_v2 and not account.email_verified:
