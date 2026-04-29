@@ -98,6 +98,35 @@ The default cache backend (`LocMemCache`) is acceptable for a single-Gunicorn-wo
 - `templates/account/verification_sent.html` — "We sent a link to <email>. Check your inbox."
 - `templates/account/verification_invalid.html` — "This link is invalid or expired" + embedded resend form.
 
+### Auth error UX fixes (bundled into this feature)
+
+The existing login/register partials (`account/templates/account/partials/login_form.html`, `register_form.html`) iterate `field.errors` only — they do not render `form.non_field_errors`. The login form's wrong-password path raises a non-field `ValidationError("Invalid login")` from `AccountAuthenticationForm.clean()`, which means **the form currently re-renders blank with no visible error message on failed login**. This is a pre-existing bug, not something the verification feature introduces, but we'd ship the same silent-failure UX to every new error state in this feature (expired link, unverified login attempt, rate-limit hit) if we don't fix it now.
+
+Bundled fixes:
+
+1. **Add `form.non_field_errors` block to both partials** at the top of the form, styled consistently with field errors:
+   ```django
+   {% if login_form.non_field_errors %}
+   <div class="rounded-lg bg-error/10 border border-error/20 p-3 text-sm text-error" role="alert">
+     {% for error in login_form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
+   </div>
+   {% endif %}
+   ```
+2. **Surface the resend-verification link inside the login partial** when login has failed, regardless of the failure reason (no enumeration). The link is rendered immediately under the non-field-errors block:
+   ```django
+   {% if login_form.non_field_errors %}
+   <p class="text-xs text-on-surface-variant mt-2">
+     Didn't receive verification email?
+     <a href="{% url 'resend_verification' %}?email={{ login_form.email.value|default:'' }}"
+        class="text-secondary font-medium hover:underline">Resend</a>
+   </p>
+   {% endif %}
+   ```
+   Pre-filling `?email=` from the submitted value (not from a DB lookup) is safe — it's just echoing what the user typed.
+3. **Success messaging.** After clicking the verification link and being logged in, the redirect to `home` should carry a success message. Use Django's `messages` framework (one-line addition; `messages.success(request, 'Email verified — welcome!')` before redirect) and render it once on `base.html` via a small `{% if messages %}` block that fires `showToast` events. This also gives us a clean way to show success toasts on other future flows (account update already uses HX-Trigger toasts; this complements that for full-page redirects).
+
+These fixes are scoped tightly: ~30 lines across two template partials, one base.html addition, and a one-line `messages.success()` call in `confirm_email_view`. They unblock visible error feedback for every state in this feature.
+
 ## Migration plan
 
 ### Schema migration (auto-generated)
@@ -167,7 +196,11 @@ The exact venv path will be verified via SSH before installing.
 | `templates/registration/email_verification_email.html` | new |
 | `templates/account/verification_sent.html` | new |
 | `templates/account/verification_invalid.html` | new |
-| `account/tests.py` | + ~16 tests |
+| `account/templates/account/partials/login_form.html` | modify — render `non_field_errors` + resend-verification link block |
+| `account/templates/account/partials/register_form.html` | modify — render `non_field_errors` |
+| `templates/base.html` | modify — render Django `messages` as `showToast` events on full-page loads |
+| `account/views.py` (confirm_email_view) | + `messages.success(...)` before home redirect |
+| `account/tests.py` | + ~18 tests |
 
 ## Test plan
 
@@ -180,7 +213,7 @@ Automated (`account/tests.py`):
 5. `test_confirm_email_with_invalid_token_shows_error_page`
 6. `test_confirm_email_with_expired_token_shows_error_page` (freeze time +4 days)
 7. `test_token_invalidated_after_first_use` (second click fails)
-8. `test_unverified_user_cannot_log_in` (correct password, generic error)
+8. `test_unverified_user_cannot_log_in` — correct password, generic error visible in response (asserts the rendered HTML contains the error message text and the resend-verification link, not just that login failed silently — guards against the non-field-errors bug returning).
 9. `test_resend_verification_sends_new_email_for_unverified_account`
 10. `test_resend_verification_silent_for_unknown_or_verified_email` (no enumeration)
 11. `test_purge_command_deletes_old_unverified_only` (matrix of 4 accounts)
@@ -189,6 +222,8 @@ Automated (`account/tests.py`):
 14. `test_login_with_wrong_password_for_unverified_account_does_not_send_email` — failed login must never trigger a verification email. Only the explicit resend endpoint sends. Guards against accidentally wiring email-send into the login error path during implementation.
 15. `test_purged_email_can_be_reregistered` — create unverified account, age it 8 days, run purge, register a brand-new account with the same email, assert success. Validates the "free up email/username" goal of the cleanup feature end-to-end.
 16. `test_resend_rate_limited_within_cooldown` — two POSTs in quick succession; only the first sends mail. Outer response identical. Third POST after `cache.clear()` (or time advance) sends again.
+17. `test_failed_login_with_wrong_password_shows_error_message` — pre-existing bug regression test. POST wrong password against an existing verified account; assert the rendered HTML contains the "Invalid login" / "Invalid email or password" message text. Without the non-field-errors fix, the response renders blank.
+18. `test_confirm_email_success_sets_messages_framework` — after clicking valid link, `messages.success` is queued with the welcome text. Asserts the message exists in `messages` middleware storage on the redirect response.
 
 Manual (post-deploy, throwaway email):
 
@@ -208,6 +243,7 @@ These are the decisions made during brainstorming and the reasoning behind them.
 - **Hybrid login UX (generic error + always-shown resend link, always-200 resend response).** Account enumeration matters more for a public site than an internal tool. The hybrid pattern costs nothing extra to implement and handles the wrong-email-at-signup recovery case gracefully.
 - **7-day purge window.** Equals two consecutive 3-day token windows: signup link (days 0–3) plus one resend window (days 4–7). A user who misses the first link has one shot to recover before purge frees the email/username.
 - **`email_verified` as a separate field from `is_active`.** Verification semantics ("did you click the link?") and activation semantics ("are you allowed to log in?") will diverge — a banned user is `is_active=False` but stays verified. Coupling them now means uncoupling later.
+- **Bundle the `non_field_errors` rendering fix into this feature.** The login partial currently swallows non-field validation errors silently — wrong-password users see a blank re-render today. Shipping verification on top of that means *every* new error state we add (expired link, unverified-login attempt, rate-limit hit) inherits the silent failure. The fix is ~30 lines and one base.html change. Pulling it into this feature trades a small scope expansion for not shipping a feature whose error UX is broken on day one. The alternative — file the bug separately and ship verification regardless — was rejected because it would make this feature visibly worse than what's there today.
 
 ## Out of scope
 
