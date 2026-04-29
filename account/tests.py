@@ -551,7 +551,7 @@ class WebLoginTests(TestCase):
             'password': 'testpass123',  # pragma: allowlist secret
         }, follow=False)
         self.assertFalse(response.wsgi_request.user.is_authenticated)
-        self.assertContains(response, 'Invalid', status_code=200)
+        self.assertContains(response, 'Invalid email or password.', status_code=200)
         self.assertContains(response, 'Resend')
 
     def test_failed_login_with_wrong_password_shows_error_message(self):
@@ -560,7 +560,20 @@ class WebLoginTests(TestCase):
             'password': 'wrongpassword',  # pragma: allowlist secret
         })
         self.assertFalse(response.wsgi_request.user.is_authenticated)
-        self.assertContains(response, 'Invalid', status_code=200)
+        self.assertContains(response, 'Invalid email or password.', status_code=200)
+
+    def test_unverified_and_wrong_password_render_identical_error(self):
+        wrong_pw = self.client.post(reverse('login'), {
+            'email': 'verified@nyasablog.com',
+            'password': 'wrongpassword',  # pragma: allowlist secret
+        })
+        unverified = self.client.post(reverse('login'), {
+            'email': 'unverified@nyasablog.com',
+            'password': 'testpass123',  # pragma: allowlist secret
+        })
+        # Both should render the exact same error text — no enumeration leak.
+        self.assertContains(wrong_pw, 'Invalid email or password.')
+        self.assertContains(unverified, 'Invalid email or password.')
 
     def test_login_with_wrong_password_for_unverified_account_does_not_send_email(self):
         from django.core import mail
