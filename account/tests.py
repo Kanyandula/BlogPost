@@ -1,8 +1,14 @@
+from datetime import timedelta
+from unittest.mock import patch
+
 from django.core import mail
 from django.db import connection
 from django.db.migrations.executor import MigrationExecutor
 from django.test import TestCase, TransactionTestCase, RequestFactory, Client
 from django.urls import reverse
+from django.utils import timezone
+from django.utils.encoding import force_bytes
+from django.utils.http import urlsafe_base64_encode
 from rest_framework.test import APITestCase, APIClient
 from rest_framework.authtoken.models import Token
 
@@ -448,3 +454,54 @@ class SendVerificationEmailTests(TestCase):
         self.assertEqual(msg.to, [self.user.email])
         self.assertIn('confirm-email', msg.body)
         self.assertIn('nyasablog.com', msg.body)
+
+
+class ConfirmEmailViewTests(TestCase):
+    def setUp(self):
+        from account.models import Account
+        self.user = Account.objects.create_user(
+            email='confirm@nyasablog.com', username='confirmuser', password='testpass123'  # pragma: allowlist secret
+        )
+        self.user.is_active = False
+        self.user.save()
+        self.uidb64 = urlsafe_base64_encode(force_bytes(self.user.pk))
+        from account.tokens import email_verification_token
+        self.valid_token = email_verification_token.make_token(self.user)
+
+    def test_confirm_email_with_valid_token_activates_account(self):
+        url = reverse('confirm_email', kwargs={'uidb64': self.uidb64, 'token': self.valid_token})
+        response = self.client.get(url)
+        self.user.refresh_from_db()
+        self.assertTrue(self.user.is_active)
+        self.assertTrue(self.user.email_verified)
+
+    def test_confirm_email_with_invalid_token_shows_error_page(self):
+        url = reverse('confirm_email', kwargs={'uidb64': self.uidb64, 'token': 'bogus-token'})
+        response = self.client.get(url)
+        self.assertTemplateUsed(response, 'account/verification_invalid.html')
+        self.user.refresh_from_db()
+        self.assertFalse(self.user.email_verified)
+
+    def test_confirm_email_with_expired_token_shows_error_page(self):
+        from datetime import datetime
+        from account.tokens import email_verification_token
+        token = email_verification_token.make_token(self.user)
+        future = datetime.now() + timedelta(days=4)
+        with patch('django.contrib.auth.tokens.PasswordResetTokenGenerator._now', return_value=future):
+            url = reverse('confirm_email', kwargs={'uidb64': self.uidb64, 'token': token})
+            response = self.client.get(url)
+        self.assertTemplateUsed(response, 'account/verification_invalid.html')
+
+    def test_token_invalidated_after_first_use_via_view(self):
+        url = reverse('confirm_email', kwargs={'uidb64': self.uidb64, 'token': self.valid_token})
+        self.client.get(url)  # first use — succeeds
+        self.client.logout()
+        response = self.client.get(url)
+        self.assertTemplateUsed(response, 'account/verification_invalid.html')
+
+    def test_confirm_email_success_sets_messages_framework(self):
+        url = reverse('confirm_email', kwargs={'uidb64': self.uidb64, 'token': self.valid_token})
+        response = self.client.get(url, follow=True)
+        messages = list(response.context['messages'])
+        self.assertEqual(len(messages), 1)
+        self.assertIn('verified', str(messages[0]).lower())

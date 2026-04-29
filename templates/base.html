@@ -38,6 +38,18 @@
 <!-- Toast container -->
 <div id="toast-container" class="fixed top-20 right-6 z-[60] space-y-3 pointer-events-none"></div>
 
+{% if messages %}
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    {% for message in messages %}
+    document.body.dispatchEvent(new CustomEvent('showToast', {
+      detail: { message: {{ message|escapejs|safe|stringformat:'"%s"' }}, type: '{{ message.tags|default:"success" }}' }
+    }));
+    {% endfor %}
+  });
+</script>
+{% endif %}
+
 {% block extra_js %}{% endblock %}
 <script>
 // CSRF token helper (Django docs pattern)

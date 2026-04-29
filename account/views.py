@@ -1,13 +1,17 @@
 from urllib.parse import urlencode
 
+from django.contrib import messages
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, authenticate, logout
 from django.http import HttpResponse
 from django.urls import reverse
+from django.utils.encoding import force_str
+from django.utils.http import urlsafe_base64_decode
 
 from account.emails import send_verification_email
 from account.forms import RegistrationForm, AccountAuthenticationForm, AccountUpdateForm
 from account.models import Account
+from account.tokens import email_verification_token
 from django.db.models import Count, Sum
 from blog.models import BlogPost
 from blog.utils import trigger_toast
@@ -42,6 +46,24 @@ def registration_view(request):
 
 def verification_sent_view(request):
 	return render(request, 'account/verification_sent.html', {'email': request.GET.get('email', '')})
+
+
+def confirm_email_view(request, uidb64, token):
+	try:
+		uid = force_str(urlsafe_base64_decode(uidb64))
+		account = Account.objects.get(pk=uid)
+	except (TypeError, ValueError, OverflowError, Account.DoesNotExist):
+		return render(request, 'account/verification_invalid.html')
+
+	if email_verification_token.check_token(account, token):
+		account.is_active = True
+		account.email_verified = True
+		account.save()
+		login(request, account, backend='account.backends.CaseInsensitiveModelBackend')
+		messages.success(request, 'Email verified — welcome to NyasaBlog!')
+		return redirect('home')
+
+	return render(request, 'account/verification_invalid.html')
 
 
 def logout_view(request):

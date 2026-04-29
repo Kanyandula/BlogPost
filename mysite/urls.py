@@ -47,6 +47,7 @@ from account.views import (
 	must_authenticate_view,
 	author_profile_view,
 	verification_sent_view,
+	confirm_email_view,
 )
 
 def robots_txt(request):
@@ -76,8 +77,7 @@ urlpatterns = [
   	path('must_authenticate/', must_authenticate_view, name="must_authenticate"),
     path('register/', registration_view, name="register"),
     path('verification-sent/', verification_sent_view, name='verification_sent'),
-    # Placeholder — full handler added in Task 7
-    path('confirm-email/<str:uidb64>/<str:token>/', lambda r, uidb64, token: HttpResponse('placeholder'), name='confirm_email'),
+    path('confirm-email/<str:uidb64>/<str:token>/', confirm_email_view, name='confirm_email'),
     # Placeholder — full handler added in Task 9
     path('resend-verification/', lambda r: HttpResponse('placeholder', status=501), name='resend_verification'),
     path('author/<str:username>/', author_profile_view, name="author_profile"),
