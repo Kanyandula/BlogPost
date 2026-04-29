@@ -209,6 +209,22 @@ Read endpoints (list posts, view profiles, view comments, list categories/tags) 
 
 The permission returns HTTP 403 with `{"detail": "Email not verified..."}` when a verified-only action is attempted by an unverified account. The mobile team's old client will see this as a generic 403 and probably show "permission denied" — not great UX but not broken. Once the mobile team ships an update aware of `email_verified`, it can prompt the user to verify before attempting the write.
 
+### Known mobile-app risks (accepted)
+
+v1 preserves the **auth contract** (register/login response shape, token format, status codes). What v1 does *not* preserve is **write-endpoint behavior for unverified users**:
+
+- Active mobile commenters/likers who never published will see 403 on their next write action after the migration runs (until they verify).
+- New users registering via the v1 API will get a working token but 403 on first attempted write.
+
+This is the intentional cost of closing the spam vector while v1 exists. The mobile team's old client will likely surface "something went wrong" instead of "please verify your email" — a UX regression, not a crash.
+
+**Pre-deploy coordination items (not blockers, but worth confirming with the mobile team):**
+
+1. The mobile client's JSON deserializer ignores unknown keys (we're adding `email_verified` to login + properties responses). Most Android/iOS parsers do this by default, but worth a one-message check.
+2. The mobile client doesn't retry-loop on 403 (some clients aggressively retry 4xx).
+
+If either is a problem, the workaround is option C-deferred: ship this PR with `IsEmailVerified` *not* registered on v1 write endpoints initially, then enable it in a follow-up PR after the mobile team ships an aware build. This spec assumes neither is a problem.
+
 ### Mobile migration timeline (informational)
 
 This spec doesn't mandate a timeline, but for context:
