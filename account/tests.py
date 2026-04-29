@@ -1,9 +1,19 @@
+from django.test import TestCase
 from django.urls import reverse
 from rest_framework.test import APITestCase, APIClient
 from rest_framework.authtoken.models import Token
 
 from account.models import Account, UserProfile
 from blog.models import BlogPost
+
+
+class EmailVerifiedFieldTests(TestCase):
+    def test_email_verified_defaults_to_false(self):
+        from account.models import Account
+        user = Account.objects.create_user(
+            email='newuser@nyasablog.com', username='newuser', password='testpass123'  # pragma: allowlist secret
+        )
+        self.assertFalse(user.email_verified)
 
 
 class AccountAPITestMixin:
