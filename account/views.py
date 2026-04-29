@@ -1,7 +1,9 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, authenticate, logout
 from django.http import HttpResponse
+from django.urls import reverse
 
+from account.emails import send_verification_email
 from account.forms import RegistrationForm, AccountAuthenticationForm, AccountUpdateForm
 from account.models import Account
 from django.db.models import Count, Sum
@@ -15,16 +17,17 @@ def registration_view(request):
 	if request.POST:
 		form = RegistrationForm(request.POST)
 		if form.is_valid():
-			form.save()
+			account = form.save(commit=False)
+			account.is_active = False
+			account.save()
 			email = form.cleaned_data.get('email').lower()
-			raw_password = form.cleaned_data.get('password1')
-			account = authenticate(email=email, password=raw_password)
-			login(request, account)
+			send_verification_email(account, request)
+			target = reverse('verification_sent') + '?email=' + email
 			if getattr(request, 'htmx', False):
 				response = HttpResponse(status=204)
-				response['HX-Redirect'] = '/'
+				response['HX-Redirect'] = target
 				return response
-			return redirect('home')
+			return redirect(target)
 		else:
 			context['registration_form'] = form
 			if getattr(request, 'htmx', False):
@@ -33,6 +36,10 @@ def registration_view(request):
 		form = RegistrationForm()
 		context['registration_form'] = form
 	return render(request, 'account/register.html', context)
+
+
+def verification_sent_view(request):
+	return render(request, 'account/verification_sent.html', {'email': request.GET.get('email', '')})
 
 
 def logout_view(request):

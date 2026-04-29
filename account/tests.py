@@ -1,13 +1,53 @@
 from django.core import mail
 from django.db import connection
 from django.db.migrations.executor import MigrationExecutor
-from django.test import TestCase, TransactionTestCase, RequestFactory
+from django.test import TestCase, TransactionTestCase, RequestFactory, Client
 from django.urls import reverse
 from rest_framework.test import APITestCase, APIClient
 from rest_framework.authtoken.models import Token
 
 from account.models import Account, UserProfile
 from blog.models import BlogPost
+
+
+class WebRegistrationTests(TestCase):
+    def setUp(self):
+        self.client = Client()
+
+    def test_registration_creates_inactive_unverified_account(self):
+        from account.models import Account
+        response = self.client.post(reverse('register'), {
+            'email': 'fresh@nyasablog.com',
+            'username': 'freshuser',
+            'password1': 'testpass123!',  # pragma: allowlist secret
+            'password2': 'testpass123!',  # pragma: allowlist secret
+        })
+        user = Account.objects.get(email='fresh@nyasablog.com')
+        self.assertFalse(user.is_active)
+        self.assertFalse(user.email_verified)
+
+    def test_registration_sends_verification_email(self):
+        from django.core import mail
+        mail.outbox = []
+        self.client.post(reverse('register'), {
+            'email': 'fresh@nyasablog.com',
+            'username': 'freshuser',
+            'password1': 'testpass123!',  # pragma: allowlist secret
+            'password2': 'testpass123!',  # pragma: allowlist secret
+        })
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertIn('Verify your', mail.outbox[0].subject)
+
+    def test_registration_does_not_log_user_in(self):
+        self.client.post(reverse('register'), {
+            'email': 'fresh@nyasablog.com',
+            'username': 'freshuser',
+            'password1': 'testpass123!',  # pragma: allowlist secret
+            'password2': 'testpass123!',  # pragma: allowlist secret
+        })
+        # Subsequent request should be unauthenticated
+        response = self.client.get(reverse('home'))
+        self.assertFalse(response.wsgi_request.user.is_authenticated)
 
 
 class EmailVerifiedFieldTests(TestCase):
