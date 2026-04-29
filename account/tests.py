@@ -714,3 +714,48 @@ class PurgeUnverifiedAccountsTests(TestCase):
             'password2': 'testpass123!',  # pragma: allowlist secret
         })
         self.assertTrue(Account.objects.filter(email='old_unverified@x.com').exists())
+
+
+class DRFVersioningTests(TestCase):
+    def test_default_version_is_v1(self):
+        from account.models import Account
+        from rest_framework.authtoken.models import Token
+        u = Account.objects.create_user(email='ver@x.com', username='ver', password='testpass123')  # pragma: allowlist secret
+        u.email_verified = True
+        u.save()
+        token = Token.objects.get(user=u)
+        client = APIClient()
+        client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
+        # Hit the existing properties endpoint with no Accept header.
+        response = client.get(reverse('account_api:properties'))
+        self.assertEqual(response.status_code, 200)
+
+    def test_v2_accept_header_resolves_cleanly(self):
+        from account.models import Account
+        from rest_framework.authtoken.models import Token
+        u = Account.objects.create_user(email='v2@x.com', username='v2', password='testpass123')  # pragma: allowlist secret
+        u.email_verified = True
+        u.save()
+        token = Token.objects.get(user=u)
+        client = APIClient()
+        client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
+        response = client.get(
+            reverse('account_api:properties'),
+            HTTP_ACCEPT='application/json; version=2'
+        )
+        self.assertEqual(response.status_code, 200)
+
+    def test_unknown_version_rejected(self):
+        from account.models import Account
+        from rest_framework.authtoken.models import Token
+        u = Account.objects.create_user(email='vu@x.com', username='vu', password='testpass123')  # pragma: allowlist secret
+        u.email_verified = True
+        u.save()
+        token = Token.objects.get(user=u)
+        client = APIClient()
+        client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
+        response = client.get(
+            reverse('account_api:properties'),
+            HTTP_ACCEPT='application/json; version=99'
+        )
+        self.assertEqual(response.status_code, 406)  # Not Acceptable
