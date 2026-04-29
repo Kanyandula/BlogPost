@@ -48,7 +48,7 @@ class AccountPropertiesSerializer(serializers.ModelSerializer):
 
 	class Meta:
 		model = Account
-		fields = ['pk', 'email', 'username', ]
+		fields = ['pk', 'email', 'username', 'email_verified', ]
 
 class ChangePasswordSerializer(serializers.Serializer):
 

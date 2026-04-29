@@ -198,6 +198,18 @@ class AccountPropertiesAPITests(AccountAPITestMixin, APITestCase):
         self.assertEqual(response.status_code, 401)
 
 
+class AccountPropertiesEmailVerifiedTests(AccountAPITestMixin, APITestCase):
+    def test_api_properties_includes_email_verified_field(self):
+        self.user.email_verified = True
+        self.user.save()
+        self.authenticate()
+        url = reverse('account_api:properties')
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('email_verified', response.data)
+        self.assertTrue(response.data['email_verified'])
+
+
 class UpdateAccountAPITests(AccountAPITestMixin, APITestCase):
 
     def test_update_username_success(self):
