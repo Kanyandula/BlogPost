@@ -77,6 +77,11 @@ class AccountAPITestMixin:
         self.token2 = Token.objects.get(user=self.user2)
         self.client = APIClient()
 
+        self.user.email_verified = True
+        self.user.save()
+        self.user2.email_verified = True
+        self.user2.save()
+
     def authenticate(self, user=None):
         token = Token.objects.get(user=user or self.user)
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
@@ -1047,3 +1052,35 @@ class BlogWriteEndpointGatingTests(APITestCase):
         client = self._client_for(self.un_token)
         response = client.get(reverse('blog_api:comments', args=[self.post.slug]))
         self.assertEqual(response.status_code, 200)
+
+
+class AccountWriteEndpointGatingTests(APITestCase):
+    def setUp(self):
+        self.unverified = Account.objects.create_user(
+            email='un@x.com', username='un', password='testpass123'  # pragma: allowlist secret
+        )
+        self.un_token = Token.objects.get(user=self.unverified)
+
+    def _client(self):
+        c = APIClient()
+        c.credentials(HTTP_AUTHORIZATION='Token ' + self.un_token.key)
+        return c
+
+    def test_unverified_blocked_from_change_password(self):
+        response = self._client().put(reverse('account_api:change_password'), {
+            'old_password': 'testpass123',  # pragma: allowlist secret
+            'new_password': 'newtestpass123',  # pragma: allowlist secret
+            'confirm_new_password': 'newtestpass123',  # pragma: allowlist secret
+        })
+        self.assertEqual(response.status_code, 403)
+
+    def test_unverified_blocked_from_update_profile(self):
+        response = self._client().put(reverse('account_api:update_profile'),
+                                       {'bio': 'Spammy bio'})
+        self.assertEqual(response.status_code, 403)
+
+    def test_unverified_blocked_from_update_account(self):
+        response = self._client().put(reverse('account_api:update'), {
+            'email': 'un@x.com', 'username': 'newun',
+        })
+        self.assertEqual(response.status_code, 403)

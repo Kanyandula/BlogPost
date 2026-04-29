@@ -11,6 +11,7 @@ from django.utils.http import urlsafe_base64_decode
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 
+from account.api.permissions import IsEmailVerified
 from account.api.serializers import RegistrationSerializer, AccountPropertiesSerializer, ChangePasswordSerializer, UserProfileSerializer
 from account.emails import send_verification_email
 from account.models import Account, UserProfile
@@ -97,7 +98,7 @@ def account_properties_view(request):
 
 
 @api_view(['PUT',])
-@permission_classes((IsAuthenticated, ))
+@permission_classes((IsAuthenticated, IsEmailVerified))
 def update_account_view(request):
 
 	try:
@@ -180,7 +181,7 @@ class ChangePasswordView(UpdateAPIView):
 
 	serializer_class = ChangePasswordSerializer
 	model = Account
-	permission_classes = (IsAuthenticated,)
+	permission_classes = (IsAuthenticated, IsEmailVerified)
 	authentication_classes = (TokenAuthentication,)
 
 	def get_object(self, queryset=None):
@@ -232,7 +233,7 @@ def api_author_profile_view(request, username):
 
 
 @api_view(['PUT'])
-@permission_classes((IsAuthenticated,))
+@permission_classes((IsAuthenticated, IsEmailVerified))
 def api_update_profile_view(request):
 	profile = request.user.profile
 	serializer = UserProfileSerializer(profile, data=request.data, partial=True)
