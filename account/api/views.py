@@ -256,6 +256,12 @@ def api_confirm_email_view(request):
 		account = Account.objects.get(pk=uid)
 	except (TypeError, ValueError, OverflowError, Account.DoesNotExist):
 		return Response({'error_message': 'Invalid link.'}, status=status.HTTP_400_BAD_REQUEST)
+	# Idempotency: a retried confirm on an already-verified account returns the existing token
+	# rather than 400. Mobile clients on flaky networks retry; one-shot 400 punishes legit users.
+	if account.email_verified:
+		auth_token, _ = Token.objects.get_or_create(user=account)
+		return Response({'response': 'Email verified.', 'token': auth_token.key,
+						 'email': account.email, 'pk': account.pk})
 	if not email_verification_token.check_token(account, token):
 		return Response({'error_message': 'Invalid or expired link.'}, status=status.HTTP_400_BAD_REQUEST)
 	account.is_active = True

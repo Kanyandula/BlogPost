@@ -125,7 +125,10 @@ def login_view(request):
 			email = request.POST['email']
 			password = request.POST['password']
 			user = authenticate(email=email, password=password)
-
+			# AUTHENTICATION_BACKENDS lists AllowAllUsersModelBackend first, which lets
+			# inactive users through authenticate(). The email_verified check below is
+			# therefore the *sole* gate for the web login flow — don't drop it without
+			# also re-evaluating the backend config.
 			if user and user.email_verified:
 				login(request, user)
 				if getattr(request, 'htmx', False):

@@ -583,6 +583,19 @@ class WebLoginTests(TestCase):
         self.assertFalse(response.wsgi_request.user.is_authenticated)
         self.assertContains(response, 'Invalid email or password.', status_code=200)
 
+    def test_inactive_unverified_user_cannot_log_in(self):
+        # Mirrors what web registration_view produces (is_active=False, email_verified=False).
+        # Locks in that the email_verified gate works regardless of is_active state, since
+        # AllowAllUsersModelBackend lets inactive users through authenticate().
+        self.unverified.is_active = False
+        self.unverified.save()
+        response = self.client.post(reverse('login'), {
+            'email': 'unverified@nyasablog.com',
+            'password': 'testpass123',  # pragma: allowlist secret
+        })
+        self.assertFalse(response.wsgi_request.user.is_authenticated)
+        self.assertContains(response, 'Invalid email or password.', status_code=200)
+
     def test_unverified_and_wrong_password_render_identical_error(self):
         wrong_pw = self.client.post(reverse('login'), {
             'email': 'verified@nyasablog.com',
@@ -950,6 +963,20 @@ class ConfirmEmailAPITests(APITestCase):
         self.assertEqual(response.status_code, 400)
         self.user.refresh_from_db()
         self.assertFalse(self.user.email_verified)
+
+    def test_api_confirm_already_verified_is_idempotent(self):
+        # Mobile clients on flaky networks retry. A retry on an already-verified account
+        # must return the auth token rather than 400, so the client can recover gracefully.
+        client = APIClient()
+        first = client.post(reverse('account_api:confirm_email'),
+                            {'uid': self.uidb64, 'token': self.token})
+        self.assertEqual(first.status_code, 200)
+        # Same payload, second call. Old token is now invalid (email_verified flipped),
+        # but the early-return path bypasses the token check.
+        second = client.post(reverse('account_api:confirm_email'),
+                             {'uid': self.uidb64, 'token': self.token})
+        self.assertEqual(second.status_code, 200)
+        self.assertEqual(second.data['token'], first.data['token'])
 
 
 from rest_framework.test import APIRequestFactory
