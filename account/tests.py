@@ -1,6 +1,7 @@
+from django.core import mail
 from django.db import connection
 from django.db.migrations.executor import MigrationExecutor
-from django.test import TestCase, TransactionTestCase
+from django.test import TestCase, TransactionTestCase, RequestFactory
 from django.urls import reverse
 from rest_framework.test import APITestCase, APIClient
 from rest_framework.authtoken.models import Token
@@ -392,3 +393,23 @@ class EmailVerificationTokenTests(TestCase):
         from account.tokens import email_verification_token
         token = email_verification_token.make_token(self.user)
         self.assertTrue(email_verification_token.check_token(self.user, token))
+
+
+class SendVerificationEmailTests(TestCase):
+    def setUp(self):
+        from account.models import Account
+        self.user = Account.objects.create_user(
+            email='mailto@nyasablog.com', username='mailtouser', password='testpass123'  # pragma: allowlist secret
+        )
+        self.factory = RequestFactory()
+
+    def test_send_verification_email_appends_to_outbox(self):
+        from account.emails import send_verification_email
+        request = self.factory.get('/')
+        request.META['HTTP_HOST'] = 'nyasablog.com'
+        send_verification_email(self.user, request)
+        self.assertEqual(len(mail.outbox), 1)
+        msg = mail.outbox[0]
+        self.assertEqual(msg.to, [self.user.email])
+        self.assertIn('confirm-email', msg.body)
+        self.assertIn('nyasablog.com', msg.body)

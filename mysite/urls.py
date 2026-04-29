@@ -74,6 +74,8 @@ urlpatterns = [
     path('logout/', logout_view, name="logout"),
   	path('must_authenticate/', must_authenticate_view, name="must_authenticate"),
     path('register/', registration_view, name="register"),
+    # Placeholder — full handler added in Task 7
+    path('confirm-email/<str:uidb64>/<str:token>/', lambda r, uidb64, token: HttpResponse('placeholder'), name='confirm_email'),
     path('author/<str:username>/', author_profile_view, name="author_profile"),
     path('about', about_screen_view, name= "about"),
     path('contact/', contact_screen_view, name= "contact"),

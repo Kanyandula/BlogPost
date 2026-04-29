@@ -1,0 +1,9 @@
+Hello {{ user.username }},
+
+Welcome to NyasaBlog! Please confirm your email address by clicking the link below:
+
+{{ protocol }}://{{ domain }}{% url 'confirm_email' uidb64=uid token=token %}
+
+This link will expire in 3 days. If you didn't create an account, you can safely ignore this email.
+
+— NyasaBlog
