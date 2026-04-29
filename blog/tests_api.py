@@ -34,6 +34,10 @@ class BlogAPITestMixin:
         self.user2 = Account.objects.create_user(
             email='other@nyasablog.com', username='otheruser', password='testpass123'
         )
+        self.user.email_verified = True
+        self.user.save()
+        self.user2.email_verified = True
+        self.user2.save()
         self.token = Token.objects.get(user=self.user)
         self.token2 = Token.objects.get(user=self.user2)
         self.category, _ = Category.objects.get_or_create(name='Culture', slug='culture', defaults={'description': 'Test'})

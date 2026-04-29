@@ -8,6 +8,7 @@ from rest_framework.generics import ListAPIView
 from rest_framework.filters import SearchFilter, OrderingFilter
 
 
+from account.api.permissions import IsEmailVerified
 from account.models import Account
 from blog.models import BlogPost, Category, Tag, Comment, Like, Bookmark
 from blog.api.serializers import (
@@ -39,7 +40,7 @@ def api_detail_blog_view(request, slug):
 # Url: https://<your-domain>/api/blog/<slug>/update
 # Headers: Authorization: Token <token>
 @api_view(['PUT',])
-@permission_classes((IsAuthenticated,))
+@permission_classes((IsAuthenticated, IsEmailVerified))
 def api_update_blog_view(request, slug):
 
 	try:
@@ -91,7 +92,7 @@ def api_is_author_of_blogpost(request, slug):
 
 
 @api_view(['DELETE',])
-@permission_classes((IsAuthenticated, ))
+@permission_classes((IsAuthenticated, IsEmailVerified))
 def api_delete_blog_view(request, slug):
 
 	try:
@@ -115,7 +116,7 @@ def api_delete_blog_view(request, slug):
 # Url: https://<your-domain>/api/blog/create
 # Headers: Authorization: Token <token>
 @api_view(['POST'])
-@permission_classes((IsAuthenticated,))
+@permission_classes((IsAuthenticated, IsEmailVerified))
 def api_create_blog_view(request):
 
 	if request.method == 'POST':
@@ -209,7 +210,7 @@ def api_comments_view(request, slug):
 
 
 @api_view(['POST'])
-@permission_classes((IsAuthenticated,))
+@permission_classes((IsAuthenticated, IsEmailVerified))
 def api_create_comment_view(request, slug):
 	try:
 		post = BlogPost.objects.get(slug=slug)
@@ -224,7 +225,7 @@ def api_create_comment_view(request, slug):
 
 
 @api_view(['DELETE'])
-@permission_classes((IsAuthenticated,))
+@permission_classes((IsAuthenticated, IsEmailVerified))
 def api_delete_comment_view(request, pk):
 	try:
 		comment = Comment.objects.get(pk=pk)
@@ -240,7 +241,7 @@ def api_delete_comment_view(request, pk):
 # --- Likes & Bookmarks ---
 
 @api_view(['POST'])
-@permission_classes((IsAuthenticated,))
+@permission_classes((IsAuthenticated, IsEmailVerified))
 def api_toggle_like_view(request, slug):
 	try:
 		post = BlogPost.objects.get(slug=slug)
@@ -255,7 +256,7 @@ def api_toggle_like_view(request, slug):
 
 
 @api_view(['POST'])
-@permission_classes((IsAuthenticated,))
+@permission_classes((IsAuthenticated, IsEmailVerified))
 def api_toggle_bookmark_view(request, slug):
 	try:
 		post = BlogPost.objects.get(slug=slug)

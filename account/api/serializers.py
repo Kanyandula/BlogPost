@@ -38,6 +38,9 @@ class RegistrationSerializer(serializers.ModelSerializer):
 		if password != password2:
 			raise serializers.ValidationError({'password': 'Passwords must match.'})
 		account.set_password(password)
+		# Honor is_active from view context (v2 sets False to gate login until verification).
+		if self.context.get('is_active') is False:
+			account.is_active = False
 		account.save()
 		return account
 
@@ -45,7 +48,7 @@ class AccountPropertiesSerializer(serializers.ModelSerializer):
 
 	class Meta:
 		model = Account
-		fields = ['pk', 'email', 'username', ]
+		fields = ['pk', 'email', 'username', 'email_verified', ]
 
 class ChangePasswordSerializer(serializers.Serializer):
 

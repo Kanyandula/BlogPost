@@ -5,11 +5,18 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 from rest_framework.generics import UpdateAPIView
 from django.contrib.auth import authenticate
+from django.core.cache import cache
+from django.utils.encoding import force_str
+from django.utils.http import urlsafe_base64_decode
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 
+from account.api.permissions import IsEmailVerified
 from account.api.serializers import RegistrationSerializer, AccountPropertiesSerializer, ChangePasswordSerializer, UserProfileSerializer
+from account.emails import send_verification_email
 from account.models import Account, UserProfile
+from account.tokens import email_verification_token
+from account.views import _can_send_resend  # reuse the cooldown helper from web view
 from rest_framework.authtoken.models import Token
 from django.db.models import Sum, Count
 
@@ -35,16 +42,24 @@ def registration_view(request):
 			data['response'] = 'Error'
 			return Response(data)
 
-		serializer = RegistrationSerializer(data=request.data)
-		
+		is_v2 = (request.version == '2')
+		serializer = RegistrationSerializer(data=request.data, context={'is_active': not is_v2})
+
 		if serializer.is_valid():
 			account = serializer.save()
-			data['response'] = 'successfully registered new user.'
-			data['email'] = account.email
-			data['username'] = account.username
-			data['pk'] = account.pk
-			token = Token.objects.get(user=account).key
-			data['token'] = token
+			send_verification_email(account, request)
+			if is_v2:
+				data['response'] = 'verification_email_sent'
+				data['email'] = account.email
+				data['email_verified'] = False
+			else:
+				data['response'] = 'successfully registered new user.'
+				data['email'] = account.email
+				data['username'] = account.username
+				data['pk'] = account.pk
+				data['email_verified'] = False
+				token = Token.objects.get(user=account).key
+				data['token'] = token
 		else:
 			data = serializer.errors
 		return Response(data)
@@ -83,7 +98,7 @@ def account_properties_view(request):
 
 
 @api_view(['PUT',])
-@permission_classes((IsAuthenticated, ))
+@permission_classes((IsAuthenticated, IsEmailVerified))
 def update_account_view(request):
 
 	try:
@@ -112,23 +127,38 @@ class ObtainAuthTokenView(APIView):
 	def post(self, request):
 		context = {}
 
-		email = request.POST.get('username')
-		password = request.POST.get('password')
+		email = request.data.get('username', '')
+		password = request.data.get('password', '')
+		is_v2 = (request.version == '2')
 		account = authenticate(email=email, password=password)
-		if account:
-			try:
-				token = Token.objects.get(user=account)
-			except Token.DoesNotExist:
-				token = Token.objects.create(user=account)
-			context['response'] = 'Successfully authenticated.'
-			context['pk'] = account.pk
-			context['email'] = email.lower()
-			context['token'] = token.key
-		else:
-			context['response'] = 'Error'
-			context['error_message'] = 'Invalid credentials'
 
-		return Response(context)
+		if account is None:
+			# Maybe inactive-unverified - check manually so v2 can give the right error code.
+			candidate = Account.objects.filter(email__iexact=email).first()
+			if candidate and candidate.check_password(password) and not candidate.email_verified:
+				if is_v2:
+					return Response({
+						'response': 'Error',
+						'error_message': 'Email not verified',
+						'error_code': 'email_not_verified',
+					})
+			return Response({'response': 'Error', 'error_message': 'Invalid credentials'})
+
+		if is_v2 and not account.email_verified:
+			return Response({
+				'response': 'Error',
+				'error_message': 'Email not verified',
+				'error_code': 'email_not_verified',
+			})
+
+		token, _ = Token.objects.get_or_create(user=account)
+		return Response({
+			'response': 'Successfully authenticated.',
+			'pk': account.pk,
+			'email': account.email,
+			'token': token.key,
+			'email_verified': account.email_verified,
+		})
 
 @api_view(['GET', ])
 @permission_classes([])
@@ -151,7 +181,7 @@ class ChangePasswordView(UpdateAPIView):
 
 	serializer_class = ChangePasswordSerializer
 	model = Account
-	permission_classes = (IsAuthenticated,)
+	permission_classes = (IsAuthenticated, IsEmailVerified)
 	authentication_classes = (TokenAuthentication,)
 
 	def get_object(self, queryset=None):
@@ -203,7 +233,7 @@ def api_author_profile_view(request, username):
 
 
 @api_view(['PUT'])
-@permission_classes((IsAuthenticated,))
+@permission_classes((IsAuthenticated, IsEmailVerified))
 def api_update_profile_view(request):
 	profile = request.user.profile
 	serializer = UserProfileSerializer(profile, data=request.data, partial=True)
@@ -211,3 +241,53 @@ def api_update_profile_view(request):
 		serializer.save()
 		return Response(serializer.data)
 	return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['POST', ])
+@permission_classes([])
+@authentication_classes([])
+def api_confirm_email_view(request):
+	uidb64 = request.data.get('uid')
+	token = request.data.get('token')
+	if not uidb64 or not token:
+		return Response({'error_message': 'uid and token are required.'}, status=status.HTTP_400_BAD_REQUEST)
+	try:
+		uid = force_str(urlsafe_base64_decode(uidb64))
+		account = Account.objects.get(pk=uid)
+	except (TypeError, ValueError, OverflowError, Account.DoesNotExist):
+		return Response({'error_message': 'Invalid link.'}, status=status.HTTP_400_BAD_REQUEST)
+	# Idempotency: a retried confirm on an already-verified account returns the existing token
+	# rather than 400. Mobile clients on flaky networks retry; one-shot 400 punishes legit users.
+	if account.email_verified:
+		auth_token, _ = Token.objects.get_or_create(user=account)
+		return Response({'response': 'Email verified.', 'token': auth_token.key,
+						 'email': account.email, 'pk': account.pk})
+	if not email_verification_token.check_token(account, token):
+		return Response({'error_message': 'Invalid or expired link.'}, status=status.HTTP_400_BAD_REQUEST)
+	account.is_active = True
+	account.email_verified = True
+	account.save()
+	auth_token, _ = Token.objects.get_or_create(user=account)
+	return Response({'response': 'Email verified.', 'token': auth_token.key,
+					 'email': account.email, 'pk': account.pk})
+
+
+@api_view(['POST', ])
+@permission_classes([])
+@authentication_classes([])
+def api_resend_verification_view(request):
+	email = (request.data.get('email') or '').strip().lower()
+	response_body = {'response': 'If that email is registered and unverified, a new link was sent.'}
+	if email:
+		try:
+			account = Account.objects.get(email__iexact=email, email_verified=False)
+			if _can_send_resend(email):
+				try:
+					send_verification_email(account, request)
+				except Exception:
+					# Release the cooldown so the user can retry on transient SMTP failure.
+					cache.delete(f"resend_cooldown:{email}")
+					raise
+		except Account.DoesNotExist:
+			pass
+	return Response(response_body)

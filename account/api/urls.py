@@ -8,6 +8,8 @@ from account.api.views import(
 	ChangePasswordView,
 	api_author_profile_view,
 	api_update_profile_view,
+	api_resend_verification_view,
+	api_confirm_email_view,
 )
 from rest_framework.authtoken.views import obtain_auth_token
 
@@ -22,4 +24,6 @@ urlpatterns = [
 	path('register', registration_view, name="register"),
 	path('profile/update/', api_update_profile_view, name="update_profile"),
 	path('profile/<str:username>/', api_author_profile_view, name="author_profile"),
+	path('resend-verification/', api_resend_verification_view, name="resend_verification"),
+	path('confirm-email/', api_confirm_email_view, name="confirm_email"),
 ]

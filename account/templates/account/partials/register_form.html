@@ -4,6 +4,12 @@
       class="space-y-4">
   {% csrf_token %}
 
+  {% if registration_form.non_field_errors %}
+  <div class="rounded-lg bg-error/10 border border-error/20 p-3 text-sm text-error" role="alert">
+    {% for error in registration_form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
+  </div>
+  {% endif %}
+
   {% for field in registration_form %}
   <div>
     <label class="block text-sm font-medium text-on-surface mb-1">{{ field.label }}</label>
