@@ -747,6 +747,8 @@ class RegistrationAPIVersionTests(APITestCase):
         )
         self.assertEqual(response.status_code, 200)
         self.assertNotIn('token', response.data)
+        self.assertNotIn('username', response.data)
+        self.assertNotIn('pk', response.data)
         self.assertEqual(response.data['response'], 'verification_email_sent')
         u = Account.objects.get(email='v2@nyasablog.com')
         self.assertFalse(u.email_verified)
