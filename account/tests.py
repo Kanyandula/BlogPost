@@ -2,6 +2,7 @@ from datetime import timedelta
 from unittest.mock import patch
 
 from django.core import mail
+from django.core.cache import cache
 from django.db import connection
 from django.db.migrations.executor import MigrationExecutor
 from django.test import TestCase, TransactionTestCase, RequestFactory, Client
@@ -590,3 +591,59 @@ class WebLoginTests(TestCase):
             'password': 'testpass123',  # pragma: allowlist secret
         }, follow=True)
         self.assertTrue(response.wsgi_request.user.is_authenticated)
+
+
+class ResendVerificationViewTests(TestCase):
+    def setUp(self):
+        from account.models import Account
+        self.unverified = Account.objects.create_user(
+            email='resend@nyasablog.com', username='resenduser', password='testpass123'  # pragma: allowlist secret
+        )
+        self.verified = Account.objects.create_user(
+            email='already@nyasablog.com', username='alreadyuser', password='testpass123'  # pragma: allowlist secret
+        )
+        self.verified.email_verified = True
+        self.verified.save()
+        cache.clear()
+
+    def test_resend_verification_sends_for_unverified(self):
+        from django.core import mail
+        before = len(mail.outbox)
+        self.client.post(reverse('resend_verification'), {'email': 'resend@nyasablog.com'})
+        self.assertEqual(len(mail.outbox), before + 1)
+        self.assertEqual(mail.outbox[-1].to, ['resend@nyasablog.com'])
+
+    def test_resend_verification_silent_for_unknown_email(self):
+        from django.core import mail
+        before = len(mail.outbox)
+        self.client.post(reverse('resend_verification'), {'email': 'nobody@nyasablog.com'})
+        self.assertEqual(len(mail.outbox), before)
+
+    def test_resend_verification_silent_for_verified_email(self):
+        from django.core import mail
+        before = len(mail.outbox)
+        self.client.post(reverse('resend_verification'), {'email': 'already@nyasablog.com'})
+        self.assertEqual(len(mail.outbox), before)
+
+    def test_resend_response_identical_for_known_and_unknown(self):
+        r1 = self.client.post(reverse('resend_verification'), {'email': 'resend@nyasablog.com'})
+        r2 = self.client.post(reverse('resend_verification'), {'email': 'nobody@nyasablog.com'})
+        self.assertEqual(r1.status_code, r2.status_code)
+
+    def test_resend_rate_limited_within_cooldown(self):
+        from django.core import mail
+        before = len(mail.outbox)
+        self.client.post(reverse('resend_verification'), {'email': 'resend@nyasablog.com'})
+        self.assertEqual(len(mail.outbox), before + 1)
+        # Second attempt within cooldown — still returns 200 but no new email.
+        self.client.post(reverse('resend_verification'), {'email': 'resend@nyasablog.com'})
+        self.assertEqual(len(mail.outbox), before + 1)
+        cache.clear()  # simulates time advancing past cooldown
+        self.client.post(reverse('resend_verification'), {'email': 'resend@nyasablog.com'})
+        self.assertEqual(len(mail.outbox), before + 2)
+
+    def test_resend_case_insensitive_email_lookup(self):
+        from django.core import mail
+        before = len(mail.outbox)
+        self.client.post(reverse('resend_verification'), {'email': 'RESEND@NYASABLOG.COM'})
+        self.assertEqual(len(mail.outbox), before + 1)

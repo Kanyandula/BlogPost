@@ -1,6 +1,7 @@
 from urllib.parse import urlencode
 
 from django.contrib import messages
+from django.core.cache import cache
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, authenticate, logout
 from django.http import HttpResponse
@@ -46,6 +47,35 @@ def registration_view(request):
 
 def verification_sent_view(request):
 	return render(request, 'account/verification_sent.html', {'email': request.GET.get('email', '')})
+
+
+def _can_send_resend(email: str) -> bool:
+	"""Reserve the cooldown slot for `email` (lowercased), or refuse if still in cooldown."""
+	key = f"resend_cooldown:{email.lower()}"
+	if cache.get(key):
+		return False
+	cache.set(key, True, timeout=60)
+	return True
+
+
+def resend_verification_view(request):
+	if request.method == 'POST':
+		email = (request.POST.get('email') or '').strip()
+		if email:
+			email_lower = email.lower()
+			try:
+				account = Account.objects.get(email__iexact=email_lower, email_verified=False)
+				if _can_send_resend(email_lower):
+					send_verification_email(account, request)
+			except Account.DoesNotExist:
+				pass  # silent — no enumeration
+		# Always render the same response, regardless of state.
+		return render(request, 'account/verification_sent.html',
+		              {'email': email, 'resend': True})
+
+	# GET — render the form (reuses verification_invalid.html which has an embedded resend form)
+	prefill = request.GET.get('email', '')
+	return render(request, 'account/verification_invalid.html', {'email': prefill})
 
 
 def confirm_email_view(request, uidb64, token):

@@ -48,6 +48,7 @@ from account.views import (
 	author_profile_view,
 	verification_sent_view,
 	confirm_email_view,
+	resend_verification_view,
 )
 
 def robots_txt(request):
@@ -78,8 +79,7 @@ urlpatterns = [
     path('register/', registration_view, name="register"),
     path('verification-sent/', verification_sent_view, name='verification_sent'),
     path('confirm-email/<str:uidb64>/<str:token>/', confirm_email_view, name='confirm_email'),
-    # Placeholder — full handler added in Task 9
-    path('resend-verification/', lambda r: HttpResponse('placeholder', status=501), name='resend_verification'),
+    path('resend-verification/', resend_verification_view, name='resend_verification'),
     path('author/<str:username>/', author_profile_view, name="author_profile"),
     path('about', about_screen_view, name= "about"),
     path('contact/', contact_screen_view, name= "contact"),
