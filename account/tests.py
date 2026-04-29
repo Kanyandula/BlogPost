@@ -1,4 +1,6 @@
-from django.test import TestCase
+from django.db import connection
+from django.db.migrations.executor import MigrationExecutor
+from django.test import TestCase, TransactionTestCase
 from django.urls import reverse
 from rest_framework.test import APITestCase, APIClient
 from rest_framework.authtoken.models import Token
@@ -301,3 +303,70 @@ class UpdateProfileAPITests(AccountAPITestMixin, APITestCase):
         url = reverse('account_api:update_profile')
         response = self.client.put(url, {'bio': 'Hacked bio'})
         self.assertEqual(response.status_code, 401)
+
+
+class GrandfatherMigrationTests(TransactionTestCase):
+    """Test the grandfather data migration in isolation."""
+
+    migrate_from = ("account", "0005_account_email_verified")
+    migrate_to = ("account", "0006_grandfather_existing_users")
+
+    def setUp(self):
+        executor = MigrationExecutor(connection)
+        # Roll back to the state just before the grandfather migration.
+        executor.migrate([self.migrate_from])
+        # Build the historical apps state including the blog app (which has its
+        # latest migration applied — only the account app is rolled back).
+        blog_leaf = next(
+            node for node in executor.loader.graph.leaf_nodes()
+            if node[0] == "blog"
+        )
+        old_apps = executor.loader.project_state(
+            [self.migrate_from, blog_leaf]
+        ).apps
+        Account = old_apps.get_model("account", "Account")
+        BlogPost = old_apps.get_model("blog", "BlogPost")
+        # Staff user (no posts)
+        self.staff = Account.objects.create(
+            email='staff@nyasablog.com', username='staff', password='x',  # pragma: allowlist secret
+            is_staff=True, email_verified=False,
+        )
+        # Contributor (has a post)
+        self.author = Account.objects.create(
+            email='author@nyasablog.com', username='author', password='x',  # pragma: allowlist secret
+            email_verified=False,
+        )
+        BlogPost.objects.create(
+            title='Post', body='Body', author=self.author, status='published',
+            slug='author-post',
+        )
+        # Lurker (no posts, not staff)
+        self.lurker = Account.objects.create(
+            email='lurker@nyasablog.com', username='lurker', password='x',  # pragma: allowlist secret
+            email_verified=False,
+        )
+        # Apply the grandfather migration
+        executor.loader.build_graph()
+        executor.migrate([self.migrate_to])
+        new_apps = executor.loader.project_state([self.migrate_to]).apps
+        self.Account = new_apps.get_model("account", "Account")
+
+    def test_grandfather_migration_marks_staff_verified(self):
+        self.assertTrue(self.Account.objects.get(pk=self.staff.pk).email_verified)
+
+    def test_grandfather_migration_marks_contributor_verified(self):
+        self.assertTrue(self.Account.objects.get(pk=self.author.pk).email_verified)
+
+    def test_grandfather_migration_leaves_lurker_unverified(self):
+        self.assertFalse(self.Account.objects.get(pk=self.lurker.pk).email_verified)
+
+    def test_grandfather_migration_idempotent(self):
+        # Re-applying the migration must not regress anyone's state.
+        executor = MigrationExecutor(connection)
+        executor.loader.build_graph()
+        executor.migrate([self.migrate_from])
+        executor.loader.build_graph()
+        executor.migrate([self.migrate_to])
+        self.assertTrue(self.Account.objects.get(pk=self.staff.pk).email_verified)
+        self.assertTrue(self.Account.objects.get(pk=self.author.pk).email_verified)
+        self.assertFalse(self.Account.objects.get(pk=self.lurker.pk).email_verified)
