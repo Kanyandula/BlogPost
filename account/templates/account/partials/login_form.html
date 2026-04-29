@@ -4,6 +4,16 @@
       class="space-y-4">
   {% csrf_token %}
 
+  {% if login_form.non_field_errors %}
+  <div class="rounded-lg bg-error/10 border border-error/20 p-3 text-sm text-error" role="alert">
+    {% for error in login_form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
+  </div>
+  <p class="text-xs text-on-surface-variant">
+    Didn't receive verification email?
+    <a href="{% url 'resend_verification' %}?email={{ login_form.email.value|default:''|urlencode }}" class="text-secondary font-medium hover:underline">Resend</a>
+  </p>
+  {% endif %}
+
   {% for field in login_form %}
   <div>
     <label class="block text-sm font-medium text-on-surface mb-1">{{ field.label }}</label>

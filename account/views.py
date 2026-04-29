@@ -89,13 +89,15 @@ def login_view(request):
 			password = request.POST['password']
 			user = authenticate(email=email, password=password)
 
-			if user:
+			if user and user.email_verified:
 				login(request, user)
 				if getattr(request, 'htmx', False):
 					response = HttpResponse(status=204)
 					response['HX-Redirect'] = '/'
 					return response
 				return redirect("home")
+			# Authentication failed OR user is unverified — render the same generic error.
+			form.add_error(None, "Invalid email or password.")
 
 		if getattr(request, 'htmx', False):
 			context['login_form'] = form

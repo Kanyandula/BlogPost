@@ -529,3 +529,51 @@ class ConfirmEmailViewTests(TestCase):
         url = reverse('confirm_email', kwargs={'uidb64': self.uidb64, 'token': token})
         response = self.client.get(url)
         self.assertRedirects(response, reverse('login'))
+
+
+class WebLoginTests(TestCase):
+    def setUp(self):
+        from account.models import Account
+        # Verified user
+        self.verified = Account.objects.create_user(
+            email='verified@nyasablog.com', username='verifieduser', password='testpass123'  # pragma: allowlist secret
+        )
+        self.verified.email_verified = True
+        self.verified.save()
+        # Unverified user (is_active=True since create_user defaults that)
+        self.unverified = Account.objects.create_user(
+            email='unverified@nyasablog.com', username='unverifieduser', password='testpass123'  # pragma: allowlist secret
+        )
+
+    def test_unverified_user_cannot_log_in(self):
+        response = self.client.post(reverse('login'), {
+            'email': 'unverified@nyasablog.com',
+            'password': 'testpass123',  # pragma: allowlist secret
+        }, follow=False)
+        self.assertFalse(response.wsgi_request.user.is_authenticated)
+        self.assertContains(response, 'Invalid', status_code=200)
+        self.assertContains(response, 'Resend')
+
+    def test_failed_login_with_wrong_password_shows_error_message(self):
+        response = self.client.post(reverse('login'), {
+            'email': 'verified@nyasablog.com',
+            'password': 'wrongpassword',  # pragma: allowlist secret
+        })
+        self.assertFalse(response.wsgi_request.user.is_authenticated)
+        self.assertContains(response, 'Invalid', status_code=200)
+
+    def test_login_with_wrong_password_for_unverified_account_does_not_send_email(self):
+        from django.core import mail
+        before = len(mail.outbox)
+        self.client.post(reverse('login'), {
+            'email': 'unverified@nyasablog.com',
+            'password': 'wrongpassword',  # pragma: allowlist secret
+        })
+        self.assertEqual(len(mail.outbox), before)
+
+    def test_verified_user_logs_in_successfully(self):
+        response = self.client.post(reverse('login'), {
+            'email': 'verified@nyasablog.com',
+            'password': 'testpass123',  # pragma: allowlist secret
+        }, follow=True)
+        self.assertTrue(response.wsgi_request.user.is_authenticated)
