@@ -1,4 +1,4 @@
-from django.core.mail import EmailMultiAlternatives
+from django.core.mail import EmailMessage
 from django.template.loader import render_to_string
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
@@ -16,6 +16,6 @@ def send_verification_email(user, request):
         'token': email_verification_token.make_token(user),
     }
     subject = render_to_string('registration/email_verification_subject.txt', context).strip()
-    body = render_to_string('registration/email_verification_email.html', context)
-    msg = EmailMultiAlternatives(subject=subject, body=body, to=[user.email])
+    body = render_to_string('registration/email_verification_email.txt', context)
+    msg = EmailMessage(subject=subject, body=body, to=[user.email])
     msg.send()
