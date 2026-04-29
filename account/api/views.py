@@ -6,12 +6,15 @@ from rest_framework.views import APIView
 from rest_framework.generics import UpdateAPIView
 from django.contrib.auth import authenticate
 from django.core.cache import cache
+from django.utils.encoding import force_str
+from django.utils.http import urlsafe_base64_decode
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 
 from account.api.serializers import RegistrationSerializer, AccountPropertiesSerializer, ChangePasswordSerializer, UserProfileSerializer
 from account.emails import send_verification_email
 from account.models import Account, UserProfile
+from account.tokens import email_verification_token
 from account.views import _can_send_resend  # reuse the cooldown helper from web view
 from rest_framework.authtoken.models import Token
 from django.db.models import Sum, Count
@@ -237,6 +240,29 @@ def api_update_profile_view(request):
 		serializer.save()
 		return Response(serializer.data)
 	return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['POST', ])
+@permission_classes([])
+@authentication_classes([])
+def api_confirm_email_view(request):
+	uidb64 = request.data.get('uid')
+	token = request.data.get('token')
+	if not uidb64 or not token:
+		return Response({'error_message': 'uid and token are required.'}, status=status.HTTP_400_BAD_REQUEST)
+	try:
+		uid = force_str(urlsafe_base64_decode(uidb64))
+		account = Account.objects.get(pk=uid)
+	except (TypeError, ValueError, OverflowError, Account.DoesNotExist):
+		return Response({'error_message': 'Invalid link.'}, status=status.HTTP_400_BAD_REQUEST)
+	if not email_verification_token.check_token(account, token):
+		return Response({'error_message': 'Invalid or expired link.'}, status=status.HTTP_400_BAD_REQUEST)
+	account.is_active = True
+	account.email_verified = True
+	account.save()
+	auth_token, _ = Token.objects.get_or_create(user=account)
+	return Response({'response': 'Email verified.', 'token': auth_token.key,
+					 'email': account.email, 'pk': account.pk})
 
 
 @api_view(['POST', ])

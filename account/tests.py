@@ -915,3 +915,33 @@ class ResendVerificationAPITests(APITestCase):
         client.post(reverse('account_api:resend_verification'), {'email': 'r@x.com'})
         client.post(reverse('account_api:resend_verification'), {'email': 'r@x.com'})
         self.assertEqual(len(mail.outbox), before + 1)
+
+
+class ConfirmEmailAPITests(APITestCase):
+    def setUp(self):
+        from account.tokens import email_verification_token
+        self.user = Account.objects.create_user(
+            email='c@x.com', username='c', password='testpass123'  # pragma: allowlist secret
+        )
+        self.user.is_active = False
+        self.user.save()
+        self.uidb64 = urlsafe_base64_encode(force_bytes(self.user.pk))
+        self.token = email_verification_token.make_token(self.user)
+
+    def test_api_confirm_valid_token_returns_token(self):
+        client = APIClient()
+        response = client.post(reverse('account_api:confirm_email'),
+                               {'uid': self.uidb64, 'token': self.token})
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('token', response.data)
+        self.user.refresh_from_db()
+        self.assertTrue(self.user.email_verified)
+        self.assertTrue(self.user.is_active)
+
+    def test_api_confirm_invalid_token_returns_400(self):
+        client = APIClient()
+        response = client.post(reverse('account_api:confirm_email'),
+                               {'uid': self.uidb64, 'token': 'bogus'})
+        self.assertEqual(response.status_code, 400)
+        self.user.refresh_from_db()
+        self.assertFalse(self.user.email_verified)
