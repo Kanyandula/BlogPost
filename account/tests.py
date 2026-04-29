@@ -945,3 +945,42 @@ class ConfirmEmailAPITests(APITestCase):
         self.assertEqual(response.status_code, 400)
         self.user.refresh_from_db()
         self.assertFalse(self.user.email_verified)
+
+
+from rest_framework.test import APIRequestFactory
+from rest_framework.views import APIView
+
+
+class IsEmailVerifiedPermissionTests(TestCase):
+    def setUp(self):
+        self.factory = APIRequestFactory()
+        self.unverified = Account.objects.create_user(
+            email='unv@x.com', username='unv', password='testpass123'  # pragma: allowlist secret
+        )
+        self.verified = Account.objects.create_user(
+            email='ver@x.com', username='ver', password='testpass123'  # pragma: allowlist secret
+        )
+        self.verified.email_verified = True
+        self.verified.save()
+
+    def test_permission_allows_verified_user(self):
+        from account.api.permissions import IsEmailVerified
+        permission = IsEmailVerified()
+        request = self.factory.get('/')
+        request.user = self.verified
+        self.assertTrue(permission.has_permission(request, APIView()))
+
+    def test_permission_denies_unverified_user(self):
+        from account.api.permissions import IsEmailVerified
+        permission = IsEmailVerified()
+        request = self.factory.get('/')
+        request.user = self.unverified
+        self.assertFalse(permission.has_permission(request, APIView()))
+
+    def test_permission_denies_anonymous(self):
+        from account.api.permissions import IsEmailVerified
+        from django.contrib.auth.models import AnonymousUser
+        permission = IsEmailVerified()
+        request = self.factory.get('/')
+        request.user = AnonymousUser()
+        self.assertFalse(permission.has_permission(request, APIView()))
