@@ -878,3 +878,40 @@ class DRFVersioningTests(TestCase):
             HTTP_ACCEPT='application/json; version=99'
         )
         self.assertEqual(response.status_code, 406)  # Not Acceptable
+
+
+class ResendVerificationAPITests(APITestCase):
+    def setUp(self):
+        cache.clear()
+        self.unverified = Account.objects.create_user(
+            email='r@x.com', username='r', password='testpass123'  # pragma: allowlist secret
+        )
+
+    def test_api_resend_sends_for_unverified(self):
+        before = len(mail.outbox)
+        client = APIClient()
+        response = client.post(reverse('account_api:resend_verification'),
+                               {'email': 'r@x.com'})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(mail.outbox), before + 1)
+
+    def test_api_resend_silent_for_unknown(self):
+        before = len(mail.outbox)
+        client = APIClient()
+        client.post(reverse('account_api:resend_verification'), {'email': 'nobody@x.com'})
+        self.assertEqual(len(mail.outbox), before)
+
+    def test_api_resend_silent_for_already_verified(self):
+        self.unverified.email_verified = True
+        self.unverified.save()
+        before = len(mail.outbox)
+        client = APIClient()
+        client.post(reverse('account_api:resend_verification'), {'email': 'r@x.com'})
+        self.assertEqual(len(mail.outbox), before)
+
+    def test_api_resend_rate_limited(self):
+        before = len(mail.outbox)
+        client = APIClient()
+        client.post(reverse('account_api:resend_verification'), {'email': 'r@x.com'})
+        client.post(reverse('account_api:resend_verification'), {'email': 'r@x.com'})
+        self.assertEqual(len(mail.outbox), before + 1)

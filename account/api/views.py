@@ -5,12 +5,14 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 from rest_framework.generics import UpdateAPIView
 from django.contrib.auth import authenticate
+from django.core.cache import cache
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 
 from account.api.serializers import RegistrationSerializer, AccountPropertiesSerializer, ChangePasswordSerializer, UserProfileSerializer
 from account.emails import send_verification_email
 from account.models import Account, UserProfile
+from account.views import _can_send_resend  # reuse the cooldown helper from web view
 from rest_framework.authtoken.models import Token
 from django.db.models import Sum, Count
 
@@ -235,3 +237,24 @@ def api_update_profile_view(request):
 		serializer.save()
 		return Response(serializer.data)
 	return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['POST', ])
+@permission_classes([])
+@authentication_classes([])
+def api_resend_verification_view(request):
+	email = (request.data.get('email') or '').strip().lower()
+	response_body = {'response': 'If that email is registered and unverified, a new link was sent.'}
+	if email:
+		try:
+			account = Account.objects.get(email__iexact=email, email_verified=False)
+			if _can_send_resend(email):
+				try:
+					send_verification_email(account, request)
+				except Exception:
+					# Release the cooldown so the user can retry on transient SMTP failure.
+					cache.delete(f"resend_cooldown:{email}")
+					raise
+		except Account.DoesNotExist:
+			pass
+	return Response(response_body)
