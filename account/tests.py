@@ -626,9 +626,18 @@ class ResendVerificationViewTests(TestCase):
         self.assertEqual(len(mail.outbox), before)
 
     def test_resend_response_identical_for_known_and_unknown(self):
+        # Hit the same email, once when the account exists, once after deletion.
+        # Bodies must be byte-identical to prevent enumeration via response content.
         r1 = self.client.post(reverse('resend_verification'), {'email': 'resend@nyasablog.com'})
-        r2 = self.client.post(reverse('resend_verification'), {'email': 'nobody@nyasablog.com'})
+        self.unverified.delete()
+        cache.clear()
+        r2 = self.client.post(reverse('resend_verification'), {'email': 'resend@nyasablog.com'})
         self.assertEqual(r1.status_code, r2.status_code)
+        self.assertEqual(r1.content, r2.content)
+
+    def test_resend_post_renders_verification_sent_template(self):
+        response = self.client.post(reverse('resend_verification'), {'email': 'resend@nyasablog.com'})
+        self.assertTemplateUsed(response, 'account/verification_sent.html')
 
     def test_resend_rate_limited_within_cooldown(self):
         from django.core import mail

@@ -66,7 +66,14 @@ def resend_verification_view(request):
 			try:
 				account = Account.objects.get(email__iexact=email_lower, email_verified=False)
 				if _can_send_resend(email_lower):
-					send_verification_email(account, request)
+					try:
+						send_verification_email(account, request)
+					except Exception:  # pylint: disable=broad-except
+						# Release the cooldown so the user can retry on transient SMTP failure.
+						# Bare except is intentional: send() can raise SMTPException, socket.error,
+						# ConnectionRefusedError, etc. Re-allowing one retry is safer than enumerating.
+						cache.delete(f"resend_cooldown:{email_lower}")
+						raise
 			except Account.DoesNotExist:
 				pass  # silent — no enumeration
 		# Always render the same response, regardless of state.
