@@ -727,6 +727,9 @@ class DRFVersioningTests(TestCase):
         client = APIClient()
         client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
         # Hit the existing properties endpoint with no Accept header.
+        # `request.version='1'` resolution is locked in by Tasks 12+ tests that
+        # branch on request.version directly; here we only verify the request
+        # doesn't error out under default versioning.
         response = client.get(reverse('account_api:properties'))
         self.assertEqual(response.status_code, 200)
 
