@@ -756,6 +756,70 @@ class RegistrationAPIVersionTests(APITestCase):
         self.assertEqual(len(mail.outbox), before + 1)
 
 
+class LoginAPIVersionTests(APITestCase):
+    def setUp(self):
+        # Active-unverified - matches v1 API register output
+        self.unverified = Account.objects.create_user(
+            email='un@x.com', username='un', password='testpass123'  # pragma: allowlist secret
+        )
+        # Inactive-unverified - matches v2 API register output and web register output
+        self.inactive_unverified = Account.objects.create_user(
+            email='inv@x.com', username='inv', password='testpass123'  # pragma: allowlist secret
+        )
+        self.inactive_unverified.is_active = False
+        self.inactive_unverified.save()
+        # Verified happy-path user
+        self.verified = Account.objects.create_user(
+            email='ver@x.com', username='ver', password='testpass123'  # pragma: allowlist secret
+        )
+        self.verified.email_verified = True
+        self.verified.save()
+
+    def test_api_login_v1_allows_unverified_with_email_verified_field(self):
+        client = APIClient()
+        url = reverse('account_api:login')
+        response = client.post(url, {'username': 'un@x.com', 'password': 'testpass123'})  # pragma: allowlist secret
+        self.assertEqual(response.data['response'], 'Successfully authenticated.')
+        self.assertIn('token', response.data)
+        self.assertIn('email_verified', response.data)
+        self.assertFalse(response.data['email_verified'])
+
+    def test_api_login_v2_rejects_unverified_with_error_code(self):
+        client = APIClient()
+        url = reverse('account_api:login')
+        response = client.post(
+            url, {'username': 'un@x.com', 'password': 'testpass123'},  # pragma: allowlist secret
+            HTTP_ACCEPT='application/json; version=2',
+        )
+        self.assertEqual(response.data['response'], 'Error')
+        self.assertEqual(response.data.get('error_code'), 'email_not_verified')
+        self.assertNotIn('token', response.data)
+
+    def test_api_login_v2_succeeds_for_verified_user(self):
+        client = APIClient()
+        url = reverse('account_api:login')
+        response = client.post(
+            url, {'username': 'ver@x.com', 'password': 'testpass123'},  # pragma: allowlist secret
+            HTTP_ACCEPT='application/json; version=2',
+        )
+        self.assertEqual(response.data['response'], 'Successfully authenticated.')
+        self.assertIn('token', response.data)
+        self.assertTrue(response.data['email_verified'])
+
+    def test_api_login_v2_rejects_inactive_unverified_with_error_code(self):
+        # Mirrors v2 API register output (is_active=False, email_verified=False).
+        # The view must give the explicit `email_not_verified` code rather than masking as "Invalid credentials".
+        client = APIClient()
+        url = reverse('account_api:login')
+        response = client.post(
+            url, {'username': 'inv@x.com', 'password': 'testpass123'},  # pragma: allowlist secret
+            HTTP_ACCEPT='application/json; version=2',
+        )
+        self.assertEqual(response.data['response'], 'Error')
+        self.assertEqual(response.data.get('error_code'), 'email_not_verified')
+        self.assertNotIn('token', response.data)
+
+
 class DRFVersioningTests(TestCase):
     def test_default_version_is_v1(self):
         from account.models import Account

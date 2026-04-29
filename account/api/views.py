@@ -121,23 +121,41 @@ class ObtainAuthTokenView(APIView):
 	def post(self, request):
 		context = {}
 
-		email = request.POST.get('username')
-		password = request.POST.get('password')
+		email = request.data.get('username', '0')
+		password = request.data.get('password', '0')
+		is_v2 = (request.version == '2')
 		account = authenticate(email=email, password=password)
-		if account:
-			try:
-				token = Token.objects.get(user=account)
-			except Token.DoesNotExist:
-				token = Token.objects.create(user=account)
-			context['response'] = 'Successfully authenticated.'
-			context['pk'] = account.pk
-			context['email'] = email.lower()
-			context['token'] = token.key
-		else:
-			context['response'] = 'Error'
-			context['error_message'] = 'Invalid credentials'
 
-		return Response(context)
+		if account is None:
+			# Maybe inactive-unverified - check manually so v2 can give the right error code.
+			try:
+				candidate = Account.objects.get(email__iexact=email)
+				if candidate.check_password(password) and not candidate.email_verified:
+					if is_v2:
+						return Response({
+							'response': 'Error',
+							'error_message': 'Email not verified',
+							'error_code': 'email_not_verified',
+						})
+			except Account.DoesNotExist:
+				pass
+			return Response({'response': 'Error', 'error_message': 'Invalid credentials'})
+
+		if is_v2 and not account.email_verified:
+			return Response({
+				'response': 'Error',
+				'error_message': 'Email not verified',
+				'error_code': 'email_not_verified',
+			})
+
+		token, _ = Token.objects.get_or_create(user=account)
+		return Response({
+			'response': 'Successfully authenticated.',
+			'pk': account.pk,
+			'email': account.email,
+			'token': token.key,
+			'email_verified': account.email_verified,
+		})
 
 @api_view(['GET', ])
 @permission_classes([])
