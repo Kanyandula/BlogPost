@@ -6,7 +6,6 @@ from django.db import connection
 from django.db.migrations.executor import MigrationExecutor
 from django.test import TestCase, TransactionTestCase, RequestFactory, Client
 from django.urls import reverse
-from django.utils import timezone
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
 from rest_framework.test import APITestCase, APIClient
@@ -496,8 +495,12 @@ class ConfirmEmailViewTests(TestCase):
         url = reverse('confirm_email', kwargs={'uidb64': self.uidb64, 'token': self.valid_token})
         self.client.get(url)  # first use — succeeds
         self.client.logout()
+        # Second use: user is already verified, so the early-return redirects to login
+        # rather than re-running activation.
         response = self.client.get(url)
-        self.assertTemplateUsed(response, 'account/verification_invalid.html')
+        self.assertRedirects(response, reverse('login'))
+        self.user.refresh_from_db()
+        self.assertTrue(self.user.email_verified)
 
     def test_confirm_email_success_sets_messages_framework(self):
         url = reverse('confirm_email', kwargs={'uidb64': self.uidb64, 'token': self.valid_token})
@@ -505,3 +508,24 @@ class ConfirmEmailViewTests(TestCase):
         messages = list(response.context['messages'])
         self.assertEqual(len(messages), 1)
         self.assertIn('verified', str(messages[0]).lower())
+
+    def test_confirm_email_success_renders_toast_message_in_html(self):
+        url = reverse('confirm_email', kwargs={'uidb64': self.uidb64, 'token': self.valid_token})
+        response = self.client.get(url, follow=True)
+        # The actual message text should appear in the toast script block in base.html
+        self.assertContains(response, 'Email verified')
+
+    def test_confirm_email_when_already_verified_redirects_to_login(self):
+        self.user.email_verified = True
+        self.user.is_active = True
+        self.user.save()
+        # Make a fresh token (pre-flip token would be invalidated)
+        from account.tokens import email_verification_token
+        token = email_verification_token.make_token(self.user)
+        # But since the token is for an already-verified user, we test the early-return path.
+        # Actually with email_verified=True, the token will check successfully (since hash includes
+        # email_verified=True at make-time). The early-return ensures the user is redirected to
+        # login rather than re-running the activation.
+        url = reverse('confirm_email', kwargs={'uidb64': self.uidb64, 'token': token})
+        response = self.client.get(url)
+        self.assertRedirects(response, reverse('login'))

@@ -43,7 +43,7 @@
   document.addEventListener('DOMContentLoaded', function() {
     {% for message in messages %}
     document.body.dispatchEvent(new CustomEvent('showToast', {
-      detail: { message: {{ message|escapejs|safe|stringformat:'"%s"' }}, type: '{{ message.tags|default:"success" }}' }
+      detail: { message: "{{ message|escapejs }}", type: "{{ message.tags|default:'success' }}" }
     }));
     {% endfor %}
   });

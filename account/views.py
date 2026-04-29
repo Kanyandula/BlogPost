@@ -55,6 +55,10 @@ def confirm_email_view(request, uidb64, token):
 	except (TypeError, ValueError, OverflowError, Account.DoesNotExist):
 		return render(request, 'account/verification_invalid.html')
 
+	if account.email_verified:
+		messages.info(request, 'Your email is already verified. Please log in.')
+		return redirect('login')
+
 	if email_verification_token.check_token(account, token):
 		account.is_active = True
 		account.email_verified = True
