@@ -21,7 +21,11 @@ class Command(BaseCommand):
         qs = Account.objects.filter(email_verified=False, date_joined__lt=cutoff)
         count = qs.count()
         if dry_run:
-            self.stdout.write(f"Would delete {count} unverified accounts")
+            self.stdout.write(f"[DRY RUN] cutoff={cutoff.isoformat()} — Would delete {count} unverified accounts")
             return
-        qs.delete()
-        self.stdout.write(f"Deleted {count} unverified accounts")
+        deleted_total, deleted_by_model = qs.delete()
+        accounts_deleted = deleted_by_model.get('account.Account', 0)
+        self.stdout.write(
+            f"cutoff={cutoff.isoformat()} — deleted {accounts_deleted} accounts "
+            f"({deleted_total} rows total across cascades)"
+        )
