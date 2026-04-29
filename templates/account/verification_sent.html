@@ -11,7 +11,7 @@
   </p>
   <p class="text-sm text-on-surface-variant mt-6">
     Didn't receive it?
-    <a href="{% url 'resend_verification' %}?email={{ email }}" class="text-secondary font-medium hover:underline">Resend</a>
+    <a href="{% url 'resend_verification' %}?email={{ email|urlencode }}" class="text-secondary font-medium hover:underline">Resend</a>
   </p>
 </div>
 {% endblock %}

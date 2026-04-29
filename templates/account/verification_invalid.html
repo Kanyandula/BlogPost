@@ -9,6 +9,7 @@
   <form method="post" action="{% url 'resend_verification' %}" class="space-y-4">
     {% csrf_token %}
     <input type="email" name="email" required placeholder="your@email.com"
+           aria-label="Email address" autocomplete="email" inputmode="email"
            class="w-full bg-surface-container-lowest border border-outline-variant/20 rounded-lg py-3 px-4 text-sm focus:ring-2 focus:ring-secondary/20 focus:border-secondary"/>
     <button type="submit" class="w-full bg-primary-container text-on-primary py-3 rounded-lg font-semibold hover:opacity-90">Send a new link</button>
   </form>
