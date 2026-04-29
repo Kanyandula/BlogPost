@@ -9,6 +9,7 @@ from rest_framework.authentication import TokenAuthentication
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 
 from account.api.serializers import RegistrationSerializer, AccountPropertiesSerializer, ChangePasswordSerializer, UserProfileSerializer
+from account.emails import send_verification_email
 from account.models import Account, UserProfile
 from rest_framework.authtoken.models import Token
 from django.db.models import Sum, Count
@@ -35,16 +36,24 @@ def registration_view(request):
 			data['response'] = 'Error'
 			return Response(data)
 
-		serializer = RegistrationSerializer(data=request.data)
-		
+		is_v2 = (request.version == '2')
+		serializer = RegistrationSerializer(data=request.data, context={'is_active': not is_v2})
+
 		if serializer.is_valid():
 			account = serializer.save()
-			data['response'] = 'successfully registered new user.'
-			data['email'] = account.email
-			data['username'] = account.username
-			data['pk'] = account.pk
-			token = Token.objects.get(user=account).key
-			data['token'] = token
+			send_verification_email(account, request)
+			if is_v2:
+				data['response'] = 'verification_email_sent'
+				data['email'] = account.email
+				data['email_verified'] = False
+			else:
+				data['response'] = 'successfully registered new user.'
+				data['email'] = account.email
+				data['username'] = account.username
+				data['pk'] = account.pk
+				data['email_verified'] = False
+				token = Token.objects.get(user=account).key
+				data['token'] = token
 		else:
 			data = serializer.errors
 		return Response(data)

@@ -716,6 +716,44 @@ class PurgeUnverifiedAccountsTests(TestCase):
         self.assertTrue(Account.objects.filter(email='old_unverified@x.com').exists())
 
 
+class RegistrationAPIVersionTests(APITestCase):
+
+    def test_api_register_v1_returns_token_and_unverified(self):
+        from django.core import mail
+        from account.models import Account
+        before = len(mail.outbox)
+        url = reverse('account_api:register')
+        response = self.client.post(url, {
+            'email': 'apinew@nyasablog.com', 'username': 'apinewuser',
+            'password': 'testpass123', 'password2': 'testpass123',  # pragma: allowlist secret
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('token', response.data)
+        u = Account.objects.get(email='apinew@nyasablog.com')
+        self.assertFalse(u.email_verified)
+        self.assertTrue(u.is_active)  # v1 keeps is_active=True for back-compat
+        self.assertEqual(len(mail.outbox), before + 1)
+
+    def test_api_register_v2_no_token_unverified_inactive(self):
+        from django.core import mail
+        from account.models import Account
+        before = len(mail.outbox)
+        url = reverse('account_api:register')
+        response = self.client.post(
+            url,
+            {'email': 'v2@nyasablog.com', 'username': 'v2user',
+             'password': 'testpass123', 'password2': 'testpass123'},  # pragma: allowlist secret
+            HTTP_ACCEPT='application/json; version=2',
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertNotIn('token', response.data)
+        self.assertEqual(response.data['response'], 'verification_email_sent')
+        u = Account.objects.get(email='v2@nyasablog.com')
+        self.assertFalse(u.email_verified)
+        self.assertFalse(u.is_active)
+        self.assertEqual(len(mail.outbox), before + 1)
+
+
 class DRFVersioningTests(TestCase):
     def test_default_version_is_v1(self):
         from account.models import Account
