@@ -14,7 +14,7 @@ sudo -u ephraim crontab -e
 Add this entry (replace the venv path if different — verify with `which python` after activating the env):
 
 ```
-0 3 * * * cd /home/ephraim/djangoprojectdir && /home/ephraim/djangoprojectenv/bin/python manage.py purge_unverified_accounts >> /var/log/nyasablog/purge.log 2>&1
+0 3 * * * cd /home/ephraim/djangoprojectdir && /home/ephraim/djangoprojectdir/djangoprojectenv/bin/python manage.py purge_unverified_accounts >> /var/log/nyasablog/purge.log 2>&1
 ```
 
 Runs daily at 03:00 UTC (~05:00 in Malawi).
@@ -24,7 +24,7 @@ Runs daily at 03:00 UTC (~05:00 in Malawi).
 ```bash
 sudo -u ephraim crontab -l                                        # confirm entry is present
 ls -ld /var/log/nyasablog                                         # confirm log dir exists, ephraim-writable
-sudo -u ephraim /home/ephraim/djangoprojectenv/bin/python /home/ephraim/djangoprojectdir/manage.py purge_unverified_accounts --dry-run
+sudo -u ephraim /home/ephraim/djangoprojectdir/djangoprojectenv/bin/python /home/ephraim/djangoprojectdir/manage.py purge_unverified_accounts --dry-run
 ```
 
 The `--dry-run` invocation should print `[DRY RUN] cutoff=... — Would delete N unverified accounts` without deleting anything.
