@@ -189,6 +189,10 @@ else:
     EMAIL_PORT = config('EMAIL_PORT')
     EMAIL_USE_TLS = config('EMAIL_USE_TLS')
     DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL')
+    # Fail SMTP fast (10s) so view exception handlers run before gunicorn's 30s
+    # worker timeout fires. Without this, hanging SMTP connects → SIGABRT →
+    # 500 with no chance to release the resend cooldown cache.
+    EMAIL_TIMEOUT = 10
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
