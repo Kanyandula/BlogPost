@@ -164,12 +164,14 @@ class ObtainAuthTokenView(APIView):
 @permission_classes([])
 @authentication_classes([])
 def does_account_exist_view(request):
-
+	# NOTE: This endpoint is a user-enumeration oracle (returns the email when it
+	# exists, sentinel string otherwise). Behavior preserved for the v1 Android
+	# password-reset client; remove together with that client when v2 lands.
 	if request.method == 'GET':
-		email = request.GET['email'].lower()
+		email = (request.GET.get('email') or '').lower()
 		data = {}
 		try:
-			account = Account.objects.get(email=email)
+			Account.objects.get(email=email)
 			data['response'] = email
 		except Account.DoesNotExist:
 			data['response'] = "Account does not exist"

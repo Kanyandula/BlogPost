@@ -4,12 +4,14 @@ from django.http import HttpResponse, HttpResponseForbidden, JsonResponse
 from django.views.decorators.http import require_POST
 from django.contrib.auth.decorators import login_required
 
+from account.decorators import email_verified_required
 from blog.models import BlogPost, Category, Comment, Like, Bookmark
 from blog.forms import CreateBlogPostForm, UpdateBlogPostForm, CommentForm
 from blog.utils import htmx_login_required, trigger_toast
 
 
 @login_required(login_url='must_authenticate')
+@email_verified_required
 def create_blog_view(request):
 	context = {}
 
@@ -63,6 +65,7 @@ def detail_blog_view(request, slug):
 
 
 @login_required(login_url='must_authenticate')
+@email_verified_required
 def edit_blog_view(request, slug):
 	context = {}
 
@@ -100,6 +103,7 @@ def get_blog_queryset(query=None):
 
 
 @login_required(login_url='must_authenticate')
+@email_verified_required
 def delete_blog_post(request, pk):
 	post = get_object_or_404(BlogPost, id=pk)
 	if post.author != request.user:
@@ -113,6 +117,7 @@ def delete_blog_post(request, pk):
 
 @require_POST
 @login_required(login_url='must_authenticate')
+@email_verified_required
 def delete_comment_view(request, pk):
 	comment = get_object_or_404(Comment, pk=pk)
 	if comment.author != request.user:

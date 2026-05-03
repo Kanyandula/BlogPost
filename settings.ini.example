@@ -17,3 +17,7 @@ DB_USER=nyasablog_user
 DB_PASSWORD=
 DB_HOST=localhost
 DB_PORT=5432
+# Domain used in transactional email links. Must NOT include a scheme.
+# Production: nyasablog.com   Local dev: localhost:8000
+SITE_DOMAIN=localhost:8000
+SITE_PROTOCOL=http

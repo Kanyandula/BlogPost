@@ -125,10 +125,10 @@ def login_view(request):
 			email = request.POST['email']
 			password = request.POST['password']
 			user = authenticate(email=email, password=password)
-			# AUTHENTICATION_BACKENDS lists AllowAllUsersModelBackend first, which lets
-			# inactive users through authenticate(). The email_verified check below is
-			# therefore the *sole* gate for the web login flow — don't drop it without
-			# also re-evaluating the backend config.
+			# CaseInsensitiveModelBackend (the only configured backend) inherits
+			# user_can_authenticate() from ModelBackend, so authenticate() already
+			# returns None for is_active=False accounts. The email_verified check is
+			# the second-stage gate for active-but-unverified accounts.
 			if user and user.email_verified:
 				login(request, user)
 				if getattr(request, 'htmx', False):
@@ -153,6 +153,12 @@ def account_view(request):
 
 	if not request.user.is_authenticated:
 			return redirect("login")
+
+	# Unverified users land on verification_sent — they shouldn't be able to
+	# edit profile/avatar/social links until they prove the email is theirs.
+	if not request.user.email_verified:
+		target = f"{reverse('verification_sent')}?{urlencode({'email': request.user.email})}"
+		return redirect(target)
 
 	context = {}
 	profile = request.user.profile

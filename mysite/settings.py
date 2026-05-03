@@ -26,7 +26,7 @@ SECRET_KEY = config('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DEBUG', default=False, cast=bool)
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', '104.248.204.211', 'www.nyasablog.com', 'nyasablog.com']
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'www.nyasablog.com', 'nyasablog.com']
 
 
 # Application definition
@@ -56,10 +56,9 @@ INSTALLED_APPS = [
 
 AUTH_USER_MODEL = 'account.Account'
 
-AUTHENTICATION_BACKENDS = ( 
-    'django.contrib.auth.backends.AllowAllUsersModelBackend', 
+AUTHENTICATION_BACKENDS = (
     'account.backends.CaseInsensitiveModelBackend',
-    )
+)
     
     
 REST_FRAMEWORK = {
@@ -193,6 +192,23 @@ else:
     # worker timeout fires. Without this, hanging SMTP connects → SIGABRT →
     # 500 with no chance to release the resend cooldown cache.
     EMAIL_TIMEOUT = 10
+
+    # HTTPS / cookie security. Nginx terminates TLS and forwards X-Forwarded-Proto,
+    # so request.is_secure() and the SSL redirect both rely on SECURE_PROXY_SSL_HEADER.
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_HSTS_SECONDS = 31536000
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    X_FRAME_OPTIONS = 'DENY'
+
+# Verification-email link domain. Sourced from settings.ini, not request.get_host(),
+# so a forged Host header cannot redirect verification links to an attacker domain.
+SITE_DOMAIN = config('SITE_DOMAIN', default='localhost:8000')
+SITE_PROTOCOL = config('SITE_PROTOCOL', default='http')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
