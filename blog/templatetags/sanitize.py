@@ -9,14 +9,16 @@ ALLOWED_TAGS = {
     "h1", "h2", "h3", "h4", "h5", "h6", "hr", "i", "img", "li",
     "ol", "p", "pre", "strong", "sub", "sup", "table", "tbody",
     "td", "th", "thead", "tr", "u", "ul", "figure", "figcaption",
-    "div", "span", "iframe",
+    "div", "span",
 }
 
+# `style` is intentionally not allowed — inline CSS enables overlay/exfiltration
+# attacks (full-viewport positioned elements, url() leaks). Tailwind classes are
+# enough for CKEditor-generated markup.
 ALLOWED_ATTRIBUTES = {
-    "*": {"class", "style"},
+    "*": {"class"},
     "a": {"href", "title", "target"},
     "img": {"src", "alt", "width", "height", "loading"},
-    "iframe": {"src", "width", "height", "frameborder", "allowfullscreen"},
     "td": {"colspan", "rowspan"},
     "th": {"colspan", "rowspan"},
 }

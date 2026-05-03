@@ -11,9 +11,13 @@ class ModelTestMixin:
 		self.user = Account.objects.create_user(
 			email='test@nyasablog.com', username='testuser', password='testpass123'
 		)
+		self.user.email_verified = True
+		self.user.save()
 		self.user2 = Account.objects.create_user(
 			email='other@nyasablog.com', username='otheruser', password='testpass123'
 		)
+		self.user2.email_verified = True
+		self.user2.save()
 		self.category, _ = Category.objects.get_or_create(name='Culture', slug='culture', defaults={'description': 'Test'})
 		self.tag, _ = Tag.objects.get_or_create(name='Malawi', slug='malawi')
 		self.post = BlogPost.objects.create(
@@ -383,3 +387,31 @@ class BookmarkTogglePostMethodTests(ModelTestMixin, TestCase):
 		self.client.login(email='test@nyasablog.com', password='testpass123')
 		response = self.client.get(reverse('blog:bookmark', args=[self.post.slug]))
 		self.assertEqual(response.status_code, 405)
+
+
+class SanitizeHtmlFilterTests(TestCase):
+	"""nh3 filter must strip iframe tags and inline style attributes."""
+
+	def _clean(self, raw):
+		from blog.templatetags.sanitize import sanitize_html
+		return str(sanitize_html(raw))
+
+	def test_iframe_is_stripped(self):
+		out = self._clean('<p>Hi</p><iframe src="https://attacker.com/phish"></iframe>')
+		self.assertNotIn('<iframe', out)
+		self.assertNotIn('attacker.com', out)
+
+	def test_inline_style_is_stripped(self):
+		raw = '<div style="position:absolute;top:0;left:0;width:100%;height:100%;background:red">x</div>'
+		out = self._clean(raw)
+		self.assertNotIn('style=', out)
+		self.assertIn('<div', out)
+
+	def test_safe_tags_preserved(self):
+		out = self._clean('<p class="lead"><strong>hi</strong> <a href="https://x">link</a></p>')
+		self.assertIn('<strong>hi</strong>', out)
+		self.assertIn('href="https://x"', out)
+
+	def test_javascript_url_blocked(self):
+		out = self._clean('<a href="javascript:alert(1)">click</a>')
+		self.assertNotIn('javascript:', out)
