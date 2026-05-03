@@ -7,7 +7,7 @@ from django.core.cache import cache
 from django.core.management import call_command
 from django.db import connection
 from django.db.migrations.executor import MigrationExecutor
-from django.test import TestCase, TransactionTestCase, RequestFactory, Client
+from django.test import TestCase, TransactionTestCase, RequestFactory, Client, override_settings
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.encoding import force_bytes
@@ -464,16 +464,26 @@ class SendVerificationEmailTests(TestCase):
         )
         self.factory = RequestFactory()
 
+    @override_settings(SITE_DOMAIN='nyasablog.com', SITE_PROTOCOL='https')
     def test_send_verification_email_appends_to_outbox(self):
         from account.emails import send_verification_email
-        request = self.factory.get('/')
-        request.META['HTTP_HOST'] = 'nyasablog.com'
-        send_verification_email(self.user, request)
+        send_verification_email(self.user)
         self.assertEqual(len(mail.outbox), 1)
         msg = mail.outbox[0]
         self.assertEqual(msg.to, [self.user.email])
         self.assertIn('confirm-email', msg.body)
-        self.assertIn('nyasablog.com', msg.body)
+        self.assertIn('https://nyasablog.com/confirm-email/', msg.body)
+
+    @override_settings(SITE_DOMAIN='nyasablog.com', SITE_PROTOCOL='https')
+    def test_send_verification_email_ignores_request_host_header(self):
+        """Forged Host header must not influence the verification link."""
+        from account.emails import send_verification_email
+        request = self.factory.get('/')
+        request.META['HTTP_HOST'] = 'attacker.example'
+        send_verification_email(self.user, request)
+        msg = mail.outbox[0]
+        self.assertNotIn('attacker.example', msg.body)
+        self.assertIn('https://nyasablog.com/', msg.body)
 
 
 class ConfirmEmailViewTests(TestCase):
@@ -1111,3 +1121,42 @@ class AccountWriteEndpointGatingTests(APITestCase):
             'email': 'un@x.com', 'username': 'newun',
         })
         self.assertEqual(response.status_code, 403)
+
+
+class HTMLViewEmailVerifiedGatingTests(TestCase):
+    """Confirms web write views redirect unverified users to verification_sent."""
+
+    def setUp(self):
+        self.unverified = Account.objects.create_user(
+            email='unv@x.com', username='unvuser', password='testpass123'  # pragma: allowlist secret
+        )  # is_active=True, email_verified=False — mirrors API v1 register output
+        self.verified = Account.objects.create_user(
+            email='ver@x.com', username='veruser', password='testpass123'  # pragma: allowlist secret
+        )
+        self.verified.email_verified = True
+        self.verified.save()
+
+    def _login(self, user):
+        self.client.force_login(user, backend='account.backends.CaseInsensitiveModelBackend')
+
+    def test_unverified_redirected_from_create_blog(self):
+        self._login(self.unverified)
+        response = self.client.get(reverse('blog:create'))
+        self.assertEqual(response.status_code, 302)
+        self.assertIn('verification', response['Location'])
+
+    def test_unverified_redirected_from_account_view(self):
+        self._login(self.unverified)
+        response = self.client.get(reverse('account'))
+        self.assertEqual(response.status_code, 302)
+        self.assertIn('verification', response['Location'])
+
+    def test_verified_can_access_create_blog(self):
+        self._login(self.verified)
+        response = self.client.get(reverse('blog:create'))
+        self.assertEqual(response.status_code, 200)
+
+    def test_verified_can_access_account_view(self):
+        self._login(self.verified)
+        response = self.client.get(reverse('account'))
+        self.assertEqual(response.status_code, 200)
