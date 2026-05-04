@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from personal.models import Page, Subscriber
+from personal.models import AboutPage, Subscriber
 
 
 @admin.register(Subscriber)
@@ -19,10 +19,23 @@ class SubscriberAdmin(admin.ModelAdmin):
 		return response
 
 
-@admin.register(Page)
-class PageAdmin(admin.ModelAdmin):
-	list_display = ('slug', 'title', 'is_published', 'updated_at')
-	list_filter = ('is_published',)
-	search_fields = ('slug', 'title')
+@admin.register(AboutPage)
+class AboutPageAdmin(admin.ModelAdmin):
+	"""Singleton admin: hide the changelist 'Add' button so only one row exists."""
+
 	readonly_fields = ('updated_at',)
-	fields = ('slug', 'title', 'is_published', 'body', 'updated_at')
+	fieldsets = (
+		(None, {'fields': ('is_published',)}),
+		('Intro', {'fields': ('intro',)}),
+		('Mission section', {'fields': ('mission_title', 'mission_body')}),
+		('Categories section', {'fields': ('categories_heading', 'categories')}),
+		('Founder section', {'fields': ('founder_title', 'founder_body')}),
+		('Metadata', {'fields': ('updated_at',)}),
+	)
+
+	def has_add_permission(self, request):
+		# Allow add only if no instance exists yet.
+		return not AboutPage.objects.exists()
+
+	def has_delete_permission(self, request, obj=None):
+		return False

@@ -1,6 +1,5 @@
 import uuid
 from django.db import models
-from django_ckeditor_5.fields import CKEditor5Field
 
 
 class Subscriber(models.Model):
@@ -13,21 +12,40 @@ class Subscriber(models.Model):
 		return self.email
 
 
-class Page(models.Model):
-	"""Admin-editable static page (about, privacy, terms, etc.).
+class AboutPage(models.Model):
+	"""Singleton model holding the editable copy for /about.
 
-	Slug is the URL key. The view fetches by slug; the page-chrome wrapper
-	lives in the template so admins can change copy without breaking layout.
+	Structured fields map to fixed visual sections in the template (intro,
+	mission card, categories grid, founder callout). The template owns the
+	chrome — admins edit only the words, so the layout cannot be broken.
 	"""
 
-	slug = models.SlugField(unique=True, max_length=50)
-	title = models.CharField(max_length=120)
-	body = CKEditor5Field(config_name='default')
+	intro = models.TextField(
+		help_text='The opening paragraph beneath the page title.',
+	)
+
+	mission_title = models.CharField(max_length=80, default='Our Mission')
+	mission_body = models.TextField()
+
+	categories_heading = models.CharField(max_length=80, default='Categories We Cover')
+	categories = models.TextField(
+		help_text='Comma-separated list of category labels (e.g. "Culture, Entertainment, Tourism").',
+	)
+
+	founder_title = models.CharField(max_length=120, default='Founded by Ephraim Kanyandula')
+	founder_body = models.TextField()
+
 	is_published = models.BooleanField(default=True)
 	updated_at = models.DateTimeField(auto_now=True)
 
 	class Meta:
-		ordering = ['slug']
+		verbose_name = 'About page'
+		verbose_name_plural = 'About page'
 
 	def __str__(self):
-		return f"{self.slug} — {self.title}"
+		return 'About page content'
+
+	@property
+	def category_list(self):
+		"""Split the comma-separated `categories` field into a clean list."""
+		return [c.strip() for c in self.categories.split(',') if c.strip()]

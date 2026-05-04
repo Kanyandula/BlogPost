@@ -1,20 +1,38 @@
 {% extends 'base.html' %}
-{% load sanitize %}
 
-{% block title %}{% if page %}{{ page.title }}{% else %}About{% endif %} | NyasaBlog{% endblock %}
+{% block title %}About | NyasaBlog{% endblock %}
 
 {% block content %}
 <div class="max-w-3xl mx-auto px-6 md:px-12">
-  <h1 class="text-3xl md:text-4xl font-black text-primary mb-6">{% if page %}{{ page.title }}{% else %}About NyasaBlog{% endif %}</h1>
+  <h1 class="text-3xl md:text-4xl font-black text-primary mb-6">About NyasaBlog</h1>
 
-  <div class="prose prose-lg max-w-none text-on-surface text-on-surface-variant">
-    {% if page %}
-      {{ page.body|sanitize_html }}
-    {% else %}
-      <p class="text-lg leading-relaxed">
-        NyasaBlog is a digital platform dedicated to promoting positive content created by Malawian content creators and influencers. Our aim is to be the most trusted source for Malawian content in the areas of Culture, Entertainment, Entrepreneurship, and many more.
-      </p>
-    {% endif %}
+  <div class="prose prose-lg max-w-none text-on-surface">
+    <p class="text-lg text-on-surface-variant leading-relaxed">
+      {% if page %}{{ page.intro|linebreaksbr }}{% else %}NyasaBlog is a digital platform dedicated to promoting positive content created by Malawian content creators and influencers. Our aim is to be the most trusted source for Malawian content in the areas of Culture, Entertainment, Entrepreneurship, and many more.{% endif %}
+    </p>
+
+    <div class="bg-surface-container-low p-8 rounded-2xl my-10">
+      <h2 class="text-xl font-bold text-primary mb-3">{% if page %}{{ page.mission_title }}{% else %}Our Mission{% endif %}</h2>
+      <p class="text-on-surface-variant">{% if page %}{{ page.mission_body|linebreaksbr }}{% else %}To amplify Malawian voices and showcase the best of Malawian creativity, innovation, and culture to the world.{% endif %}</p>
+    </div>
+
+    <h2 class="text-xl font-bold text-primary mb-3">{% if page %}{{ page.categories_heading }}{% else %}Categories We Cover{% endif %}</h2>
+    <div class="flex flex-wrap gap-2 mb-8">
+      {% if page %}
+        {% for cat in page.category_list %}
+          <span class="px-4 py-2 rounded-full bg-surface-container text-on-surface-variant text-sm">{{ cat }}</span>
+        {% endfor %}
+      {% else %}
+        <span class="px-4 py-2 rounded-full bg-surface-container text-on-surface-variant text-sm">Culture</span>
+        <span class="px-4 py-2 rounded-full bg-surface-container text-on-surface-variant text-sm">Entertainment</span>
+        <span class="px-4 py-2 rounded-full bg-surface-container text-on-surface-variant text-sm">Entrepreneurship</span>
+      {% endif %}
+    </div>
+
+    <div class="bg-[#0f3d3e] text-white p-8 rounded-2xl">
+      <h2 class="text-xl font-bold mb-3">{% if page %}{{ page.founder_title }}{% else %}Founded by Ephraim Kanyandula{% endif %}</h2>
+      <p class="text-white/80">{% if page %}{{ page.founder_body|linebreaksbr }}{% else %}NyasaBlog was created by Ephraim Kanyandula, a Malawian national, with the vision of building a platform that amplifies Malawian voices and showcases the best of Malawian creativity and innovation.{% endif %}</p>
+    </div>
   </div>
 </div>
 {% endblock content %}

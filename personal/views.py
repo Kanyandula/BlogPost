@@ -128,8 +128,8 @@ def search_view(request):
 
 
 def about_screen_view(request):
-	from personal.models import Page
-	page = Page.objects.filter(slug='about', is_published=True).first()
+	from personal.models import AboutPage
+	page = AboutPage.objects.filter(is_published=True).first()
 	return render(request, 'personal/about.html', {'page': page})
 
 
