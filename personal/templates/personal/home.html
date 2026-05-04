@@ -75,7 +75,7 @@
 
       <!-- Create Post CTA -->
       {% if request.user.is_authenticated %}
-      <a href="{% url 'blog:create' %}" class="block bg-[#0f3d3e] text-white p-6 rounded-2xl hover:opacity-90 transition-opacity">
+      <a href="{% url 'blog:create' %}" class="block bg-[#0f3d3e] text-white p-6 rounded-2xl hover:opacity-90 transition motion-safe:active:scale-[0.98]">
         <div class="flex items-center gap-3 mb-3">
           <span class="material-symbols-outlined">edit</span>
           <span class="font-bold text-lg">Write a Story</span>
@@ -108,7 +108,7 @@
         <p class="text-sm text-white/70 mb-4">The best of Malawian stories, every Monday morning.</p>
         <form hx-post="{% url 'subscribe' %}" hx-target="#newsletter-msg-home" hx-swap="innerHTML" hx-on::after-request="if(event.detail.successful) this.reset()">
           <input name="email" class="w-full bg-white/10 border-none rounded-lg py-2.5 px-4 text-sm text-white placeholder:text-white/50 mb-3" placeholder="Your email address" type="email"/>
-          <button type="submit" class="w-full bg-tertiary-fixed-dim text-[#002627] py-2.5 rounded-lg text-sm font-bold hover:opacity-90 transition-opacity">Subscribe</button>
+          <button type="submit" class="w-full bg-tertiary-fixed-dim text-[#002627] py-2.5 rounded-lg text-sm font-bold hover:opacity-90 transition motion-safe:active:scale-[0.97]">Subscribe</button>
         </form>
         <p id="newsletter-msg-home" class="text-xs text-white/70 mt-2 empty:hidden"></p>
       </div>
@@ -121,37 +121,39 @@
 
 <!-- Mobile FAB -->
 {% if request.user.is_authenticated %}
-<a href="{% url 'blog:create' %}" class="fixed bottom-24 right-6 md:hidden w-14 h-14 rounded-full bg-primary text-on-primary flex items-center justify-center shadow-lg hover:opacity-90 transition-opacity z-40">
+<a href="{% url 'blog:create' %}" class="fixed bottom-24 right-6 md:hidden w-14 h-14 rounded-full bg-primary text-on-primary flex items-center justify-center shadow-lg hover:opacity-90 transition motion-safe:active:scale-90 z-40">
   <span class="material-symbols-outlined text-2xl">edit</span>
 </a>
 {% endif %}
 
 <!-- Mobile Bottom Nav -->
+{% with active=request.resolver_match.url_name %}
 <nav class="fixed bottom-0 left-0 w-full md:hidden bg-surface-container-lowest/90 backdrop-blur-md rounded-t-[10px] z-50">
   <div class="flex justify-around py-3">
-    <a href="{% url 'home' %}" class="flex flex-col items-center text-primary">
-      <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1">home</span>
+    <a href="{% url 'home' %}" class="flex flex-col items-center transition motion-safe:active:scale-90 {% if active == 'home' %}text-primary{% else %}text-on-surface-variant{% endif %}">
+      <span class="material-symbols-outlined" {% if active == 'home' %}style="font-variation-settings: 'FILL' 1"{% endif %}>home</span>
       <span class="text-[10px] mt-0.5">Home</span>
     </a>
-    <a href="{% url 'home' %}" class="flex flex-col items-center text-on-surface-variant">
-      <span class="material-symbols-outlined">search</span>
+    <a href="{% url 'search' %}" class="flex flex-col items-center transition motion-safe:active:scale-90 {% if active == 'search' %}text-primary{% else %}text-on-surface-variant{% endif %}">
+      <span class="material-symbols-outlined" {% if active == 'search' %}style="font-variation-settings: 'FILL' 1"{% endif %}>search</span>
       <span class="text-[10px] mt-0.5">Search</span>
     </a>
     {% if request.user.is_authenticated %}
-    <a href="{% url 'blog:bookmarks' %}" class="flex flex-col items-center text-on-surface-variant">
-      <span class="material-symbols-outlined">bookmark</span>
+    <a href="{% url 'blog:bookmarks' %}" class="flex flex-col items-center transition motion-safe:active:scale-90 {% if active == 'bookmarks' %}text-primary{% else %}text-on-surface-variant{% endif %}">
+      <span class="material-symbols-outlined" {% if active == 'bookmarks' %}style="font-variation-settings: 'FILL' 1"{% endif %}>bookmark</span>
       <span class="text-[10px] mt-0.5">Bookmarks</span>
     </a>
-    <a href="{% url 'account' %}" class="flex flex-col items-center text-on-surface-variant">
-      <span class="material-symbols-outlined">person</span>
+    <a href="{% url 'account' %}" class="flex flex-col items-center transition motion-safe:active:scale-90 {% if active == 'account' %}text-primary{% else %}text-on-surface-variant{% endif %}">
+      <span class="material-symbols-outlined" {% if active == 'account' %}style="font-variation-settings: 'FILL' 1"{% endif %}>person</span>
       <span class="text-[10px] mt-0.5">Profile</span>
     </a>
     {% else %}
-    <a href="{% url 'login' %}" class="flex flex-col items-center text-on-surface-variant">
-      <span class="material-symbols-outlined">login</span>
+    <a href="{% url 'login' %}" class="flex flex-col items-center transition motion-safe:active:scale-90 {% if active == 'login' %}text-primary{% else %}text-on-surface-variant{% endif %}">
+      <span class="material-symbols-outlined" {% if active == 'login' %}style="font-variation-settings: 'FILL' 1"{% endif %}>login</span>
       <span class="text-[10px] mt-0.5">Sign in</span>
     </a>
     {% endif %}
   </div>
 </nav>
+{% endwith %}
 {% endblock content %}

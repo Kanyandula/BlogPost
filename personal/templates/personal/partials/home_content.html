@@ -3,7 +3,7 @@
   <a href="{% url 'home' %}"
      hx-get="{% url 'home' %}?partial=home_content"
      hx-target="#home-content"
-     hx-swap="innerHTML"
+     hx-swap="innerHTML swap:150ms"
      hx-push-url="{% url 'home' %}"
      class="px-5 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors {% if not active_category %}bg-primary text-on-primary{% else %}bg-surface-container-high text-on-surface-variant hover:bg-surface-container-highest{% endif %}">
     All
@@ -12,7 +12,7 @@
   <a href="{% url 'home' %}?category={{ cat.slug }}"
      hx-get="{% url 'home' %}?category={{ cat.slug }}&partial=home_content"
      hx-target="#home-content"
-     hx-swap="innerHTML"
+     hx-swap="innerHTML swap:150ms"
      hx-push-url="{% url 'home' %}?category={{ cat.slug }}"
      class="px-5 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors {% if active_category == cat.slug %}bg-primary text-on-primary{% else %}bg-surface-container-high text-on-surface-variant hover:bg-surface-container-highest{% endif %}">
     {{ cat.name }}
@@ -30,6 +30,6 @@
   <span class="material-symbols-outlined text-6xl text-outline-variant mb-4">search_off</span>
   <h3 class="text-xl font-bold text-primary mb-2">No stories found</h3>
   <p class="text-on-surface-variant mb-6">Try different keywords or browse categories</p>
-  <a href="{% url 'home' %}" class="bg-primary-container text-on-primary px-6 py-2.5 rounded-lg font-semibold hover:opacity-90 transition-opacity">Browse All</a>
+  <a href="{% url 'home' %}" class="bg-primary-container text-on-primary px-6 py-2.5 rounded-lg font-semibold hover:opacity-90 transition motion-safe:active:scale-[0.97] inline-block">Browse All</a>
 </div>
 {% endif %}

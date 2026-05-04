@@ -3,7 +3,7 @@
      hx-target="this"
      hx-swap="outerHTML">
   <button type="button"
-          class="p-2 {% if is_bookmarked %}text-secondary{% else %}text-on-surface-variant{% endif %}">
-    <span class="material-symbols-outlined text-xl" {% if is_bookmarked %}style="font-variation-settings: 'FILL' 1"{% endif %}>bookmark</span>
+          class="p-2 transition motion-safe:active:scale-90 {% if is_bookmarked %}text-secondary{% else %}text-on-surface-variant{% endif %}">
+    <span class="material-symbols-outlined text-xl motion-safe:transition-transform motion-safe:hover:scale-110" {% if is_bookmarked %}style="font-variation-settings: 'FILL' 1"{% endif %}>bookmark</span>
   </button>
 </div>
