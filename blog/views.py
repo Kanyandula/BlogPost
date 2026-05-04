@@ -93,13 +93,42 @@ def edit_blog_view(request, slug):
 	return render(request, 'blog/edit_blog.html', context)
 
 
+SEARCH_MIN_LENGTH = 2
+
+
 def get_blog_queryset(query=None):
-	if not query:
-		return BlogPost.objects.filter(status='published')
-	q_objects = Q()
-	for term in query.split():
-		q_objects |= Q(title__icontains=term) | Q(body__icontains=term)
-	return BlogPost.objects.filter(q_objects, status='published').distinct()
+	"""Return published BlogPosts matching `query`.
+
+	Semantics:
+	  * Each whitespace-separated term in the query MUST appear in at least one
+	    of the searchable fields (AND across terms, OR across fields per term).
+	  * Queries shorter than SEARCH_MIN_LENGTH after stripping whitespace return
+	    an empty queryset — single characters used to match every post.
+	  * Body matching uses the plain-text mirror `body_plain`, so HTML tag names
+	    (div, class, style) no longer leak as matches.
+	  * Coverage: title, body_plain, author username, category name, tag names.
+	"""
+	if not query or len(query.strip()) < SEARCH_MIN_LENGTH:
+		return BlogPost.objects.none()
+
+	terms = query.split()
+	combined = Q()
+	for term in terms:
+		per_term = (
+			Q(title__icontains=term)
+			| Q(body_plain__icontains=term)
+			| Q(author__username__icontains=term)
+			| Q(category__name__icontains=term)
+			| Q(tags__name__icontains=term)
+		)
+		combined &= per_term
+
+	return (
+		BlogPost.objects.filter(combined, status='published')
+		.select_related('author', 'category')
+		.prefetch_related('tags')
+		.distinct()
+	)
 
 
 @login_required(login_url='must_authenticate')

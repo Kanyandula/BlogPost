@@ -415,3 +415,161 @@ class SanitizeHtmlFilterTests(TestCase):
 	def test_javascript_url_blocked(self):
 		out = self._clean('<a href="javascript:alert(1)">click</a>')
 		self.assertNotIn('javascript:', out)
+
+
+class BlogPostBodyPlainTests(ModelTestMixin, TestCase):
+	"""body_plain mirrors body with HTML stripped, populated in pre_save."""
+
+	def test_body_plain_strips_html_on_save(self):
+		from blog.models import BlogPost
+		post = BlogPost.objects.create(
+			title='HTML test', body='<p>Hello <strong>world</strong></p>',
+			author=self.user, status='published',
+		)
+		self.assertEqual(post.body_plain, 'Hello world')
+
+	def test_body_plain_collapses_whitespace(self):
+		from blog.models import BlogPost
+		post = BlogPost.objects.create(
+			title='WS test', body='<p>Hello\n\n\n   <span>  world  </span></p>',
+			author=self.user, status='published',
+		)
+		self.assertEqual(post.body_plain, 'Hello world')
+
+	def test_body_plain_updates_when_body_changes(self):
+		self.post.body = '<div>Updated content</div>'
+		self.post.save()
+		self.post.refresh_from_db()
+		self.assertEqual(self.post.body_plain, 'Updated content')
+
+	def test_body_plain_empty_when_body_empty(self):
+		from blog.models import BlogPost
+		post = BlogPost.objects.create(
+			title='Empty', body='', author=self.user, status='published',
+		)
+		self.assertEqual(post.body_plain, '')
+
+
+class SearchQueryTests(ModelTestMixin, TestCase):
+	"""get_blog_queryset must use body_plain, search across multiple fields,
+	enforce min length, and AND across multi-word queries."""
+
+	def setUp(self):
+		super().setUp()
+		from blog.models import BlogPost, Category, Tag
+		from account.models import Account
+		self.author2 = Account.objects.create_user(
+			email='alice@nyasablog.com', username='alicefarmer', password='x'  # pragma: allowlist secret
+		)
+		self.cat_tourism, _ = Category.objects.get_or_create(
+			name='Tourism', slug='tourism', defaults={'description': ''}
+		)
+		self.tag_tea, _ = Tag.objects.get_or_create(name='Tea', slug='tea')
+		# Three posts with different content to exercise each field.
+		self.malawi_post = BlogPost.objects.create(
+			title='Lake Malawi facts', body='<p>The lake is deep.</p>',
+			author=self.user, status='published', category=self.category,
+		)
+		self.tea_post = BlogPost.objects.create(
+			title='Thyolo highlands', body='<p>Tea farming in the south.</p>',
+			author=self.author2, status='published', category=self.cat_tourism,
+		)
+		self.tea_post.tags.add(self.tag_tea)
+		self.combined_post = BlogPost.objects.create(
+			title='Malawi tea industry', body='<p>Both topics covered.</p>',
+			author=self.user, status='published', category=self.cat_tourism,
+		)
+		self.combined_post.tags.add(self.tag_tea)
+		self.draft_post = BlogPost.objects.create(
+			title='Draft about Malawi', body='<p>Unpublished.</p>',
+			author=self.user, status='draft',
+		)
+
+	def _q(self, query):
+		from blog.views import get_blog_queryset
+		return list(get_blog_queryset(query))
+
+	def test_html_tag_names_no_longer_match(self):
+		# `body` contains <p>...</p> but body_plain doesn't, so 'div' must miss.
+		self.assertEqual(self._q('div'), [])
+		self.assertEqual(self._q('class'), [])
+		self.assertEqual(self._q('style'), [])
+
+	def test_min_length_returns_empty(self):
+		self.assertEqual(self._q('a'), [])
+		self.assertEqual(self._q(''), [])
+		self.assertEqual(self._q('   '), [])
+
+	def test_search_by_title(self):
+		results = self._q('Lake')
+		self.assertIn(self.malawi_post, results)
+
+	def test_search_by_body_plain(self):
+		results = self._q('farming')
+		self.assertIn(self.tea_post, results)
+
+	def test_search_by_author_username(self):
+		results = self._q('alicefarmer')
+		self.assertIn(self.tea_post, results)
+		self.assertNotIn(self.malawi_post, results)
+
+	def test_search_by_category_name(self):
+		results = self._q('Tourism')
+		self.assertIn(self.tea_post, results)
+		self.assertIn(self.combined_post, results)
+		# malawi_post is in 'Culture', not 'Tourism'
+		self.assertNotIn(self.malawi_post, results)
+
+	def test_search_by_tag_name(self):
+		results = self._q('Tea')
+		self.assertIn(self.tea_post, results)
+		self.assertIn(self.combined_post, results)
+
+	def test_multi_word_uses_AND_semantics(self):
+		# 'malawi tea' must require BOTH terms to appear somewhere
+		results = self._q('malawi tea')
+		self.assertIn(self.combined_post, results)
+		# malawi_post has 'Malawi' (title) but no 'tea' anywhere
+		self.assertNotIn(self.malawi_post, results)
+		# tea_post has 'tea' (body+tag) but no 'malawi'
+		self.assertNotIn(self.tea_post, results)
+
+	def test_drafts_never_returned(self):
+		results = self._q('Malawi')
+		self.assertNotIn(self.draft_post, results)
+
+	def test_results_distinct_when_multiple_tag_matches(self):
+		# Add a second matching tag so the join would otherwise duplicate
+		from blog.models import Tag
+		t2, _ = Tag.objects.get_or_create(name='Teatime', slug='teatime')
+		self.combined_post.tags.add(t2)
+		results = self._q('tea')
+		self.assertEqual(results.count(self.combined_post), 1)
+
+
+class SearchViewIntegrationTests(ModelTestMixin, TestCase):
+	"""End-to-end through the search view: min-length hint, dropdown vs full page."""
+
+	def test_full_page_short_query_shows_too_short_hint(self):
+		response = self.client.get(reverse('search'), {'q': 'a'})
+		self.assertEqual(response.status_code, 200)
+		self.assertContains(response, 'Keep typing')
+		self.assertContains(response, 'at least 2 characters')
+
+	def test_full_page_no_query_shows_default_empty_state(self):
+		response = self.client.get(reverse('search'))
+		self.assertContains(response, 'Enter a search term')
+
+	def test_full_page_normal_query_returns_match(self):
+		response = self.client.get(reverse('search'), {'q': 'Test'})
+		self.assertEqual(response.status_code, 200)
+		# Test Post (from ModelTestMixin) should match by title
+		self.assertContains(response, 'Test Post')
+
+	def test_dropdown_short_query_shows_hint(self):
+		response = self.client.get(
+			reverse('search'),
+			{'q': 'a', 'partial': 'search_dropdown'},
+			HTTP_HX_REQUEST='true',
+		)
+		self.assertContains(response, 'Type at least 2 characters')
