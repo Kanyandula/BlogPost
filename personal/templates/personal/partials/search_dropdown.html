@@ -3,7 +3,11 @@
 {% elif blog_posts %}
 <div class="py-2">
   {% for post in blog_posts %}
-  <a href="{% url 'blog:detail' post.slug %}" class="flex gap-3 px-4 py-3 hover:bg-surface-container-low transition-colors">
+  <a id="search-option-{{ forloop.counter0 }}"
+     role="option"
+     aria-selected="false"
+     href="{% url 'blog:detail' post.slug %}"
+     class="flex gap-3 px-4 py-3 hover:bg-surface-container-low transition-colors aria-selected:bg-surface-container-low">
     <div class="w-12 h-12 rounded-lg overflow-hidden shrink-0 bg-surface-container-high">
       {% if post.image %}
       <img alt="{{ post.title }}" class="w-full h-full object-cover" src="{{ post.image.url }}"/>

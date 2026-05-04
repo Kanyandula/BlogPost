@@ -22,19 +22,28 @@
   <!-- Right side: search + auth -->
   <div class="flex items-center gap-4 md:gap-6">
     <!-- Desktop search -->
-    <form class="relative hidden lg:block" action="{% url 'search' %}" method="GET">
+    <form class="relative hidden lg:block" action="{% url 'search' %}" method="GET" role="search">
       <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline-variant">search</span>
-      <input class="bg-surface-container-low border-none rounded-full py-2 pl-10 pr-4 text-sm focus:ring-2 focus:ring-secondary/20 w-64"
+      <input id="search-input"
+             class="bg-surface-container-low border-none rounded-full py-2 pl-10 pr-4 text-sm focus:ring-2 focus:ring-secondary/20 w-64"
              placeholder="Search stories..." type="text" name="q" value="{{ query|default:'' }}"
              hx-get="{% url 'search' %}"
              hx-trigger="input changed delay:300ms, search"
              hx-target="#search-dropdown"
              hx-swap="innerHTML"
              hx-vals='{"partial": "search_dropdown"}'
-             hx-indicator="#search-spinner"
-             autocomplete="off"/>
-      <span id="search-spinner" class="htmx-indicator material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-sm text-outline animate-spin">progress_activity</span>
-      <div id="search-dropdown" class="absolute top-full mt-2 w-96 bg-surface-container-lowest rounded-xl shadow-lg max-h-96 overflow-y-auto empty:hidden z-50"></div>
+             hx-sync="this:replace"
+             autocomplete="off"
+             role="combobox"
+             aria-autocomplete="list"
+             aria-expanded="false"
+             aria-controls="search-dropdown"
+             aria-haspopup="listbox"
+             aria-label="Search stories"/>
+      <div id="search-dropdown"
+           role="listbox"
+           aria-label="Search results"
+           class="absolute top-full mt-2 w-96 bg-surface-container-lowest rounded-xl shadow-lg max-h-96 overflow-y-auto empty:hidden z-50"></div>
     </form>
 
     <!-- Mobile search button -->
@@ -112,12 +121,91 @@ document.getElementById('mobile-menu-btn').addEventListener('click', function() 
   document.getElementById('mobile-menu').classList.toggle('hidden');
 });
 
-// Close search dropdown on outside click or empty input
+// Search dropdown: keyboard nav, skeleton loading, aria sync, outside-click close
+var searchInput = document.getElementById('search-input');
 var searchDropdown = document.getElementById('search-dropdown');
-if (searchDropdown) {
+if (searchInput && searchDropdown) {
+  var activeIndex = -1;
+
+  function skeletonRow() {
+    return '<div class="flex gap-3 px-4 py-3">' +
+      '<div class="w-12 h-12 rounded-lg shrink-0 bg-surface-container-high animate-pulse"></div>' +
+      '<div class="min-w-0 flex-1 space-y-2 pt-1">' +
+        '<div class="h-3 rounded bg-surface-container-high animate-pulse w-3/4"></div>' +
+        '<div class="h-2.5 rounded bg-surface-container-high animate-pulse w-1/2"></div>' +
+      '</div></div>';
+  }
+
+  function showSkeleton() {
+    searchDropdown.innerHTML = '<div class="py-2" aria-hidden="true">' +
+      skeletonRow() + skeletonRow() + skeletonRow() + '</div>';
+    searchInput.setAttribute('aria-expanded', 'true');
+    activeIndex = -1;
+    searchInput.removeAttribute('aria-activedescendant');
+  }
+
+  function closeDropdown() {
+    searchDropdown.innerHTML = '';
+    searchInput.setAttribute('aria-expanded', 'false');
+    searchInput.removeAttribute('aria-activedescendant');
+    activeIndex = -1;
+  }
+
+  function options() {
+    return searchDropdown.querySelectorAll('[role="option"]');
+  }
+
+  function setActive(index) {
+    var opts = options();
+    if (!opts.length) return;
+    activeIndex = (index + opts.length) % opts.length;
+    opts.forEach(function(opt, i) {
+      var isActive = i === activeIndex;
+      opt.setAttribute('aria-selected', isActive ? 'true' : 'false');
+      if (isActive) {
+        searchInput.setAttribute('aria-activedescendant', opt.id);
+        opt.scrollIntoView({block: 'nearest'});
+      }
+    });
+  }
+
+  searchInput.addEventListener('htmx:beforeRequest', function(evt) {
+    if (!searchInput.value.trim()) {
+      evt.preventDefault();
+      closeDropdown();
+      return;
+    }
+    showSkeleton();
+  });
+  searchInput.addEventListener('htmx:afterSwap', function() {
+    activeIndex = -1;
+    searchInput.removeAttribute('aria-activedescendant');
+    searchInput.setAttribute('aria-expanded', searchDropdown.children.length > 0 ? 'true' : 'false');
+  });
+
+  searchInput.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      closeDropdown();
+      return;
+    }
+    var opts = options();
+    if (!opts.length) return;
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setActive(activeIndex + 1);
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setActive(activeIndex - 1);
+    } else if (e.key === 'Enter' && activeIndex >= 0 && opts[activeIndex]) {
+      e.preventDefault();
+      window.location.href = opts[activeIndex].href;
+    }
+  });
+
   document.addEventListener('click', function(e) {
     if (!e.target.closest('form[action*="search"]')) {
-      searchDropdown.innerHTML = '';
+      closeDropdown();
     }
   });
 }
