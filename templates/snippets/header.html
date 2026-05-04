@@ -3,8 +3,8 @@
 <header class="fixed top-0 w-full z-50 bg-background/85 backdrop-blur-xl">
 <nav class="flex justify-between items-center px-6 md:px-12 h-16 md:h-20 max-w-[1440px] mx-auto">
   <!-- Mobile menu button -->
-  <button class="md:hidden p-2 text-on-surface" id="mobile-menu-btn">
-    <span class="material-symbols-outlined text-2xl">menu</span>
+  <button class="md:hidden p-2 text-on-surface transition motion-safe:active:scale-90" id="mobile-menu-btn" aria-controls="mobile-menu" aria-expanded="false" aria-label="Open menu">
+    <span class="material-symbols-outlined text-2xl" id="mobile-menu-icon">menu</span>
   </button>
 
   <!-- Logo -->
@@ -30,7 +30,7 @@
              hx-get="{% url 'search' %}"
              hx-trigger="input changed delay:300ms, search"
              hx-target="#search-dropdown"
-             hx-swap="innerHTML"
+             hx-swap="innerHTML swap:150ms"
              hx-vals='{"partial": "search_dropdown"}'
              hx-sync="this:replace"
              autocomplete="off"
@@ -47,23 +47,23 @@
     </form>
 
     <!-- Mobile search button -->
-    <a href="{% url 'search' %}" class="lg:hidden p-2">
+    <a href="{% url 'search' %}" class="lg:hidden p-2 transition motion-safe:active:scale-90">
       <span class="material-symbols-outlined text-on-surface">search</span>
     </a>
 
     <!-- Dark mode toggle -->
-    <button onclick="toggleTheme()" class="p-2 text-on-surface-variant hover:text-primary transition-colors" title="Toggle dark mode">
-      <span class="material-symbols-outlined" id="theme-icon">dark_mode</span>
+    <button onclick="toggleTheme()" class="p-2 text-on-surface-variant hover:text-primary transition motion-safe:active:scale-90" title="Toggle dark mode">
+      <span class="material-symbols-outlined motion-safe:transition-transform motion-safe:hover:rotate-12" id="theme-icon">dark_mode</span>
     </button>
 
     {% if request.user.is_authenticated %}
       <!-- Bookmarks -->
-      <a href="{% url 'blog:bookmarks' %}" class="hidden md:block p-2" title="Bookmarks">
-        <span class="material-symbols-outlined text-on-surface">bookmark</span>
+      <a href="{% url 'blog:bookmarks' %}" class="hidden md:block p-2 transition motion-safe:active:scale-90" title="Bookmarks">
+        <span class="material-symbols-outlined text-on-surface motion-safe:transition-transform motion-safe:hover:scale-110">bookmark</span>
       </a>
       <!-- Account dropdown -->
       <div class="relative">
-        <button id="account-menu-btn" class="flex items-center gap-2 cursor-pointer active:scale-95 transition-transform">
+        <button id="account-menu-btn" class="flex items-center gap-2 cursor-pointer transition motion-safe:active:scale-95">
           <span class="material-symbols-outlined text-3xl text-primary">account_circle</span>
           <span class="hidden md:inline text-sm font-medium text-on-surface">{{ request.user.username }}</span>
           <span class="material-symbols-outlined text-sm text-on-surface-variant hidden md:inline">expand_more</span>
@@ -82,8 +82,8 @@
         </div>
       </div>
     {% else %}
-      <a href="{% url 'login' %}" class="hidden md:inline text-sm font-medium text-on-surface hover:text-primary-container transition-colors">Sign in</a>
-      <a href="{% url 'register' %}" class="hidden md:inline bg-primary-container text-on-primary px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 transition-opacity">
+      <a href="{% url 'login' %}" class="hidden md:inline text-sm font-medium text-on-surface hover:text-primary-container transition motion-safe:active:scale-95">Sign in</a>
+      <a href="{% url 'register' %}" class="hidden md:inline bg-primary-container text-on-primary px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 transition motion-safe:active:scale-[0.97]">
         Register
       </a>
     {% endif %}
@@ -91,35 +91,59 @@
 </nav>
 
 <!-- Mobile menu overlay -->
-<div class="hidden md:hidden bg-surface-container-lowest border-t border-outline-variant/10 px-6 py-4" id="mobile-menu">
-  <div class="flex flex-col gap-3">
-    <a href="{% url 'home' %}" class="text-on-surface font-medium py-2">Home</a>
-    <a href="{% url 'about' %}" class="text-on-surface/70 py-2">About</a>
-    <a href="{% url 'contact' %}" class="text-on-surface/70 py-2">Contact</a>
-    {% if request.user.is_authenticated %}
-      <a href="{% url 'account' %}" class="text-on-surface/70 py-2">Account</a>
-      <a href="{% url 'logout' %}" class="text-on-surface/70 py-2">Logout</a>
-    {% else %}
-      <a href="{% url 'login' %}" class="text-on-surface/70 py-2">Sign in</a>
-      <a href="{% url 'register' %}" class="bg-[#0f3d3e] text-white text-center py-3 rounded-lg font-semibold mt-2">Register</a>
-    {% endif %}
-  </div>
-  <!-- Mobile search -->
-  <form class="mt-4" action="{% url 'search' %}" method="GET">
-    <div class="relative">
-      <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline-variant">search</span>
-      <input class="w-full bg-surface-container-low border-none rounded-full py-2 pl-10 pr-4 text-sm focus:ring-2 focus:ring-secondary/20"
-             placeholder="Search stories..." type="text" name="q" value="{{ query|default:'' }}"/>
+<div id="mobile-menu"
+     class="md:hidden bg-surface-container-lowest border-t border-outline-variant/10 overflow-hidden max-h-0 opacity-0 motion-safe:transition-[max-height,opacity] motion-safe:duration-300 motion-safe:ease-in-out">
+  <div class="px-6 py-4">
+    <div class="flex flex-col gap-3">
+      <a href="{% url 'home' %}" class="text-on-surface font-medium py-2">Home</a>
+      <a href="{% url 'about' %}" class="text-on-surface/70 py-2">About</a>
+      <a href="{% url 'contact' %}" class="text-on-surface/70 py-2">Contact</a>
+      {% if request.user.is_authenticated %}
+        <a href="{% url 'account' %}" class="text-on-surface/70 py-2">Account</a>
+        <a href="{% url 'logout' %}" class="text-on-surface/70 py-2">Logout</a>
+      {% else %}
+        <a href="{% url 'login' %}" class="text-on-surface/70 py-2">Sign in</a>
+        <a href="{% url 'register' %}" class="bg-[#0f3d3e] text-white text-center py-3 rounded-lg font-semibold mt-2 transition motion-safe:active:scale-[0.97]">Register</a>
+      {% endif %}
     </div>
-  </form>
+    <!-- Mobile search -->
+    <form class="mt-4" action="{% url 'search' %}" method="GET">
+      <div class="relative">
+        <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline-variant">search</span>
+        <input class="w-full bg-surface-container-low border-none rounded-full py-2 pl-10 pr-4 text-sm focus:ring-2 focus:ring-secondary/20"
+               placeholder="Search stories..." type="text" name="q" value="{{ query|default:'' }}"/>
+      </div>
+    </form>
+  </div>
 </div>
 </header>
 
 <!-- Menu toggle scripts -->
 <script>
-document.getElementById('mobile-menu-btn').addEventListener('click', function() {
-  document.getElementById('mobile-menu').classList.toggle('hidden');
-});
+var mobileMenuBtn = document.getElementById('mobile-menu-btn');
+var mobileMenu = document.getElementById('mobile-menu');
+var mobileMenuIcon = document.getElementById('mobile-menu-icon');
+if (mobileMenuBtn && mobileMenu && mobileMenuIcon) {
+  function setMobileMenuOpen(isOpen) {
+    mobileMenu.classList.toggle('max-h-96', isOpen);
+    mobileMenu.classList.toggle('opacity-100', isOpen);
+    mobileMenu.classList.toggle('max-h-0', !isOpen);
+    mobileMenu.classList.toggle('opacity-0', !isOpen);
+    mobileMenuIcon.textContent = isOpen ? 'close' : 'menu';
+    mobileMenuBtn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+    mobileMenuBtn.setAttribute('aria-label', isOpen ? 'Close menu' : 'Open menu');
+  }
+  mobileMenuBtn.addEventListener('click', function() {
+    setMobileMenuOpen(!mobileMenu.classList.contains('max-h-96'));
+  });
+  // Reset state when crossing into desktop breakpoint
+  var mq = window.matchMedia('(min-width: 768px)');
+  function onBreakpointChange(e) {
+    if (e.matches) setMobileMenuOpen(false);
+  }
+  if (mq.addEventListener) mq.addEventListener('change', onBreakpointChange);
+  else mq.addListener(onBreakpointChange);
+}
 
 // Search dropdown: keyboard nav, skeleton loading, aria sync, outside-click close
 var searchInput = document.getElementById('search-input');
