@@ -1,7 +1,7 @@
-import cv2
 import os
 from functools import wraps
 
+import cv2
 from django.http import HttpResponse
 from django.shortcuts import redirect
 from django_htmx.http import trigger_client_event

@@ -1,8 +1,9 @@
-from django.test import TestCase, Client
+from django.db import IntegrityError
+from django.test import TestCase
 from django.urls import reverse
 
-from blog.models import BlogPost, Category, Tag, Comment, Like, Bookmark
 from account.models import Account
+from blog.models import BlogPost, Bookmark, Category, Comment, Like, Tag
 
 
 class ModelTestMixin:
@@ -105,7 +106,7 @@ class LikeBookmarkTests(ModelTestMixin, TestCase):
 
 	def test_like_unique_constraint(self):
 		Like.objects.create(post=self.post, user=self.user)
-		with self.assertRaises(Exception):
+		with self.assertRaises(IntegrityError):
 			Like.objects.create(post=self.post, user=self.user)
 
 	def test_bookmark_creation(self):
@@ -114,7 +115,7 @@ class LikeBookmarkTests(ModelTestMixin, TestCase):
 
 	def test_bookmark_unique_constraint(self):
 		Bookmark.objects.create(post=self.post, user=self.user)
-		with self.assertRaises(Exception):
+		with self.assertRaises(IntegrityError):
 			Bookmark.objects.create(post=self.post, user=self.user)
 
 
@@ -336,7 +337,7 @@ class DeletePostViewTests(ModelTestMixin, TestCase):
 class CommentSubmissionTests(ModelTestMixin, TestCase):
 
 	def test_comment_requires_auth(self):
-		response = self.client.post(
+		self.client.post(
 			reverse('blog:detail', args=[self.post.slug]),
 			{'body': 'Anonymous comment'}
 		)
@@ -456,8 +457,8 @@ class SearchQueryTests(ModelTestMixin, TestCase):
 
 	def setUp(self):
 		super().setUp()
-		from blog.models import BlogPost, Category, Tag
 		from account.models import Account
+		from blog.models import BlogPost, Category, Tag
 		self.author2 = Account.objects.create_user(
 			email='alice@nyasablog.com', username='alicefarmer', password='x'  # pragma: allowlist secret
 		)
@@ -554,8 +555,8 @@ class SearchQueryTests(ModelTestMixin, TestCase):
 		one filter() call to the ORM, which collapsed the tag join into a
 		single row — making this case incorrectly miss.
 		"""
-		from blog.models import BlogPost, Tag
 		from account.models import Account
+		from blog.models import BlogPost, Tag
 		# Author username and post title/body deliberately contain neither term.
 		neutral_author = Account.objects.create_user(
 			email='neutral@nyasablog.com', username='neutral', password='x',  # pragma: allowlist secret

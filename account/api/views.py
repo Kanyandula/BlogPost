@@ -1,24 +1,28 @@
-from rest_framework import status
-from rest_framework.response import Response
-from rest_framework.decorators import api_view,permission_classes
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.views import APIView
-from rest_framework.generics import UpdateAPIView
 from django.contrib.auth import authenticate
 from django.core.cache import cache
+from django.db.models import Count, Sum
 from django.utils.encoding import force_str
 from django.utils.http import urlsafe_base64_decode
+from rest_framework import status
 from rest_framework.authentication import TokenAuthentication
+from rest_framework.authtoken.models import Token
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
+from rest_framework.generics import UpdateAPIView
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from account.api.permissions import IsEmailVerified
-from account.api.serializers import RegistrationSerializer, AccountPropertiesSerializer, ChangePasswordSerializer, UserProfileSerializer
+from account.api.serializers import (
+	AccountPropertiesSerializer,
+	ChangePasswordSerializer,
+	RegistrationSerializer,
+	UserProfileSerializer,
+)
 from account.emails import send_verification_email
-from account.models import Account, UserProfile
+from account.models import Account
 from account.tokens import email_verification_token
 from account.views import _can_send_resend  # reuse the cooldown helper from web view
-from rest_framework.authtoken.models import Token
-from django.db.models import Sum, Count
 
 
 # Register
@@ -31,13 +35,13 @@ def registration_view(request):
 	if request.method == 'POST':
 		data = {}
 		email = request.data.get('email', '0').lower()
-		if validate_email(email) != None:
+		if validate_email(email) is not None:
 			data['error_message'] = 'That email is already in use.'
 			data['response'] = 'Error'
 			return Response(data)
 
 		username = request.data.get('username', '0')
-		if validate_username(username) != None:
+		if validate_username(username) is not None:
 			data['error_message'] = 'That username is already in use.'
 			data['response'] = 'Error'
 			return Response(data)
@@ -70,7 +74,7 @@ def validate_email(email):
 		account = Account.objects.get(email=email)
 	except Account.DoesNotExist:
 		return None
-	if account != None:
+	if account is not None:
 		return email
 
 def validate_username(username):
@@ -79,8 +83,8 @@ def validate_username(username):
 		account = Account.objects.get(username=username)
 	except Account.DoesNotExist:
 		return None
-	if account != None:
-		return username		
+	if account is not None:
+		return username
 
 
 @api_view(['GET', ])
@@ -125,8 +129,6 @@ class ObtainAuthTokenView(APIView):
 	permission_classes = []
 
 	def post(self, request):
-		context = {}
-
 		email = request.data.get('username', '')
 		password = request.data.get('password', '')
 		is_v2 = (request.version == '2')

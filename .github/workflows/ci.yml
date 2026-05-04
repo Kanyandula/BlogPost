@@ -1,0 +1,178 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    name: Lint (ruff)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install ruff
+        run: pip install ruff==0.6.9
+
+      - name: ruff check
+        run: ruff check .
+
+      # ruff format --check intentionally NOT run yet. Running `ruff format`
+      # against the tree would reformat ~36 files (legacy spaces-vs-tabs
+      # drift). Add to CI after a dedicated cleanup PR runs the formatter
+      # once across the tree.
+
+  migrations:
+    name: Migrations are up to date
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+          restore-keys: ${{ runner.os }}-pip-
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - uses: ./.github/actions/write-test-settings
+
+      - name: makemigrations --check
+        run: python manage.py makemigrations --check --dry-run --no-input
+
+  test:
+    name: Test (all apps, parallel, shuffled)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+          restore-keys: ${{ runner.os }}-pip-
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - uses: ./.github/actions/write-test-settings
+
+      - name: Django system check
+        run: python manage.py check --fail-level WARNING
+
+      - name: Migrate
+        run: python manage.py migrate --noinput
+
+      - name: Run tests
+        run: python manage.py test blog account personal -v 2 --parallel auto --shuffle
+
+  frontend:
+    name: Frontend (Tailwind freshness + collectstatic)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - name: npm ci
+        run: npm ci
+
+      - name: Rebuild Tailwind CSS
+        # Verifies the input.css + tailwind.config.js compile cleanly against
+        # current templates. We deliberately do NOT byte-diff against the
+        # committed bundle — Tailwind's minified output varies between Linux
+        # and macOS for the same templates, so a byte-exact check would fail
+        # on every macOS-built commit. The deploy skill still requires a
+        # local rebuild before push to S3; that's where final bytes are set.
+        run: npm run build:css
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+          restore-keys: ${{ runner.os }}-pip-
+
+      - name: Install Python dependencies (for collectstatic)
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - uses: ./.github/actions/write-test-settings
+
+      - name: collectstatic --dry-run
+        run: python manage.py collectstatic --noinput --dry-run
+
+  commit-messages:
+    name: Commit messages (no AI attribution)
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Need full history to walk base..head
+
+      - name: Scan commit messages
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          git log --format='---%n%B' "$BASE_SHA..$HEAD_SHA" > /tmp/messages.txt
+
+          # Patterns mirror ~/.claude/git-hooks/commit-msg
+          BAD_PATTERNS=(
+            'Generated with \[Claude Code\]'
+            '🤖 Generated with'
+            'Co-Authored-By:[[:space:]]*Claude'
+            '^EOF[[:space:]]*$'
+            '^\)"[[:space:]]*$'
+          )
+
+          fail=0
+          for pat in "${BAD_PATTERNS[@]}"; do
+            if grep -nE "$pat" /tmp/messages.txt; then
+              echo "::error::Commit message contains forbidden pattern: $pat"
+              fail=1
+            fi
+          done
+
+          if [ "$fail" -ne 0 ]; then
+            echo ""
+            echo "Per ~/.claude/CLAUDE.md, never include 'Generated with [Claude Code]' footers,"
+            echo "'Co-Authored-By: Claude' trailers, or stray heredoc artefacts (EOF, )\")."
+            echo "Reword the offending commit(s) (git rebase -i) and force-push."
+            exit 1
+          fi

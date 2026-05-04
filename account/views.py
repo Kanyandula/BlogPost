@@ -1,22 +1,21 @@
 from urllib.parse import urlencode
 
 from django.contrib import messages
+from django.contrib.auth import authenticate, login, logout
 from django.core.cache import cache
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth import login, authenticate, logout
+from django.db.models import Count, Sum
 from django.http import HttpResponse
+from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils.encoding import force_str
 from django.utils.http import urlsafe_base64_decode
 
 from account.emails import send_verification_email
-from account.forms import RegistrationForm, AccountAuthenticationForm, AccountUpdateForm
+from account.forms import AccountAuthenticationForm, AccountUpdateForm, RegistrationForm
 from account.models import Account
 from account.tokens import email_verification_token
-from django.db.models import Count, Sum
 from blog.models import BlogPost
 from blog.utils import trigger_toast
-
 
 
 def registration_view(request):

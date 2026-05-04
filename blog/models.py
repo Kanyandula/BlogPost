@@ -1,20 +1,18 @@
 import html
 import uuid
 
+from django.conf import settings
 from django.db import models
 from django.db.models import Q
-from django.db.models.signals import pre_save
-from django.utils.text import slugify
-from django.utils.html import strip_tags
-from django.conf import settings
-from django.db.models.signals import post_delete
+from django.db.models.signals import post_delete, pre_save
 from django.dispatch import receiver
+from django.utils.html import strip_tags
+from django.utils.text import slugify
 from django_ckeditor_5.fields import CKEditor5Field
 
 
 def upload_location(instance, filename):
-	file_path = 'blog/{author_id}/{title}-{filename}'.format(
-				author_id=str(instance.author.id), title=str(instance.title), filename=filename)
+	file_path = f'blog/{str(instance.author.id)}/{str(instance.title)}-{filename}'
 	return file_path
 
 

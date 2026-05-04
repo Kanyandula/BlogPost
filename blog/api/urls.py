@@ -1,19 +1,20 @@
 from django.urls import path
-from blog.api.views import(
-	api_detail_blog_view,
-	api_update_blog_view,
-	api_delete_blog_view,
-	api_create_blog_view,
-	api_is_author_of_blogpost,
+
+from blog.api.views import (
 	ApiBlogListView,
-	api_categories_view,
-	api_tags_view,
-	api_comments_view,
-	api_create_comment_view,
-	api_delete_comment_view,
-	api_toggle_like_view,
-	api_toggle_bookmark_view,
 	api_bookmarks_view,
+	api_categories_view,
+	api_comments_view,
+	api_create_blog_view,
+	api_create_comment_view,
+	api_delete_blog_view,
+	api_delete_comment_view,
+	api_detail_blog_view,
+	api_is_author_of_blogpost,
+	api_tags_view,
+	api_toggle_bookmark_view,
+	api_toggle_like_view,
+	api_update_blog_view,
 )
 
 app_name = 'blog'

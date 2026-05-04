@@ -2,7 +2,6 @@ from rest_framework import serializers
 
 from account.models import Account, UserProfile
 
-
 # class LoginSerializer(serializers.ModelSerializer):
 # 	class Meta:
 # 		model = Account

@@ -1,14 +1,15 @@
 from django.urls import path
+
 from blog.views import (
+	bookmarks_view,
 	create_blog_view,
-	detail_blog_view,
-	edit_blog_view,
 	delete_blog_post,
 	delete_comment_view,
+	detail_blog_view,
+	edit_blog_view,
 	htmx_create_comment_view,
-	toggle_like_view,
 	toggle_bookmark_view,
-	bookmarks_view,
+	toggle_like_view,
 )
 
 app_name = 'blog'

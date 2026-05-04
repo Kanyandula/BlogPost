@@ -1,17 +1,17 @@
 from django.urls import path
-from account.api.views import(
-	registration_view,
+
+from account.api.views import (
+	ChangePasswordView,
 	ObtainAuthTokenView,
 	account_properties_view,
-	update_account_view,
-	does_account_exist_view,
-	ChangePasswordView,
 	api_author_profile_view,
-	api_update_profile_view,
-	api_resend_verification_view,
 	api_confirm_email_view,
+	api_resend_verification_view,
+	api_update_profile_view,
+	does_account_exist_view,
+	registration_view,
+	update_account_view,
 )
-from rest_framework.authtoken.views import obtain_auth_token
 
 app_name = 'account'
 
