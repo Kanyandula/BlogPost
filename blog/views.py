@@ -107,13 +107,16 @@ def get_blog_queryset(query=None):
 	  * Body matching uses the plain-text mirror `body_plain`, so HTML tag names
 	    (div, class, style) no longer leak as matches.
 	  * Coverage: title, body_plain, author username, category name, tag names.
+
+	Chained .filter() is used (not combined Qs) so each term gets its own
+	join to the tags M2M. With combined Qs Django collapses the join, and
+	'malawi tea' would miss a post whose tags split the terms across rows.
 	"""
 	if not query or len(query.strip()) < SEARCH_MIN_LENGTH:
 		return BlogPost.objects.none()
 
-	terms = query.split()
-	combined = Q()
-	for term in terms:
+	queryset = BlogPost.objects.filter(status='published')
+	for term in query.split():
 		per_term = (
 			Q(title__icontains=term)
 			| Q(body_plain__icontains=term)
@@ -121,11 +124,10 @@ def get_blog_queryset(query=None):
 			| Q(category__name__icontains=term)
 			| Q(tags__name__icontains=term)
 		)
-		combined &= per_term
+		queryset = queryset.filter(per_term)
 
 	return (
-		BlogPost.objects.filter(combined, status='published')
-		.select_related('author', 'category')
+		queryset.select_related('author', 'category')
 		.prefetch_related('tags')
 		.distinct()
 	)

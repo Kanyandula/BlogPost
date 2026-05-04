@@ -1,3 +1,6 @@
+import html
+import uuid
+
 from django.db import models
 from django.db.models import Q
 from django.db.models.signals import pre_save
@@ -7,7 +10,6 @@ from django.conf import settings
 from django.db.models.signals import post_delete
 from django.dispatch import receiver
 from django_ckeditor_5.fields import CKEditor5Field
-import uuid
 
 
 def upload_location(instance, filename):
@@ -141,6 +143,8 @@ def pre_save_blog_post_receiver(sender, instance, *args, **kwargs):
 			counter += 1
 		instance.slug = slug
 	# Keep the searchable plain-text mirror in sync with the rich body.
-	instance.body_plain = ' '.join(strip_tags(instance.body or '').split())
+	# strip_tags removes <p> etc but leaves entities; html.unescape converts
+	# &amp; → & so a search for "and" doesn't miss bodies that use entities.
+	instance.body_plain = ' '.join(html.unescape(strip_tags(instance.body or '')).split())
 
 pre_save.connect(pre_save_blog_post_receiver, sender=BlogPost)
