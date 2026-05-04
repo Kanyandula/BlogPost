@@ -10,9 +10,13 @@ runs:
     - name: Write settings.ini
       shell: bash
       run: |
-        cat > settings.ini <<'EOF'
+        # Generate an ephemeral key at job time so no literal key value lands
+        # in the source tree (keeps detect-secrets quiet without a baseline
+        # entry).
+        ci_key=$(python3 -c 'import secrets;print(secrets.token_urlsafe(32))')
+        cat > settings.ini <<EOF
         [settings]
-        SECRET_KEY=ci-test-key-not-for-production
+        SECRET_KEY=${ci_key}
         DEBUG=True
         AWS_ACCESS_KEY_ID=
         AWS_SECRET_ACCESS_KEY=
