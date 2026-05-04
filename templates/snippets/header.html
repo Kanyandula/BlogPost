@@ -13,11 +13,19 @@
   </a>
 
   <!-- Desktop nav links -->
+  {% with active=request.resolver_match.url_name %}
   <div class="hidden md:flex items-center gap-8 text-base font-medium">
-    <a class="text-on-surface/70 hover:text-primary-container transition-colors duration-300" href="{% url 'home' %}">Home</a>
-    <a class="text-on-surface/70 hover:text-primary-container transition-colors duration-300" href="{% url 'about' %}">About</a>
-    <a class="text-on-surface/70 hover:text-primary-container transition-colors duration-300" href="{% url 'contact' %}">Contact</a>
+    <a href="{% url 'home' %}"
+       {% if active == 'home' %}aria-current="page"{% endif %}
+       class="underline-offset-4 decoration-2 transition-colors duration-300 {% if active == 'home' %}text-primary underline{% else %}text-on-surface/70 hover:text-primary-container hover:underline{% endif %}">Home</a>
+    <a href="{% url 'about' %}"
+       {% if active == 'about' %}aria-current="page"{% endif %}
+       class="underline-offset-4 decoration-2 transition-colors duration-300 {% if active == 'about' %}text-primary underline{% else %}text-on-surface/70 hover:text-primary-container hover:underline{% endif %}">About</a>
+    <a href="{% url 'contact' %}"
+       {% if active == 'contact' %}aria-current="page"{% endif %}
+       class="underline-offset-4 decoration-2 transition-colors duration-300 {% if active == 'contact' %}text-primary underline{% else %}text-on-surface/70 hover:text-primary-container hover:underline{% endif %}">Contact</a>
   </div>
+  {% endwith %}
 
   <!-- Right side: search + auth -->
   <div class="flex items-center gap-4 md:gap-6">
@@ -94,18 +102,20 @@
 <div id="mobile-menu"
      class="md:hidden bg-surface-container-lowest border-t border-outline-variant/10 overflow-hidden max-h-0 opacity-0 motion-safe:transition-[max-height,opacity] motion-safe:duration-300 motion-safe:ease-in-out">
   <div class="px-6 py-4">
+    {% with active=request.resolver_match.url_name %}
     <div class="flex flex-col gap-3">
-      <a href="{% url 'home' %}" class="text-on-surface font-medium py-2">Home</a>
-      <a href="{% url 'about' %}" class="text-on-surface/70 py-2">About</a>
-      <a href="{% url 'contact' %}" class="text-on-surface/70 py-2">Contact</a>
+      <a href="{% url 'home' %}" {% if active == 'home' %}aria-current="page"{% endif %} class="py-2 font-medium {% if active == 'home' %}text-primary{% else %}text-on-surface/70{% endif %}">Home</a>
+      <a href="{% url 'about' %}" {% if active == 'about' %}aria-current="page"{% endif %} class="py-2 {% if active == 'about' %}text-primary font-medium{% else %}text-on-surface/70{% endif %}">About</a>
+      <a href="{% url 'contact' %}" {% if active == 'contact' %}aria-current="page"{% endif %} class="py-2 {% if active == 'contact' %}text-primary font-medium{% else %}text-on-surface/70{% endif %}">Contact</a>
       {% if request.user.is_authenticated %}
-        <a href="{% url 'account' %}" class="text-on-surface/70 py-2">Account</a>
+        <a href="{% url 'account' %}" {% if active == 'account' %}aria-current="page"{% endif %} class="py-2 {% if active == 'account' %}text-primary font-medium{% else %}text-on-surface/70{% endif %}">Account</a>
         <a href="{% url 'logout' %}" class="text-on-surface/70 py-2">Logout</a>
       {% else %}
-        <a href="{% url 'login' %}" class="text-on-surface/70 py-2">Sign in</a>
+        <a href="{% url 'login' %}" {% if active == 'login' %}aria-current="page"{% endif %} class="py-2 {% if active == 'login' %}text-primary font-medium{% else %}text-on-surface/70{% endif %}">Sign in</a>
         <a href="{% url 'register' %}" class="bg-[#0f3d3e] text-white text-center py-3 rounded-lg font-semibold mt-2 transition motion-safe:active:scale-[0.97]">Register</a>
       {% endif %}
     </div>
+    {% endwith %}
     <!-- Mobile search -->
     <form class="mt-4" action="{% url 'search' %}" method="GET">
       <div class="relative">
