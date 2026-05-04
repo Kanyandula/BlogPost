@@ -106,14 +106,13 @@ jobs:
         run: npm ci
 
       - name: Rebuild Tailwind CSS
+        # Verifies the input.css + tailwind.config.js compile cleanly against
+        # current templates. We deliberately do NOT byte-diff against the
+        # committed bundle — Tailwind's minified output varies between Linux
+        # and macOS for the same templates, so a byte-exact check would fail
+        # on every macOS-built commit. The deploy skill still requires a
+        # local rebuild before push to S3; that's where final bytes are set.
         run: npm run build:css
-
-      - name: Verify static/css/tailwind.min.css is up to date
-        run: |
-          if ! git diff --exit-code -- static/css/tailwind.min.css; then
-            echo "::error::static/css/tailwind.min.css is stale. Run 'npm run build:css' locally and commit the result."
-            exit 1
-          fi
 
       - uses: actions/setup-python@v5
         with:
