@@ -546,6 +546,54 @@ class SearchQueryTests(ModelTestMixin, TestCase):
 		results = self._q('tea')
 		self.assertEqual(results.count(self.combined_post), 1)
 
+	def test_AND_across_terms_split_across_separate_tags(self):
+		"""Regression: a post with tags=['malawi-region', 'tea-farming'] and
+		nothing else matching must still match the query 'malawi tea'.
+
+		The previous implementation combined per-term Qs with & and passed
+		one filter() call to the ORM, which collapsed the tag join into a
+		single row — making this case incorrectly miss.
+		"""
+		from blog.models import BlogPost, Tag
+		from account.models import Account
+		# Author username and post title/body deliberately contain neither term.
+		neutral_author = Account.objects.create_user(
+			email='neutral@nyasablog.com', username='neutral', password='x',  # pragma: allowlist secret
+		)
+		split_tag_post = BlogPost.objects.create(
+			title='Highland farming',
+			body='<p>A profile of two regional industries.</p>',
+			author=neutral_author, status='published', category=self.category,
+		)
+		t_malawi, _ = Tag.objects.get_or_create(name='malawi-region', slug='malawi-region')
+		t_tea, _ = Tag.objects.get_or_create(name='tea-farming', slug='tea-farming')
+		split_tag_post.tags.add(t_malawi, t_tea)
+		self.assertIn(split_tag_post, self._q('malawi tea'))
+
+
+class BodyPlainEntityDecodingTests(ModelTestMixin, TestCase):
+	"""body_plain should decode HTML entities so search 'and' matches '&amp;' bodies."""
+
+	def test_entities_are_decoded(self):
+		from blog.models import BlogPost
+		post = BlogPost.objects.create(
+			title='Tea & coffee',
+			body='<p>Tea &amp; coffee &mdash; tradition.</p>',
+			author=self.user, status='published',
+		)
+		self.assertEqual(post.body_plain, 'Tea & coffee — tradition.')
+
+	def test_search_finds_entity_decoded_text(self):
+		from blog.models import BlogPost
+		from blog.views import get_blog_queryset
+		post = BlogPost.objects.create(
+			title='Title without amp', body='<p>Coffee &amp; tea</p>',
+			author=self.user, status='published',
+		)
+		# Searching the literal text 'Coffee & tea' should hit (after decoding)
+		results = list(get_blog_queryset('Coffee tea'))
+		self.assertIn(post, results)
+
 
 class SearchViewIntegrationTests(ModelTestMixin, TestCase):
 	"""End-to-end through the search view: min-length hint, dropdown vs full page."""
