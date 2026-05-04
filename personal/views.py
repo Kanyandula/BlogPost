@@ -1,15 +1,14 @@
-from django.shortcuts import render
+from django.conf import settings
+from django.core.mail import BadHeaderError, send_mail
 from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
 from django.db.models import Count
-from django.conf import settings
-
-from blog.views import get_blog_queryset
-from blog.models import BlogPost, Category, Tag
-from personal.forms import ContactForm
-from django.core.mail import send_mail, BadHeaderError
 from django.http import HttpResponse, JsonResponse
+from django.shortcuts import render
 from django.views.decorators.http import require_POST
 
+from blog.models import BlogPost, Category, Tag
+from blog.views import get_blog_queryset
+from personal.forms import ContactForm
 from personal.models import Subscriber
 
 BLOG_POSTS_PER_PAGE = 10
@@ -168,8 +167,8 @@ def contact_screen_view(request):
 
 @require_POST
 def subscribe_view(request):
-	from django.core.validators import validate_email
 	from django.core.exceptions import ValidationError
+	from django.core.validators import validate_email
 
 	email = request.POST.get('email', '').strip().lower()
 	if not email:

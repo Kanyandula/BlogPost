@@ -7,15 +7,16 @@ from django.core.cache import cache
 from django.core.management import call_command
 from django.db import connection
 from django.db.migrations.executor import MigrationExecutor
-from django.test import TestCase, TransactionTestCase, RequestFactory, Client, override_settings
+from django.test import RequestFactory, TestCase, TransactionTestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
-from rest_framework.test import APITestCase, APIClient
 from rest_framework.authtoken.models import Token
+from rest_framework.test import APIClient, APIRequestFactory, APITestCase
+from rest_framework.views import APIView
 
-from account.models import Account, UserProfile
+from account.models import Account
 from blog.models import BlogPost
 
 
@@ -500,7 +501,7 @@ class ConfirmEmailViewTests(TestCase):
 
     def test_confirm_email_with_valid_token_activates_account(self):
         url = reverse('confirm_email', kwargs={'uidb64': self.uidb64, 'token': self.valid_token})
-        response = self.client.get(url)
+        self.client.get(url)
         self.user.refresh_from_db()
         self.assertTrue(self.user.is_active)
         self.assertTrue(self.user.email_verified)
@@ -514,6 +515,7 @@ class ConfirmEmailViewTests(TestCase):
 
     def test_confirm_email_with_expired_token_shows_error_page(self):
         from datetime import datetime
+
         from account.tokens import email_verification_token
         token = email_verification_token.make_token(self.user)
         future = datetime.now() + timedelta(days=4)
@@ -747,7 +749,7 @@ class PurgeUnverifiedAccountsTests(TestCase):
         from account.models import Account
         call_command('purge_unverified_accounts', stdout=StringIO())
         # Now register a brand-new account with the freed email.
-        response = self.client.post(reverse('register'), {
+        self.client.post(reverse('register'), {
             'email': 'old_unverified@x.com',
             'username': 'newowner',
             'password1': 'testpass123!',  # pragma: allowlist secret
@@ -760,6 +762,7 @@ class RegistrationAPIVersionTests(APITestCase):
 
     def test_api_register_v1_returns_token_and_unverified(self):
         from django.core import mail
+
         from account.models import Account
         before = len(mail.outbox)
         url = reverse('account_api:register')
@@ -776,6 +779,7 @@ class RegistrationAPIVersionTests(APITestCase):
 
     def test_api_register_v2_no_token_unverified_inactive(self):
         from django.core import mail
+
         from account.models import Account
         before = len(mail.outbox)
         url = reverse('account_api:register')
@@ -862,8 +866,9 @@ class LoginAPIVersionTests(APITestCase):
 
 class DRFVersioningTests(TestCase):
     def test_default_version_is_v1(self):
-        from account.models import Account
         from rest_framework.authtoken.models import Token
+
+        from account.models import Account
         u = Account.objects.create_user(email='ver@x.com', username='ver', password='testpass123')  # pragma: allowlist secret
         u.email_verified = True
         u.save()
@@ -878,8 +883,9 @@ class DRFVersioningTests(TestCase):
         self.assertEqual(response.status_code, 200)
 
     def test_v2_accept_header_resolves_cleanly(self):
-        from account.models import Account
         from rest_framework.authtoken.models import Token
+
+        from account.models import Account
         u = Account.objects.create_user(email='v2@x.com', username='v2', password='testpass123')  # pragma: allowlist secret
         u.email_verified = True
         u.save()
@@ -893,8 +899,9 @@ class DRFVersioningTests(TestCase):
         self.assertEqual(response.status_code, 200)
 
     def test_unknown_version_rejected(self):
-        from account.models import Account
         from rest_framework.authtoken.models import Token
+
+        from account.models import Account
         u = Account.objects.create_user(email='vu@x.com', username='vu', password='testpass123')  # pragma: allowlist secret
         u.email_verified = True
         u.save()
@@ -989,10 +996,6 @@ class ConfirmEmailAPITests(APITestCase):
         self.assertEqual(second.data['token'], first.data['token'])
 
 
-from rest_framework.test import APIRequestFactory
-from rest_framework.views import APIView
-
-
 class IsEmailVerifiedPermissionTests(TestCase):
     def setUp(self):
         self.factory = APIRequestFactory()
@@ -1020,8 +1023,9 @@ class IsEmailVerifiedPermissionTests(TestCase):
         self.assertFalse(permission.has_permission(request, APIView()))
 
     def test_permission_denies_anonymous(self):
-        from account.api.permissions import IsEmailVerified
         from django.contrib.auth.models import AnonymousUser
+
+        from account.api.permissions import IsEmailVerified
         permission = IsEmailVerified()
         request = self.factory.get('/')
         request.user = AnonymousUser()

@@ -1,20 +1,23 @@
 from rest_framework import status
-from rest_framework.response import Response
-from rest_framework.decorators import api_view,permission_classes
-from rest_framework.permissions import IsAuthenticated
 from rest_framework.authentication import TokenAuthentication
-from rest_framework.pagination import PageNumberPagination
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.generics import ListAPIView
-from rest_framework.filters import SearchFilter, OrderingFilter
-
+from rest_framework.pagination import PageNumberPagination
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 
 from account.api.permissions import IsEmailVerified
-from account.models import Account
-from blog.models import BlogPost, Category, Tag, Comment, Like, Bookmark
 from blog.api.serializers import (
-	BlogPostSerializer, BlogPostUpdateSerializer, BlogPostCreateSerializer,
-	CategorySerializer, TagSerializer, CommentSerializer, CommentCreateSerializer,
+	BlogPostCreateSerializer,
+	BlogPostSerializer,
+	BlogPostUpdateSerializer,
+	CategorySerializer,
+	CommentCreateSerializer,
+	CommentSerializer,
+	TagSerializer,
 )
+from blog.models import BlogPost, Bookmark, Category, Comment, Like, Tag
 
 SUCCESS = 'success'
 ERROR = 'error'

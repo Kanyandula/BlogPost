@@ -22,7 +22,7 @@ class RegistrationForm(UserCreationForm):
 	def clean_username(self):
 		username = self.cleaned_data['username']
 		try:
-			account = Account.objects.exclude(pk=self.instance.pk).get(username=username)
+			Account.objects.exclude(pk=self.instance.pk).get(username=username)
 		except Account.DoesNotExist:
 			return username
 		raise forms.ValidationError('Username "%s" is already in use.' % username)
@@ -54,7 +54,7 @@ class AccountUpdateForm(forms.ModelForm):
 	def clean_username(self):
 		username = self.cleaned_data['username']
 		try:
-			account = Account.objects.exclude(pk=self.instance.pk).get(username=username)
+			Account.objects.exclude(pk=self.instance.pk).get(username=username)
 		except Account.DoesNotExist:
 			return username
 		raise forms.ValidationError('Username "%s" is already in use.' % username)

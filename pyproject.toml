@@ -5,6 +5,7 @@ extend-exclude = [
     "**/migrations",
     "node_modules",
     ".venv",
+    ".claude",
     "static_cdn",
     "media",
     "media_cdn",
@@ -14,6 +15,14 @@ extend-exclude = [
 select = ["E", "F", "I", "UP", "B", "DJ"]
 ignore = [
     "E501",  # line-length is enforced by formatter, not lint
+    # The codebase mixes tabs and spaces in several files (legacy Django
+    # boilerplate). Auto-fixable by `ruff format` but would reformat 70+ files;
+    # keep it out of this CI PR and clean up in a dedicated formatting pass.
+    "E101",
+    "W191",
+    # Percent formatting → f-strings is a stylistic modernization with churn
+    # comparable to a full reformat. Not a correctness issue. Defer.
+    "UP031",
 ]
 
 [tool.ruff.format]

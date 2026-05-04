@@ -6,13 +6,13 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import override_settings
 from django.urls import reverse
 from PIL import Image
-
-TEMP_MEDIA_ROOT = tempfile.mkdtemp()
-from rest_framework.test import APITestCase, APIClient
 from rest_framework.authtoken.models import Token
+from rest_framework.test import APIClient, APITestCase
 
 from account.models import Account
-from blog.models import BlogPost, Category, Tag, Comment, Like, Bookmark
+from blog.models import BlogPost, Bookmark, Category, Comment, Tag
+
+TEMP_MEDIA_ROOT = tempfile.mkdtemp()
 
 
 def create_test_image(name='test.jpg', size=(200, 100)):

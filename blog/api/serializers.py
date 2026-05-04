@@ -1,18 +1,15 @@
+import os
+
+from django.conf import settings
+from django.core.files.storage import FileSystemStorage
 from rest_framework import serializers
 
-import cv2
-import sys
-import os
-from django.conf import settings
-from django.core.files.storage import default_storage
-from django.core.files.storage import FileSystemStorage
-IMAGE_SIZE_MAX_BYTES = 1024 * 1024 * 2 # 2MB
+from blog.models import BlogPost, Category, Comment, Tag
+from blog.utils import is_image_aspect_ratio_valid, validate_image_upload
+
+IMAGE_SIZE_MAX_BYTES = 1024 * 1024 * 2  # 2MB
 MIN_TITLE_LENGTH = 5
 MIN_BODY_LENGTH = 50
-
-from blog.models import BlogPost, Category, Tag, Comment
-
-from blog.utils import is_image_aspect_ratio_valid, is_image_size_valid, validate_image_upload
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -184,8 +181,10 @@ class BlogPostCreateSerializer(serializers.ModelSerializer):
 
 			blog_post.save()
 			return blog_post
-		except KeyError:
-			raise serializers.ValidationError({"response": "You must have a title, some content, and an image."})
+		except KeyError as e:
+			raise serializers.ValidationError(
+				{"response": "You must have a title, some content, and an image."}
+			) from e
 
 
 

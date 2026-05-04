@@ -13,16 +13,35 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
-from django.contrib import admin
-from django.contrib.sitemaps.views import sitemap
-from django.urls import path, include
-from django.contrib.auth import views as auth_views
-from django.conf.urls.static import static
 from django.conf import settings
+from django.conf.urls.static import static
+from django.contrib import admin
+from django.contrib.auth import views as auth_views
+from django.contrib.sitemaps.views import sitemap
 from django.http import HttpResponse
+from django.urls import include, path
 from django.views.decorators.cache import cache_page
 
+from account.views import (
+    account_view,
+    author_profile_view,
+    confirm_email_view,
+    login_view,
+    logout_view,
+    must_authenticate_view,
+    registration_view,
+    resend_verification_view,
+    verification_sent_view,
+)
 from blog.sitemaps import BlogPostSitemap, CategorySitemap, StaticSitemap
+from personal.views import (
+    about_screen_view,
+    api_screen_view,
+    contact_screen_view,
+    home_screen_view,
+    search_view,
+    subscribe_view,
+)
 
 sitemaps = {
     'posts': BlogPostSitemap,
@@ -30,26 +49,6 @@ sitemaps = {
     'static': StaticSitemap,
 }
 
-from personal.views import (
-	home_screen_view,
-  about_screen_view,
-  contact_screen_view,
-  api_screen_view,
-  search_view,
-  subscribe_view,
-)
-
-from account.views import (
-    registration_view,
-    logout_view,
-    login_view,
-    account_view,
-	must_authenticate_view,
-	author_profile_view,
-	verification_sent_view,
-	confirm_email_view,
-	resend_verification_view,
-)
 
 def robots_txt(request):
     lines = [
