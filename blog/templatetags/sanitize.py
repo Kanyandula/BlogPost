@@ -37,4 +37,6 @@ def sanitize_html(value):
         url_schemes=ALLOWED_URL_SCHEMES,
         link_rel="noopener noreferrer",
     )
-    return mark_safe(cleaned)
+    # `cleaned` is the output of nh3.clean() above; mark_safe is the canonical
+    # render path for already-sanitized HTML.
+    return mark_safe(cleaned)  # nosec B703 B308
