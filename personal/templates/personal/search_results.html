@@ -54,9 +54,10 @@
       <!-- Empty State -->
       <div class="text-center py-20">
         <span class="material-symbols-outlined text-7xl text-outline-variant mb-6">search_off</span>
-        <h2 class="text-3xl font-bold text-primary mb-3">No stories found</h2>
+        <h2 class="text-3xl font-bold text-primary mb-3">{% if too_short %}Keep typing{% else %}No stories found{% endif %}</h2>
         <p class="text-on-surface-variant text-lg max-w-md mx-auto mb-8">
-          {% if query %}We couldn't find anything matching "{{ query }}". Try different keywords or browse categories.
+          {% if too_short %}Type at least {{ min_length }} characters to search.
+          {% elif query %}We couldn't find anything matching "{{ query }}". Try different keywords or browse categories.
           {% else %}Enter a search term to find stories.{% endif %}
         </p>
         <a href="{% url 'home' %}" class="px-8 py-3 rounded-lg bg-[#0f3d3e] text-white font-semibold hover:opacity-90 transition-opacity">Browse All Stories</a>

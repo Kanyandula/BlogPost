@@ -50,6 +50,9 @@ class BlogPost(models.Model):
 
 	title = models.CharField(max_length=50, null=False, blank=True)
 	body = CKEditor5Field(max_length=20000, blank=True, config_name='default')
+	# Plain-text mirror of body, populated in pre_save. Search uses this so HTML
+	# tag names (div, class, style) don't leak as matches against the rich field.
+	body_plain = models.TextField(blank=True, editable=False)
 	image = models.ImageField(upload_to=upload_location, null=True, blank=True)
 	date_published = models.DateTimeField(auto_now_add=True, verbose_name="date published")
 	date_updated = models.DateTimeField(auto_now=True, verbose_name="date updated")
@@ -137,5 +140,7 @@ def pre_save_blog_post_receiver(sender, instance, *args, **kwargs):
 			slug = f"{base_slug}-{counter}"
 			counter += 1
 		instance.slug = slug
+	# Keep the searchable plain-text mirror in sync with the rich body.
+	instance.body_plain = ' '.join(strip_tags(instance.body or '').split())
 
 pre_save.connect(pre_save_blog_post_receiver, sender=BlogPost)

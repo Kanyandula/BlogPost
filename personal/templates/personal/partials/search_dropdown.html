@@ -1,4 +1,6 @@
-{% if blog_posts %}
+{% if too_short %}
+<div class="p-6 text-center text-on-surface-variant text-sm">Type at least {{ min_length }} characters to search.</div>
+{% elif blog_posts %}
 <div class="py-2">
   {% for post in blog_posts %}
   <a href="{% url 'blog:detail' post.slug %}" class="flex gap-3 px-4 py-3 hover:bg-surface-container-low transition-colors">

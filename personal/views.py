@@ -81,12 +81,18 @@ def home_screen_view(request):
 
 
 def search_view(request):
+	from blog.views import SEARCH_MIN_LENGTH
+
 	context = {}
 	query = request.GET.get('q', '')
 	category_slug = request.GET.get('category', '')
 	context['query'] = query
+	context['min_length'] = SEARCH_MIN_LENGTH
+	# A short non-empty query renders the "type at least N characters" hint
+	# instead of "0 results found" — distinct UX from a true zero-match.
+	context['too_short'] = bool(query) and len(query.strip()) < SEARCH_MIN_LENGTH
 
-	if query:
+	if query and not context['too_short']:
 		blog_posts = _annotate_posts(
 			get_blog_queryset(query)
 		).order_by('-date_updated')
