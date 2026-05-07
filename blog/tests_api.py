@@ -199,6 +199,66 @@ class BlogPostListAPITests(BlogAPITestMixin, APITestCase):
         views = [p['view_count'] for p in response.data['results']]
         self.assertEqual(views, sorted(views, reverse=True))
 
+    def test_list_posts_is_featured_true(self):
+        self.authenticate()
+        featured = BlogPost.objects.create(
+            title='Featured Post', body='Content for featured filter test.',
+            author=self.user, status='published', is_featured=True
+        )
+        url = reverse('blog_api:list')
+        response = self.client.get(url, {'is_featured': 'true'})
+        self.assertEqual(response.status_code, 200)
+        slugs = [p['slug'] for p in response.data['results']]
+        self.assertIn(featured.slug, slugs)
+        self.assertNotIn(self.published_post.slug, slugs)
+        for post in response.data['results']:
+            self.assertTrue(post['is_featured'])
+
+    def test_list_posts_is_featured_false(self):
+        self.authenticate()
+        featured = BlogPost.objects.create(
+            title='Featured Post', body='Content for featured filter test.',
+            author=self.user, status='published', is_featured=True
+        )
+        url = reverse('blog_api:list')
+        response = self.client.get(url, {'is_featured': 'false'})
+        self.assertEqual(response.status_code, 200)
+        slugs = [p['slug'] for p in response.data['results']]
+        self.assertIn(self.published_post.slug, slugs)
+        self.assertNotIn(featured.slug, slugs)
+        for post in response.data['results']:
+            self.assertFalse(post['is_featured'])
+
+    def test_list_posts_is_featured_omitted_returns_all(self):
+        self.authenticate()
+        featured = BlogPost.objects.create(
+            title='Featured Post', body='Content for featured filter test.',
+            author=self.user, status='published', is_featured=True
+        )
+        url = reverse('blog_api:list')
+        response = self.client.get(url)
+        slugs = [p['slug'] for p in response.data['results']]
+        self.assertIn(self.published_post.slug, slugs)
+        self.assertIn(featured.slug, slugs)
+
+    def test_list_posts_is_featured_combined_with_ordering(self):
+        self.authenticate()
+        BlogPost.objects.create(
+            title='Featured Old', body='Content.',
+            author=self.user, status='published', is_featured=True, view_count=5
+        )
+        BlogPost.objects.create(
+            title='Featured Popular', body='Content.',
+            author=self.user, status='published', is_featured=True, view_count=99
+        )
+        url = reverse('blog_api:list')
+        response = self.client.get(url, {'is_featured': 'true', 'ordering': '-view_count'})
+        self.assertEqual(response.status_code, 200)
+        views = [p['view_count'] for p in response.data['results']]
+        self.assertEqual(views, sorted(views, reverse=True))
+        for post in response.data['results']:
+            self.assertTrue(post['is_featured'])
+
 
 class BlogPostDetailAPITests(BlogAPITestMixin, APITestCase):
 

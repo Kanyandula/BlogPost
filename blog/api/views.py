@@ -177,6 +177,13 @@ class ApiBlogListView(ListAPIView):
 		category = self.request.query_params.get('category')
 		if category:
 			queryset = queryset.filter(category__slug=category)
+		is_featured = self.request.query_params.get('is_featured')
+		if is_featured is not None:
+			normalized = is_featured.strip().lower()
+			if normalized in ('true', '1'):
+				queryset = queryset.filter(is_featured=True)
+			elif normalized in ('false', '0'):
+				queryset = queryset.filter(is_featured=False)
 		return queryset
 
 
