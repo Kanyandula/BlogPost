@@ -2,7 +2,7 @@
   <textarea name="{{ widget.name }}"
             {% if widget.attrs.required %}required{% endif %}
             data-tiptap-input
-            hidden>{{ widget.value|default_if_none:"" }}</textarea>
+            hidden>{{ widget.value|default_if_none:""|safe }}</textarea>
 
   <div data-tiptap-root class="tiptap-root">
     <div data-bubble class="bubble-menu" role="toolbar" aria-hidden="true">
