@@ -17,6 +17,8 @@
 
 [data-editor] {
   outline: none;
+  min-height: 500px;
+  cursor: text;
 }
 
 [data-editor] p          { margin: 0 0 1em; line-height: 1.7; }
