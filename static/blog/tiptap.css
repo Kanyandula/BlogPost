@@ -51,7 +51,8 @@
 [data-editor] pre        { background: rgba(0,0,0,0.06); padding: 1em; border-radius: 8px; overflow-x: auto; }
 [data-editor] hr         { border: 0; border-top: 1px solid var(--md-sys-color-outline-variant, #ccc); margin: 2em 0; }
 
-/* Bubble toolbar */
+/* Bubble toolbar — Tiptap manages visibility (visibility: hidden by default,
+   shown on selection). Don't apply display:none or it can't be positioned. */
 .bubble-menu {
   display: flex;
   gap: 0.25rem;
@@ -60,8 +61,8 @@
   padding: 0.25rem;
   border-radius: 6px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  z-index: 1000;
 }
-.bubble-menu[aria-hidden="true"] { display: none; }
 .bubble-menu button {
   background: transparent;
   color: inherit;
