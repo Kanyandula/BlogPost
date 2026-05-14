@@ -1,5 +1,8 @@
 import { marked } from "marked";
 
+// Match common typed-markdown signals. The line-anchored alternatives are
+// block-level (heading, list, quote, fence, rule, bold/italic at line start);
+// the trailing [text](url) is hoisted out so inline links match mid-sentence.
 const MARKDOWN_HINTS = /(^|\n)(#{1,6}\s|>\s|[*-]\s|\d+\.\s|```|---|\*\*[^*]+\*\*|__[^_]+__)|\[[^\]]+\]\([^)]+\)/;
 
 export function looksLikeMarkdown(text) {
