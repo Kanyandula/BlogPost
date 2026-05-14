@@ -3,6 +3,7 @@ import StarterKit from "@tiptap/starter-kit";
 import Underline from "@tiptap/extension-underline";
 import Link from "@tiptap/extension-link";
 import BubbleMenu from "@tiptap/extension-bubble-menu";
+import Placeholder from "@tiptap/extension-placeholder";
 import { SlashMenu } from "./slash-menu.js";
 import { smartPasteHandler } from "./paste.js";
 
@@ -37,6 +38,7 @@ function mountEditor(shell) {
       Link.configure({ openOnClick: false, autolink: true, HTMLAttributes: { rel: "noopener noreferrer" } }),
       BubbleMenu.configure({ element: bubble }),
       SlashMenu,
+      Placeholder.configure({ placeholder: "Tell your story…" }),
     ],
     content: textarea.value,
     editorProps: {
