@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 from django.core import mail
 from django.core.cache import cache
+from django.core.mail import get_connection
 from django.core.management import call_command
 from django.db import connection
 from django.db.migrations.executor import MigrationExecutor
@@ -1164,3 +1165,16 @@ class HTMLViewEmailVerifiedGatingTests(TestCase):
         self._login(self.verified)
         response = self.client.get(reverse('account'))
         self.assertEqual(response.status_code, 200)
+
+
+class PostmarkBackendTests(TestCase):
+    @override_settings(
+        EMAIL_BACKEND='anymail.backends.postmark.EmailBackend',
+        ANYMAIL={'POSTMARK_SERVER_TOKEN': 'test-token'},
+    )
+    def test_anymail_postmark_backend_is_resolvable(self):
+        conn = get_connection()
+        self.assertEqual(
+            conn.__class__.__module__,
+            'anymail.backends.postmark',
+        )

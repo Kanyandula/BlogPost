@@ -151,7 +151,9 @@
   )
   ```
 
-  **Remove** the old `EMAIL_HOST`, `EMAIL_HOST_USER`, `EMAIL_HOST_PASSWORD`, `EMAIL_PORT`, `EMAIL_USE_TLS` lines outright from `settings.py`. (Rollback uses env-set `EMAIL_BACKEND=smtp`, plus the SMTP envs in `.env` — see Task 6 — so the settings file doesn't need them.)
+  **Keep** the `EMAIL_HOST`, `EMAIL_HOST_USER`, `EMAIL_HOST_PASSWORD`, `EMAIL_PORT`, `EMAIL_USE_TLS` reads in `settings.py` with `default=''`/`default=587`/`default=True` as appropriate — they're no-ops while Anymail is the backend but **load-bearing for rollback**. Django's SMTP backend reads `settings.EMAIL_HOST` etc., NOT `os.environ` directly; if these `config(...)` calls are removed, an env-only `EMAIL_BACKEND=...smtp...` rollback silently fails (SMTP backend tries `localhost:25`). Earlier revision of this plan said to delete them — that was wrong; corrected 2026-05-14 during Task 2 execution.
+
+  Also: `POSTMARK_SERVER_TOKEN` defaults to `''` rather than being required, so a rollback `.env` without the token doesn't crash settings load.
 
   **Do not set `SEND_DEFAULTS` / message stream.** Postmark's default stream is `outbound` which is exactly what transactional uses; explicit configuration is dead code until you add a second stream (Task 10).
 
