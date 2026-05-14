@@ -22,7 +22,12 @@ class TiptapWidgetRenderTests(TestCase):
 
 	def test_preserves_initial_value(self):
 		html = TiptapWidget().render('body', '<h2>Hi</h2>')
-		self.assertIn('<h2>Hi</h2>', html)
+		self.assertIn('&lt;h2&gt;Hi&lt;/h2&gt;', html)
+
+	def test_initial_value_html_escaped_to_prevent_textarea_breakout(self):
+		html = TiptapWidget().render('body', '</textarea><script>x</script>')
+		self.assertNotIn('</textarea><script>', html)
+		self.assertIn('&lt;/textarea&gt;', html)
 
 	def test_media_includes_tiptap_assets(self):
 		widget = TiptapWidget()
