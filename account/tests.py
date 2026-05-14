@@ -1178,3 +1178,29 @@ class PostmarkBackendTests(TestCase):
             conn.__class__.__module__,
             'anymail.backends.postmark',
         )
+
+
+@override_settings(
+    EMAIL_BACKEND='anymail.backends.test.EmailBackend',
+    ANYMAIL={'POSTMARK_SERVER_TOKEN': 'test-token'},
+)
+class VerificationEmailTaggingTests(TestCase):
+    def setUp(self):
+        self.user = Account.objects.create_user(
+            email='tag-test@example.com', username='tagtester', password='x',  # pragma: allowlist secret
+        )
+
+    def test_verification_email_is_tagged_for_postmark(self):
+        from account.emails import send_verification_email
+        send_verification_email(self.user)
+        sent = mail.outbox[-1]
+        self.assertEqual(sent.anymail_test_params['tags'], ['email-verification'])
+
+    def test_verification_email_includes_user_id_metadata(self):
+        from account.emails import send_verification_email
+        send_verification_email(self.user)
+        sent = mail.outbox[-1]
+        self.assertEqual(
+            sent.anymail_test_params['metadata'],
+            {'user_id': str(self.user.pk)},
+        )
