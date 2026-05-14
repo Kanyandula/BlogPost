@@ -1,6 +1,7 @@
 from django import forms
 
 from blog.models import BlogPost, Comment
+from blog.widgets import TiptapWidget
 
 
 class CommentForm(forms.ModelForm):
@@ -20,6 +21,7 @@ class CreateBlogPostForm(forms.ModelForm):
 		fields = ['title', 'body', 'image', 'category', 'tags', 'status']
 		widgets = {
 			'tags': forms.CheckboxSelectMultiple(),
+			'body': TiptapWidget(),
 		}
 
 
@@ -30,10 +32,10 @@ class UpdateBlogPostForm(forms.ModelForm):
 		fields = ['title', 'body', 'image', 'category', 'tags', 'status']
 		widgets = {
 			'tags': forms.CheckboxSelectMultiple(),
+			'body': TiptapWidget(),
 		}
 
 	def save(self, commit=True):
-		# Keep existing image if no new one uploaded
 		if not self.cleaned_data.get('image'):
 			self.cleaned_data['image'] = self.instance.image
 		return super().save(commit=commit)

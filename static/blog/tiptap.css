@@ -1,0 +1,101 @@
+/* Tiptap body editor — bubble toolbar, slash menu, prose typography. */
+
+.tiptap-shell {
+  position: relative;
+}
+
+[data-tiptap-input] {
+  display: none !important;
+}
+
+.tiptap-root {
+  border: 1px solid var(--md-sys-color-outline-variant, #ccc);
+  border-radius: 12px;
+  padding: 2.5rem 3rem;
+  background: var(--md-sys-color-surface, #fff);
+}
+
+[data-editor] {
+  outline: none;
+  min-height: 500px;
+  cursor: text;
+}
+
+[data-editor] .ProseMirror {
+  outline: none;
+}
+
+[data-editor] .ProseMirror:focus,
+[data-editor] .ProseMirror:focus-visible {
+  outline: none;
+}
+
+[data-editor] p          { margin: 0 0 1em; line-height: 1.7; }
+[data-editor] h1,
+[data-editor] h2,
+[data-editor] h3         { font-weight: 700; line-height: 1.25; margin: 1.5em 0 0.5em; }
+[data-editor] h2         { font-size: 1.75rem; }
+[data-editor] h3         { font-size: 1.375rem; }
+[data-editor] blockquote {
+  border-left: 4px solid var(--md-sys-color-primary, #0f3d3e);
+  padding-left: 1em;
+  color: var(--md-sys-color-on-surface-variant, #555);
+  margin: 1em 0;
+  font-style: italic;
+}
+[data-editor] ul,
+[data-editor] ol         { padding-left: 1.5em; margin: 0 0 1em; }
+[data-editor] li         { margin-bottom: 0.25em; }
+[data-editor] a          { color: var(--md-sys-color-primary, #0f3d3e); text-decoration: underline; }
+[data-editor] code       { background: rgba(0,0,0,0.06); padding: 0.1em 0.35em; border-radius: 4px; font-family: ui-monospace, monospace; }
+[data-editor] pre        { background: rgba(0,0,0,0.06); padding: 1em; border-radius: 8px; overflow-x: auto; }
+[data-editor] hr         { border: 0; border-top: 1px solid var(--md-sys-color-outline-variant, #ccc); margin: 2em 0; }
+
+/* Bubble toolbar — Tiptap manages visibility (visibility: hidden by default,
+   shown on selection). Don't apply display:none or it can't be positioned. */
+.bubble-menu {
+  display: flex;
+  gap: 0.25rem;
+  background: #111;
+  color: #fff;
+  padding: 0.25rem;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  z-index: 1000;
+}
+.bubble-menu button {
+  background: transparent;
+  color: inherit;
+  border: 0;
+  padding: 0.35rem 0.6rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.875rem;
+}
+.bubble-menu button:hover,
+.bubble-menu button.is-active { background: rgba(255,255,255,0.15); }
+
+/* Slash menu */
+.slash-menu {
+  z-index: 1000;
+  background: #fff;
+  color: #111;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.15);
+  padding: 0.25rem;
+  min-width: 180px;
+}
+.slash-menu__item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: 0;
+  padding: 0.5rem 0.75rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.875rem;
+}
+.slash-menu__item.is-selected,
+.slash-menu__item:hover { background: rgba(0,0,0,0.05); }

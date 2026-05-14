@@ -1,0 +1,19 @@
+<div class="tiptap-shell">
+  <textarea name="{{ widget.name }}"
+            {% if widget.attrs.required %}required{% endif %}
+            data-tiptap-input
+            hidden>{{ widget.value|default_if_none:"" }}</textarea>
+
+  <div data-tiptap-root class="tiptap-root">
+    <div data-bubble class="bubble-menu" role="toolbar">
+      <button type="button" data-cmd="toggleBold" aria-label="Bold"><b>B</b></button>
+      <button type="button" data-cmd="toggleItalic" aria-label="Italic"><i>I</i></button>
+      <button type="button" data-cmd="toggleUnderline" aria-label="Underline"><u>U</u></button>
+      <button type="button" data-cmd="toggleHeading:2">H2</button>
+      <button type="button" data-cmd="toggleHeading:3">H3</button>
+      <button type="button" data-cmd="toggleBlockquote">&ldquo;</button>
+      <button type="button" data-cmd="setLink">link</button>
+    </div>
+    <div data-editor class="prose prose-lg max-w-none min-h-[500px]"></div>
+  </div>
+</div>
