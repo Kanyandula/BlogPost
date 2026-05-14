@@ -99,3 +99,30 @@
 }
 .slash-menu__item.is-selected,
 .slash-menu__item:hover { background: rgba(0,0,0,0.05); }
+
+/* Placeholder shown in empty editor (Tiptap Placeholder extension renders
+   ::before with data-placeholder content on empty paragraphs). */
+[data-editor] p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  color: var(--md-sys-color-on-surface-variant, #888);
+  pointer-events: none;
+  float: left;
+  height: 0;
+}
+
+/* Help line under the editor */
+.tiptap-help {
+  margin: 0.75rem 0.25rem 0;
+  font-size: 0.8125rem;
+  color: var(--md-sys-color-on-surface-variant, #666);
+  line-height: 1.5;
+}
+.tiptap-help kbd,
+.tiptap-help code {
+  background: rgba(0, 0, 0, 0.06);
+  padding: 0.05em 0.4em;
+  border-radius: 4px;
+  font-family: ui-monospace, monospace;
+  font-size: 0.875em;
+  color: inherit;
+}
