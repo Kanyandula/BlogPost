@@ -1,7 +1,7 @@
 asgiref==3.11.1
 boto3==1.42.82
 botocore==1.42.82
-Django==5.2.13
+Django==5.2.14
 django-anymail[postmark]==15.0
 django-ckeditor-5==0.2.20
 django-storages==1.12.3
@@ -17,6 +17,6 @@ python-decouple==3.6
 s3transfer==0.16.0
 six==1.17.0
 sqlparse==0.5.5
-urllib3==2.6.3
+urllib3==2.7.0
 whitenoise==6.2.0
 django-htmx==1.21.0

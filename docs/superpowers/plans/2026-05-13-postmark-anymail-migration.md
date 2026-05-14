@@ -557,7 +557,7 @@ Use Option A.
 - [ ] **Step 1: Failing test** — POST a forged webhook to the endpoint, expect 400/401.
 
   ```python
-  @override_settings(ANYMAIL={'POSTMARK_SERVER_TOKEN': 't', 'WEBHOOK_SECRET': 'user:pass'})
+  @override_settings(ANYMAIL={'POSTMARK_SERVER_TOKEN': 't', 'WEBHOOK_SECRET': 'user:pass'})  # pragma: allowlist secret
   class WebhookSecurityTests(TestCase):
       def test_unauthenticated_webhook_post_is_rejected(self):
           response = self.client.post('/anymail/postmark/tracking/', data={}, content_type='application/json')
