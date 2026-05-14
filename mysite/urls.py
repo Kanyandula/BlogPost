@@ -84,9 +84,6 @@ urlpatterns = [
     path('contact/', contact_screen_view, name= "contact"),
     path('api/', api_screen_view, name= "api"),
     
-    # CKEditor 5
-    path('ckeditor5/', include('django_ckeditor_5.urls')),
-
     # REST FRAMEWORK URLS
     path('api/blog/', include('blog.api.urls', 'blog_api')),
     path('api/account/', include('account.api.urls', 'account_api')),
