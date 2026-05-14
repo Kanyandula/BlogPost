@@ -8,7 +8,6 @@ from django.db.models.signals import post_delete, pre_save
 from django.dispatch import receiver
 from django.utils.html import strip_tags
 from django.utils.text import slugify
-from django_ckeditor_5.fields import CKEditor5Field
 
 
 def upload_location(instance, filename):
@@ -49,7 +48,7 @@ class BlogPost(models.Model):
 	]
 
 	title = models.CharField(max_length=50, null=False, blank=True)
-	body = CKEditor5Field(max_length=20000, blank=True, config_name='default')
+	body = models.TextField(max_length=20000, blank=True)
 	# Plain-text mirror of body, populated in pre_save. Search uses this so HTML
 	# tag names (div, class, style) don't leak as matches against the rich field.
 	body_plain = models.TextField(blank=True, editable=False)

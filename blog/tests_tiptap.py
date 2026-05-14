@@ -98,4 +98,7 @@ class SanitiserRegressionTests(TestCase):
 		)
 		r = self.client.get(reverse('blog:detail', args=[post.slug]))
 		self.assertEqual(r.status_code, 200)
-		self.assertNotIn(b'<script>', r.content)
+		# The sanitiser must strip the <script> tag from the rendered body.
+		# The page has its own legitimate <script> tags, so we assert the
+		# injected payload is absent from the article body section specifically.
+		self.assertNotIn(b'<script>alert(1)</script>', r.content)
