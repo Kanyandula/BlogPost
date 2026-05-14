@@ -1183,6 +1183,7 @@ class PostmarkBackendTests(TestCase):
 @override_settings(
     EMAIL_BACKEND='anymail.backends.test.EmailBackend',
     ANYMAIL={'POSTMARK_SERVER_TOKEN': 'test-token'},
+    SUPPORT_EMAIL='hello@nyasablog.com',
 )
 class VerificationEmailTaggingTests(TestCase):
     def setUp(self):
@@ -1204,3 +1205,16 @@ class VerificationEmailTaggingTests(TestCase):
             sent.anymail_test_params['metadata'],
             {'user_id': str(self.user.pk)},
         )
+
+    def test_verification_email_has_reply_to_set(self):
+        from account.emails import send_verification_email
+        send_verification_email(self.user)
+        sent = mail.outbox[-1]
+        self.assertEqual(sent.reply_to, ['hello@nyasablog.com'])
+
+    @override_settings(DEFAULT_FROM_EMAIL='NyasaBlog <hello@nyasablog.com>')
+    def test_verification_email_from_address_is_a_nyasablog_address(self):
+        from account.emails import send_verification_email
+        send_verification_email(self.user)
+        sent = mail.outbox[-1]
+        self.assertIn('@nyasablog.com', sent.from_email)
