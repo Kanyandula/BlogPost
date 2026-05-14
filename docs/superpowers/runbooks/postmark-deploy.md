@@ -3,6 +3,12 @@
 Switching production transactional email from Gmail SMTP to Postmark via
 `django-anymail`. This is a one-shot operation; do not run repeatedly.
 
+> **Important — config file:** This runbook references `.env`, but production
+> currently uses **`settings.ini`** (python-decouple prefers it over `.env`
+> when both exist). Replace every `.env` mention below with `settings.ini`
+> until the consolidation ticket lands. The keys and values are identical;
+> only the file path and INI section header (`[settings]` at the top) differ.
+
 ## Pre-flight
 
 1. **Postmark account approved.** Postmark UI top bar must NOT show "Test mode"

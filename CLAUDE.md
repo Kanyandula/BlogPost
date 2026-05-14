@@ -23,10 +23,20 @@ WhatsApp sharing is the dominant social channel — never deprioritize it.
 - Postgres upgrade is blocked: Ubuntu 20.04 ships PG12, Django 5.2 needs PG14+.
   Droplet OS upgrade has to come first.
 
+## Configuration files
+
+- python-decouple reads `settings.ini` **first**, then falls back to `.env`.
+  Production currently has both files, so `settings.ini` is the active source
+  of truth — any `.env` edits are silently inert until `settings.ini` is
+  removed. Consolidating to `.env` requires rotating `SECRET_KEY` (the two
+  files have different values) and a planned mass-logout. Until that
+  migration, **edit `settings.ini` on the Droplet**, not `.env`.
+- Local dev uses `settings.ini` only (`.env` doesn't exist locally).
+
 ## Deploy workflow
 
-- `rsync` source up, **always** with `--exclude=.env` (and other secrets) — never
-  overwrite the production `.env`.
+- `rsync` source up, **always** with `--exclude=.env --exclude=settings.ini`
+  (and other secrets) — never overwrite production config.
 - `chown -R ephraim:www-data .` after rsync so Gunicorn can read.
 - `systemctl restart gunicorn` to pick up Python changes.
 - For static/CSS changes: `python manage.py collectstatic --noinput` to push to
