@@ -24,5 +24,17 @@ def send_verification_email(user, request=None):
     }
     subject = render_to_string('registration/email_verification_subject.txt', context).strip()
     body = render_to_string('registration/email_verification_email.txt', context)
-    msg = EmailMessage(subject=subject, body=body, to=[user.email])
+    msg = EmailMessage(
+        subject=subject,
+        body=body,
+        to=[user.email],
+        reply_to=[settings.SUPPORT_EMAIL],
+    )
+    # Anymail-native fields: ignored by non-ESP backends, used by Postmark to
+    # surface this message in the Activity dashboard and webhook payloads.
+    # Postmark allows AT MOST ONE tag per message — adding a second raises
+    # AnymailUnsupportedFeature at send time; use metadata for finer-grained
+    # categorization.
+    msg.tags = ['email-verification']
+    msg.metadata = {'user_id': str(user.pk)}
     msg.send()

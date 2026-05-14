@@ -2,8 +2,10 @@ from datetime import timedelta
 from io import StringIO
 from unittest.mock import patch
 
+from django.conf import settings
 from django.core import mail
 from django.core.cache import cache
+from django.core.mail import get_connection
 from django.core.management import call_command
 from django.db import connection
 from django.db.migrations.executor import MigrationExecutor
@@ -1164,3 +1166,56 @@ class HTMLViewEmailVerifiedGatingTests(TestCase):
         self._login(self.verified)
         response = self.client.get(reverse('account'))
         self.assertEqual(response.status_code, 200)
+
+
+@override_settings(
+    EMAIL_BACKEND='anymail.backends.postmark.EmailBackend',
+    ANYMAIL={'POSTMARK_SERVER_TOKEN': 'test-token'},
+)
+class PostmarkBackendTests(TestCase):
+    def test_anymail_postmark_backend_is_resolvable(self):
+        conn = get_connection()
+        self.assertEqual(
+            conn.__class__.__module__,
+            'anymail.backends.postmark',
+        )
+
+
+@override_settings(
+    EMAIL_BACKEND='anymail.backends.test.EmailBackend',
+    ANYMAIL={'POSTMARK_SERVER_TOKEN': 'test-token'},
+    SUPPORT_EMAIL='hello@nyasablog.com',
+)
+class VerificationEmailTaggingTests(TestCase):
+    def setUp(self):
+        self.user = Account.objects.create_user(
+            email='tag-test@example.com', username='tagtester', password='x',  # pragma: allowlist secret
+        )
+
+    def test_verification_email_is_tagged_for_postmark(self):
+        from account.emails import send_verification_email
+        send_verification_email(self.user)
+        sent = mail.outbox[0]
+        self.assertEqual(sent.anymail_test_params['tags'], ['email-verification'])
+
+    def test_verification_email_includes_user_id_metadata(self):
+        from account.emails import send_verification_email
+        send_verification_email(self.user)
+        sent = mail.outbox[0]
+        self.assertEqual(
+            sent.anymail_test_params['metadata'],
+            {'user_id': str(self.user.pk)},
+        )
+
+    def test_verification_email_has_reply_to_set(self):
+        from account.emails import send_verification_email
+        send_verification_email(self.user)
+        sent = mail.outbox[0]
+        self.assertEqual(sent.reply_to, [settings.SUPPORT_EMAIL])
+
+    @override_settings(DEFAULT_FROM_EMAIL='NyasaBlog <hello@nyasablog.com>')
+    def test_verification_email_from_address_is_a_nyasablog_address(self):
+        from account.emails import send_verification_email
+        send_verification_email(self.user)
+        sent = mail.outbox[0]
+        self.assertIn('@nyasablog.com', sent.from_email)

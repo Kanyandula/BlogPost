@@ -27,14 +27,8 @@ jobs:
         with:
           inputs: requirements.txt
           vulnerability-service: osv
-          # Mirror of .pip-audit-ignore. Keep these in sync.
-          # TODO: drop these after Django is upgraded to 5.2.13 in a follow-up PR.
-          ignore-vulns: |
-            CVE-2026-33033
-            CVE-2026-33034
-            CVE-2026-4292
-            CVE-2026-4277
-            CVE-2026-3902
+          # No ignored CVEs at present. Mirror entries here and in
+          # .pip-audit-ignore when a CVE is intentionally deferred.
 
   npm-audit:
     name: npm audit (Node prod deps)

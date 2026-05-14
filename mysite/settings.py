@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/2.2/ref/settings/
 import os
 
 from decouple import config
+from django.core.exceptions import ImproperlyConfigured
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -51,8 +52,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework.authtoken',
     'django_htmx',
-    
-   
+    'anymail',
 ]
 
 AUTH_USER_MODEL = 'account.Account'
@@ -159,6 +159,8 @@ STATICFILES_DIRS = [
 TEMP = os.path.join(BASE_DIR, 'temp')
 FILE_UPLOAD_PERMISSIONS = 0o644
 
+SUPPORT_EMAIL = config('SUPPORT_EMAIL', default='hello@nyasablog.com')
+
 if DEBUG:
     # Local development: use filesystem for static/media
     STATIC_URL = '/static/'
@@ -182,15 +184,33 @@ else:
         "default": {"BACKEND": "storages.backends.s3boto3.S3Boto3Storage"},
         "staticfiles": {"BACKEND": "storages.backends.s3boto3.S3Boto3Storage"},
     }
-    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-    EMAIL_HOST = config('EMAIL_HOST')
-    EMAIL_HOST_USER = config('EMAIL_HOST_USER')
-    EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
-    EMAIL_PORT = config('EMAIL_PORT')
-    EMAIL_USE_TLS = config('EMAIL_USE_TLS')
-    DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL')
-    # Fail SMTP fast (10s) so view exception handlers run before gunicorn's 30s
-    # worker timeout fires. Without this, hanging SMTP connects → SIGABRT →
+    # Default backend is Postmark via Anymail. Override via env (e.g.
+    # EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend) for emergency
+    # rollback without redeploying — the SMTP settings below stay populated
+    # from .env so the SMTP backend has what it needs if reactivated.
+    EMAIL_BACKEND = config(
+        'EMAIL_BACKEND',
+        default='anymail.backends.postmark.EmailBackend',
+    )
+    ANYMAIL = {
+        'POSTMARK_SERVER_TOKEN': config('POSTMARK_SERVER_TOKEN', default=''),
+    }
+    # Fail loud at startup if Postmark is the active backend but the token is
+    # missing — otherwise Anymail sends with a blank token and Postmark returns
+    # 401 only on the first user-triggered send, which is a much worse failure
+    # mode (live user-facing 500 vs. deploy-time alarm). Empty default is kept
+    # so the SMTP rollback path doesn't require the token to be set.
+    if EMAIL_BACKEND == 'anymail.backends.postmark.EmailBackend' and not ANYMAIL['POSTMARK_SERVER_TOKEN']:
+        raise ImproperlyConfigured(
+            'POSTMARK_SERVER_TOKEN must be set when EMAIL_BACKEND is the Postmark backend.'
+        )
+    EMAIL_HOST = config('EMAIL_HOST', default='')
+    EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
+    EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
+    EMAIL_PORT = config('EMAIL_PORT', default=587, cast=int)
+    EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=True, cast=bool)
+    # Fail fast (10s) so view exception handlers run before gunicorn's 30s
+    # worker timeout fires. Without this, hanging connects → SIGABRT →
     # 500 with no chance to release the resend cooldown cache.
     EMAIL_TIMEOUT = 10
 
@@ -205,6 +225,11 @@ else:
     SECURE_HSTS_PRELOAD = True
     SECURE_CONTENT_TYPE_NOSNIFF = True
     X_FRAME_OPTIONS = 'DENY'
+
+DEFAULT_FROM_EMAIL = config(
+    'DEFAULT_FROM_EMAIL',
+    default='NyasaBlog <hello@nyasablog.com>',
+)
 
 # Verification-email link domain. Sourced from settings.ini, not request.get_host(),
 # so a forged Host header cannot redirect verification links to an attacker domain.

@@ -4,10 +4,3 @@
 #
 # Periodically review and remove entries when the underlying dependency is
 # upgraded.
-
-# TODO: upgrade Django 5.2.12 -> 5.2.13 in a follow-up PR; remove these.
-CVE-2026-33033   # Django <5.2.13
-CVE-2026-33034   # Django <5.2.13
-CVE-2026-4292    # Django <5.2.13
-CVE-2026-4277    # Django <5.2.13
-CVE-2026-3902    # Django <5.2.13
