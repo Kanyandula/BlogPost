@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/2.2/ref/settings/
 import os
 
 from decouple import config
+from django.core.exceptions import ImproperlyConfigured
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -194,6 +195,15 @@ else:
     ANYMAIL = {
         'POSTMARK_SERVER_TOKEN': config('POSTMARK_SERVER_TOKEN', default=''),
     }
+    # Fail loud at startup if Postmark is the active backend but the token is
+    # missing — otherwise Anymail sends with a blank token and Postmark returns
+    # 401 only on the first user-triggered send, which is a much worse failure
+    # mode (live user-facing 500 vs. deploy-time alarm). Empty default is kept
+    # so the SMTP rollback path doesn't require the token to be set.
+    if EMAIL_BACKEND == 'anymail.backends.postmark.EmailBackend' and not ANYMAIL['POSTMARK_SERVER_TOKEN']:
+        raise ImproperlyConfigured(
+            'POSTMARK_SERVER_TOKEN must be set when EMAIL_BACKEND is the Postmark backend.'
+        )
     EMAIL_HOST = config('EMAIL_HOST', default='')
     EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
     EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
