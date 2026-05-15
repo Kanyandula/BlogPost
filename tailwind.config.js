@@ -69,6 +69,18 @@ module.exports = {
         "xl": "0.75rem",
         "full": "9999px",
       },
+      // Post bodies use `prose prose-lg`. The stock prose-lg rhythm
+      // (line-height 1.78, h2 ~56px top) is airier than the design
+      // reference; tighten leading + heading gaps while keeping 18px type.
+      "typography": {
+        "lg": {
+          "css": {
+            "lineHeight": "1.6",
+            "h2": { "marginTop": "1.6em", "marginBottom": "0.8em" },
+            "h3": { "marginTop": "1.4em", "marginBottom": "0.5em" },
+          },
+        },
+      },
     },
   },
   plugins: [
