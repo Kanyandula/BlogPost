@@ -3,6 +3,7 @@ from io import StringIO
 from unittest.mock import patch
 
 from django.conf import settings
+from django.contrib.auth.tokens import default_token_generator
 from django.core import mail
 from django.core.cache import cache
 from django.core.mail import get_connection
@@ -1277,3 +1278,19 @@ class PasswordToggleTests(TestCase):
         body = resp.content.decode()
         # Count by aria-label (markup-only token), not `data-pw-toggle`.
         self.assertEqual(body.count('aria-label="Show password"'), 3)
+
+    def test_password_reset_confirm_is_branded_with_two_toggles(self):
+        uid = urlsafe_base64_encode(force_bytes(self.user.pk))
+        token = default_token_generator.make_token(self.user)
+        resp = self.client.get(
+            reverse('password_reset_confirm', kwargs={'uidb64': uid, 'token': token}),
+            follow=True,
+        )
+        self.assertEqual(resp.status_code, 200)
+        self.assertTemplateUsed(resp, 'registration/password_reset_confirm.html')
+        body = resp.content.decode()
+        # Branded: extends base.html, so the site name is present (admin
+        # fallback would not contain it).
+        self.assertIn('NyasaBlog', body)
+        # Count by aria-label (markup-only token), not `data-pw-toggle`.
+        self.assertEqual(body.count('aria-label="Show password"'), 2)
