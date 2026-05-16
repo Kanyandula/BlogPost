@@ -1260,3 +1260,12 @@ class PasswordToggleTests(TestCase):
         body = resp.content.decode()
         self.assertEqual(body.count('aria-label="Show password"'), 1)
         self.assertIn('__pwToggleBound', body)
+
+    def test_register_page_has_two_password_toggles(self):
+        resp = self.client.get(reverse('register'))
+        self.assertEqual(resp.status_code, 200)
+        body = resp.content.decode()
+        # RegistrationForm exposes password1 + password2. Count by
+        # aria-label (markup-only token), not `data-pw-toggle` which
+        # also appears in the delegated script's selector.
+        self.assertEqual(body.count('aria-label="Show password"'), 2)
