@@ -73,6 +73,30 @@ module.exports = {
       // (line-height 1.78, h2 ~56px top) is airier than the design
       // reference; tighten leading + heading gaps while keeping 18px type.
       "typography": {
+        // Drive every prose color off the --color-* custom properties so
+        // headings/bold/links/quotes/code track the .dark token swap.
+        // Without this the plugin's stock vars stay light-mode dark gray
+        // and headings/bold are invisible on the dark surface.
+        "DEFAULT": {
+          "css": {
+            "--tw-prose-body": "var(--color-on-surface)",
+            "--tw-prose-headings": "var(--color-on-surface)",
+            "--tw-prose-lead": "var(--color-on-surface-variant)",
+            "--tw-prose-links": "var(--color-primary)",
+            "--tw-prose-bold": "var(--color-on-surface)",
+            "--tw-prose-counters": "var(--color-on-surface-variant)",
+            "--tw-prose-bullets": "var(--color-outline)",
+            "--tw-prose-hr": "var(--color-outline-variant)",
+            "--tw-prose-quotes": "var(--color-on-surface)",
+            "--tw-prose-quote-borders": "var(--color-primary)",
+            "--tw-prose-captions": "var(--color-on-surface-variant)",
+            "--tw-prose-code": "var(--color-on-surface)",
+            "--tw-prose-pre-code": "var(--color-on-surface)",
+            "--tw-prose-pre-bg": "var(--color-surface-container)",
+            "--tw-prose-th-borders": "var(--color-outline)",
+            "--tw-prose-td-borders": "var(--color-outline-variant)",
+          },
+        },
         "lg": {
           "css": {
             "lineHeight": "1.6",
