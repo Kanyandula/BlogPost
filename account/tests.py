@@ -1234,6 +1234,12 @@ class PasswordToggleTests(TestCase):
         resp = self.client.get(reverse('login'))
         self.assertEqual(resp.status_code, 200)
         body = resp.content.decode()
-        self.assertEqual(body.count('data-pw-toggle'), 1)
+        # Count the rendered toggle button by its aria-label attribute.
+        # NOT `data-pw-toggle`: that literal also appears inside the
+        # delegated script's `closest('[data-pw-toggle]')` selector, so
+        # counting it would double-count. The JS sets the label via
+        # setAttribute with bare 'Show password' (no `aria-label="`
+        # prefix), so this token only matches rendered markup.
+        self.assertEqual(body.count('aria-label="Show password"'), 1)
+        self.assertIn('data-pw-toggle', body)
         self.assertIn('type="button"', body)
-        self.assertIn('aria-label="Show password"', body)
