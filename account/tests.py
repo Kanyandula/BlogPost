@@ -1225,7 +1225,8 @@ class VerificationEmailTaggingTests(TestCase):
 class PasswordToggleTests(TestCase):
     def setUp(self):
         self.user = Account.objects.create_user(
-            email='toggle@nyasablog.com', username='toggleuser', password='Str0ngPass!9'
+            email='toggle@nyasablog.com', username='toggleuser',
+            password='Str0ngPass!9',  # pragma: allowlist secret
         )
         self.user.email_verified = True
         self.user.save()
@@ -1255,7 +1256,7 @@ class PasswordToggleTests(TestCase):
         # inactive.)
         resp = self.client.post(
             reverse('login'),
-            {'email': 'toggle@nyasablog.com', 'password': 'wrong-password'},
+            {'email': 'toggle@nyasablog.com', 'password': 'wrong-password'},  # pragma: allowlist secret
             HTTP_HX_REQUEST='true',
         )
         self.assertEqual(resp.status_code, 200)
