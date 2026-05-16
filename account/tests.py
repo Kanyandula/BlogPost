@@ -13,6 +13,7 @@ from django.test import RequestFactory, TestCase, TransactionTestCase, override_
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.encoding import force_bytes
+from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_encode
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient, APIRequestFactory, APITestCase
@@ -1219,3 +1220,20 @@ class VerificationEmailTaggingTests(TestCase):
         send_verification_email(self.user)
         sent = mail.outbox[0]
         self.assertIn('@nyasablog.com', sent.from_email)
+
+
+class PasswordToggleTests(TestCase):
+    def setUp(self):
+        self.user = Account.objects.create_user(
+            email='toggle@nyasablog.com', username='toggleuser', password='Str0ngPass!9'
+        )
+        self.user.email_verified = True
+        self.user.save()
+
+    def test_login_page_has_exactly_one_password_toggle(self):
+        resp = self.client.get(reverse('login'))
+        self.assertEqual(resp.status_code, 200)
+        body = resp.content.decode()
+        self.assertEqual(body.count('data-pw-toggle'), 1)
+        self.assertIn('type="button"', body)
+        self.assertIn('aria-label="Show password"', body)

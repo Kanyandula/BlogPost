@@ -17,11 +17,22 @@
   {% for field in login_form %}
   <div>
     <label class="block text-sm font-medium text-on-surface mb-1">{{ field.label }}</label>
+    {% if field.field.widget.input_type == 'password' %}
+    <div class="relative">
+      <input type="password"
+             name="{{ field.name }}"
+             value="{{ field.value|default:'' }}"
+             placeholder="{{ field.label }}"
+             class="w-full bg-surface-container-lowest border border-outline-variant/20 rounded-lg py-3 px-4 pr-12 text-sm focus:ring-2 focus:ring-secondary/20 focus:border-secondary"/>
+      {% include 'snippets/password_toggle.html' %}
+    </div>
+    {% else %}
     <input type="{{ field.field.widget.input_type|default:'text' }}"
            name="{{ field.name }}"
            value="{{ field.value|default:'' }}"
            placeholder="{{ field.label }}"
            class="w-full bg-surface-container-lowest border border-outline-variant/20 rounded-lg py-3 px-4 text-sm focus:ring-2 focus:ring-secondary/20 focus:border-secondary"/>
+    {% endif %}
     {% for error in field.errors %}
     <p class="text-xs text-error mt-1">{{ error }}</p>
     {% endfor %}
@@ -37,3 +48,4 @@
 
   <button type="submit" class="w-full bg-primary-container text-on-primary py-3 rounded-lg font-semibold hover:opacity-90 transition motion-safe:active:scale-[0.98]">Sign In</button>
 </form>
+{% include 'snippets/password_toggle_js.html' %}
