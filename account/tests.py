@@ -13,7 +13,6 @@ from django.test import RequestFactory, TestCase, TransactionTestCase, override_
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.encoding import force_bytes
-from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_encode
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient, APIRequestFactory, APITestCase
@@ -1243,3 +1242,21 @@ class PasswordToggleTests(TestCase):
         self.assertEqual(body.count('aria-label="Show password"'), 1)
         self.assertIn('data-pw-toggle', body)
         self.assertIn('type="button"', body)
+
+    def test_login_htmx_partial_swap_has_toggle_and_script(self):
+        # Failed credentials with the HX-Request header make login_view
+        # return the swapped-in partial (account/partials/login_form.html),
+        # not the full page. This is the path where the script's
+        # window.__pwToggleBound guard matters, so assert the toggle AND
+        # the script are present in the fragment. (If django-htmx is not
+        # active the full page is returned instead — the assertions still
+        # hold, since the page includes the same partial.)
+        resp = self.client.post(
+            reverse('login'),
+            {'email': 'toggle@nyasablog.com', 'password': 'wrong-password'},
+            HTTP_HX_REQUEST='true',
+        )
+        self.assertEqual(resp.status_code, 200)
+        body = resp.content.decode()
+        self.assertEqual(body.count('aria-label="Show password"'), 1)
+        self.assertIn('__pwToggleBound', body)

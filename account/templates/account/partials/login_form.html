@@ -18,7 +18,7 @@
   <div>
     <label class="block text-sm font-medium text-on-surface mb-1">{{ field.label }}</label>
     {% if field.field.widget.input_type == 'password' %}
-    <div class="relative">
+    <div class="relative" data-pw-wrapper>
       <input type="password"
              name="{{ field.name }}"
              value="{{ field.value|default:'' }}"
