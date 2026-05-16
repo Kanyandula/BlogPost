@@ -1269,3 +1269,11 @@ class PasswordToggleTests(TestCase):
         # aria-label (markup-only token), not `data-pw-toggle` which
         # also appears in the delegated script's selector.
         self.assertEqual(body.count('aria-label="Show password"'), 2)
+
+    def test_password_change_page_has_three_toggles(self):
+        self.client.force_login(self.user)
+        resp = self.client.get(reverse('password_change'))
+        self.assertEqual(resp.status_code, 200)
+        body = resp.content.decode()
+        # Count by aria-label (markup-only token), not `data-pw-toggle`.
+        self.assertEqual(body.count('aria-label="Show password"'), 3)
