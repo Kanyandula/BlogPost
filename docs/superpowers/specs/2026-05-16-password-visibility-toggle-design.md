@@ -70,7 +70,13 @@ decision (2026-05-16), NB-1 includes building this branded page, modelled on
 `document.body`-delegated `click` listener for `[data-pw-toggle]`:
 
 - Resolve the target input as the `<input>` within the button's closest
-  `.relative` wrapper (no IDs — robust for loop-rendered and hardcoded markup).
+  `[data-pw-wrapper]` element (no IDs — robust for loop-rendered and
+  hardcoded markup). The wrapper carries both `class="relative"` (presentation:
+  positioning context for the absolute button) and the `data-pw-wrapper`
+  attribute (the explicit behavioral contract the script keys off). Keying
+  off the `data-` attribute rather than the `.relative` utility class keeps
+  behavior decoupled from presentation, so a later layout change can't break
+  the toggle silently.
 - Flip `input.type` between `password` and `text`.
 - Swap the icon text `visibility` ↔ `visibility_off`.
 - Swap `aria-label` "Show password" ↔ "Hide password".
@@ -146,6 +152,16 @@ Project discipline is TDD; tests written first, then implementation.
 type flip, icon swap, `aria-label` swap, Enter/Space activation, no field
 height shift, and that toggling does not submit the form. Verify the
 HTMX-swapped login/register partials still toggle after a failed submit.
+
+## Build / deploy constraint
+
+Tailwind is **compiled, not CDN** (`CLAUDE.md`). The new utility classes
+(`pr-12` on password inputs and the toggle button's positioning utilities)
+must be compiled into the built stylesheet via `npm run build:css`, and in
+production the rebuilt CSS must reach DO Spaces via `collectstatic` — a
+template/`rsync`-only change ships an unstyled toggle otherwise. `data-pw-*`
+are attributes, not classes, so they need no CSS. This is an implementation
+step (plan Task 5), recorded here so the constraint isn't lost.
 
 ## Out of scope
 
