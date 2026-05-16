@@ -1245,13 +1245,14 @@ class PasswordToggleTests(TestCase):
         self.assertIn('type="button"', body)
 
     def test_login_htmx_partial_swap_has_toggle_and_script(self):
-        # Failed credentials with the HX-Request header make login_view
-        # return the swapped-in partial (account/partials/login_form.html),
-        # not the full page. This is the path where the script's
-        # window.__pwToggleBound guard matters, so assert the toggle AND
-        # the script are present in the fragment. (If django-htmx is not
-        # active the full page is returned instead — the assertions still
-        # hold, since the page includes the same partial.)
+        # Failed credentials + the HX-Request header make login_view return
+        # the swapped-in partial (account/partials/login_form.html), a bare
+        # fragment, not the full page. Assert the fragment carries both the
+        # toggle button and the idempotency-guard script, so an HTMX swap
+        # delivers everything the delegated handler needs. (assertNotIn
+        # '<html' confirms a fragment, not the full page, was returned —
+        # otherwise this test would silently pass even if django-htmx were
+        # inactive.)
         resp = self.client.post(
             reverse('login'),
             {'email': 'toggle@nyasablog.com', 'password': 'wrong-password'},
@@ -1259,6 +1260,7 @@ class PasswordToggleTests(TestCase):
         )
         self.assertEqual(resp.status_code, 200)
         body = resp.content.decode()
+        self.assertNotIn('<html', body)
         self.assertEqual(body.count('aria-label="Show password"'), 1)
         self.assertIn('__pwToggleBound', body)
 
