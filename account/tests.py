@@ -3,6 +3,7 @@ from io import StringIO
 from unittest.mock import patch
 
 from django.conf import settings
+from django.contrib.auth.tokens import default_token_generator
 from django.core import mail
 from django.core.cache import cache
 from django.core.mail import get_connection
@@ -1219,3 +1220,80 @@ class VerificationEmailTaggingTests(TestCase):
         send_verification_email(self.user)
         sent = mail.outbox[0]
         self.assertIn('@nyasablog.com', sent.from_email)
+
+
+class PasswordToggleTests(TestCase):
+    def setUp(self):
+        self.user = Account.objects.create_user(
+            email='toggle@nyasablog.com', username='toggleuser',
+            password='Str0ngPass!9',  # pragma: allowlist secret
+        )
+        self.user.email_verified = True
+        self.user.save()
+
+    def test_login_page_has_exactly_one_password_toggle(self):
+        resp = self.client.get(reverse('login'))
+        self.assertEqual(resp.status_code, 200)
+        body = resp.content.decode()
+        # Count the rendered toggle button by its aria-label attribute.
+        # NOT `data-pw-toggle`: that literal also appears inside the
+        # delegated script's `closest('[data-pw-toggle]')` selector, so
+        # counting it would double-count. The JS sets the label via
+        # setAttribute with bare 'Show password' (no `aria-label="`
+        # prefix), so this token only matches rendered markup.
+        self.assertEqual(body.count('aria-label="Show password"'), 1)
+        self.assertIn('data-pw-toggle', body)
+        self.assertIn('type="button"', body)
+
+    def test_login_htmx_partial_swap_has_toggle_and_script(self):
+        # Failed credentials + the HX-Request header make login_view return
+        # the swapped-in partial (account/partials/login_form.html), a bare
+        # fragment, not the full page. Assert the fragment carries both the
+        # toggle button and the idempotency-guard script, so an HTMX swap
+        # delivers everything the delegated handler needs. (assertNotIn
+        # '<html' confirms a fragment, not the full page, was returned —
+        # otherwise this test would silently pass even if django-htmx were
+        # inactive.)
+        resp = self.client.post(
+            reverse('login'),
+            {'email': 'toggle@nyasablog.com', 'password': 'wrong-password'},  # pragma: allowlist secret
+            HTTP_HX_REQUEST='true',
+        )
+        self.assertEqual(resp.status_code, 200)
+        body = resp.content.decode()
+        self.assertNotIn('<html', body)
+        self.assertEqual(body.count('aria-label="Show password"'), 1)
+        self.assertIn('__pwToggleBound', body)
+
+    def test_register_page_has_two_password_toggles(self):
+        resp = self.client.get(reverse('register'))
+        self.assertEqual(resp.status_code, 200)
+        body = resp.content.decode()
+        # RegistrationForm exposes password1 + password2. Count by
+        # aria-label (markup-only token), not `data-pw-toggle` which
+        # also appears in the delegated script's selector.
+        self.assertEqual(body.count('aria-label="Show password"'), 2)
+
+    def test_password_change_page_has_three_toggles(self):
+        self.client.force_login(self.user)
+        resp = self.client.get(reverse('password_change'))
+        self.assertEqual(resp.status_code, 200)
+        body = resp.content.decode()
+        # Count by aria-label (markup-only token), not `data-pw-toggle`.
+        self.assertEqual(body.count('aria-label="Show password"'), 3)
+
+    def test_password_reset_confirm_is_branded_with_two_toggles(self):
+        uid = urlsafe_base64_encode(force_bytes(self.user.pk))
+        token = default_token_generator.make_token(self.user)
+        resp = self.client.get(
+            reverse('password_reset_confirm', kwargs={'uidb64': uid, 'token': token}),
+            follow=True,
+        )
+        self.assertEqual(resp.status_code, 200)
+        self.assertTemplateUsed(resp, 'registration/password_reset_confirm.html')
+        body = resp.content.decode()
+        # Branded: extends base.html, so the site name is present (admin
+        # fallback would not contain it).
+        self.assertIn('NyasaBlog', body)
+        # Count by aria-label (markup-only token), not `data-pw-toggle`.
+        self.assertEqual(body.count('aria-label="Show password"'), 2)
