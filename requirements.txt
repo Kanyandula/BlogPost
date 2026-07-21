@@ -10,7 +10,7 @@ jmespath==1.0.0
 nh3==0.3.4
 numpy==2.4.4
 opencv-python-headless==4.13.0.92
-Pillow==12.2.0
+Pillow==12.3.0
 python-dateutil==2.9.0.post0
 python-decouple==3.6
 s3transfer==0.16.0
