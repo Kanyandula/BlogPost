@@ -15,7 +15,7 @@ python-dateutil==2.9.0.post0
 python-decouple==3.6
 s3transfer==0.16.0
 six==1.17.0
-sqlparse==0.5.5
+sqlparse==0.6.0
 urllib3==2.7.0
 whitenoise==6.2.0
 django-htmx==1.21.0
